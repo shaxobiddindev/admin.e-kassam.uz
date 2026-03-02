@@ -1,3 +1,4 @@
+import { LOGIN_URL } from "../config";
 import { useState, useCallback } from "react";
 
 // null yoki "null" string bo'lsa bo'sh qaytaradi
@@ -26,7 +27,7 @@ export function useAuth() {
      "ek_user","ek_name","ek_shop","ek_shopCode","ek_refresh","ek_deviceId",
      "adm_token","adm_user","adm_fullName","adm_role"
     ].forEach((k) => localStorage.removeItem(k));
-    window.location.replace("http://localhost:5175?logged_out=1");
+    window.location.replace(`${LOGIN_URL}?logged_out=1`);
   }, []);
 
   return { user, logout };

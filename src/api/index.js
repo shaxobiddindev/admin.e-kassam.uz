@@ -1,4 +1,4 @@
-import { API } from "../utils";
+import { API_BASE as API, LOGIN_URL } from "../config";
 
 // Token expired 403 hisoblagich — 2 marta kelsa logout
 let _expiredCount = 0;
@@ -24,7 +24,7 @@ async function req(path, options = {}, _retry = false) {
     if (tokenExpired || _retry) {
       // Admin uchun refresh yo'q — to'g'ridan logout
       localStorage.clear();
-      window.location.replace("http://localhost:5175?logged_out=1");
+      window.location.replace(`${LOGIN_URL}?logged_out=1`);
       return {};
     }
     // Header yo'q, lekin 401 — bir marta qayta tekshir

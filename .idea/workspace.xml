@@ -5,51 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77b8b5f9-50dc-41db-a2ac-64c289eb377c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/chunk-373CG7ZK.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/chunk-373CG7ZK.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/chunk-REFQX4J5.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/chunk-REFQX4J5.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react-dom.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react-dom.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react-dom_client.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react-dom_client.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react_jsx-dev-runtime.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react_jsx-dev-runtime.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react_jsx-runtime.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_88960df1/react_jsx-runtime.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/chunk-373CG7ZK.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/chunk-373CG7ZK.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/chunk-REFQX4J5.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/chunk-REFQX4J5.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react-dom.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react-dom.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react-dom_client.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react-dom_client.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react_jsx-dev-runtime.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react_jsx-dev-runtime.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react_jsx-runtime.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps_temp_a8a81f84/react_jsx-runtime.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/css-overflow-anchor.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/css-overflow-anchor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/customizable-select.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/customizable-select.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/link-icon-svg.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/link-icon-svg.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/webtransport.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/caniuse-lite/data/features/webtransport.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/caniuse-lite/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/caniuse-lite/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/api/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/config.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useAuth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useAuth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,6 +41,7 @@
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
@@ -123,7 +81,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1766693066602</updated>
-      <workItem from="1772476134761" duration="2127000" />
+      <workItem from="1772476134761" duration="3166000" />
     </task>
     <servers />
   </component>

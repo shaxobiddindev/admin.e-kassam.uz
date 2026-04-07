@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LOGO_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 
 const NAV = [
@@ -19,13 +19,13 @@ const TITLES = {
   customers: { label: "Mijozlar",         icon: "fa-address-book" },
 };
 
-function Sidebar({ page, setPage, user, onLogout, open, onClose }) {
+function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, onToggleCollapse }) {
   const roleInfo = ADMIN_ROLE_LABELS[user?.role] || { label: "Admin" };
   return (
-    <aside className={`sb ${open ? "open" : ""}`}>
+    <aside className={`sb ${open ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}>
       <div className="sb-brand">
         <div className="sb-logo-wrap">
-          <img src={LOGO_URL} alt="e-Kassam"
+          <img src={isCollapsed ? "/favicon.png" : LOGO_URL} alt="e-Kassam"
             style={{ width:"100%", height:"100%", objectFit:"contain" }}
             onError={(e) => {
               e.target.style.display = "none";
@@ -37,6 +37,10 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose }) {
         </div>
       </div>
 
+      <button className="sb-toggle" onClick={onToggleCollapse}>
+        <i className={`fa-solid ${isCollapsed ? "fa-chevron-right" : "fa-chevron-left"}`} />
+      </button>
+
       <nav className="sb-nav">
         {NAV.map((group) => (
           <div key={group.sec}>
@@ -44,9 +48,10 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose }) {
             {group.items.map((item) => (
               <div key={item.id}
                 className={`sb-item ${page === item.id ? "on" : ""}`}
-                onClick={() => { setPage(item.id); onClose(); }}>
+                onClick={() => { setPage(item.id); onClose(); }}
+                title={isCollapsed ? item.label : ""}>
                 <i className={`fa-solid ${item.icon}`} />
-                {item.label}
+                <span>{item.label}</span>
               </div>
             ))}
           </div>
@@ -55,11 +60,11 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose }) {
 
       {/* Footer — CSS da sb-foot */}
       <div className="sb-foot">
-        <div className="sb-user" onClick={onLogout} title="Chiqish">
-          <div className="av" style={{ width:34, height:34, borderRadius:9, fontSize:13 }}>
+        <div className="sb-user" onClick={onLogout} title={isCollapsed ? "Chiqish" : ""}>
+          <div className="av" style={{ width: isCollapsed ? 28 : 34, height: isCollapsed ? 28 : 34, borderRadius:9, fontSize:13 }}>
             {initials(user?.fullName || user?.username)}
           </div>
-          <div style={{ flex:1, minWidth:0 }}>
+          <div className="sb-u-info" style={{ flex:1, minWidth:0 }}>
             <div className="sb-u-name">{user?.fullName || user?.username}</div>
             <div className="sb-u-role">
               {roleInfo?.label || "Admin"}
@@ -74,18 +79,28 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose }) {
 
 export default function Layout({ page, setPage, user, onLogout, children }) {
   const [open, setOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem("adm_sb_collapsed") === "1");
+
+  useEffect(() => {
+    localStorage.setItem("adm_sb_collapsed", isCollapsed ? "1" : "0");
+  }, [isCollapsed]);
+
   const title = TITLES[page] || TITLES.dashboard;
 
   return (
-    <div className="app">
+    <div className={`app ${isCollapsed ? "collapsed" : ""}`}>
       {/* Overlay — mobil va sidebar ochiq bo'lganda */}
       {open && (
         <div onClick={() => setOpen(false)}
           style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:200 }} />
       )}
 
-      <Sidebar page={page} setPage={setPage} user={user} onLogout={onLogout}
-        open={open} onClose={() => setOpen(false)} />
+      <Sidebar 
+        page={page} setPage={setPage} user={user} onLogout={onLogout}
+        open={open} onClose={() => setOpen(false)} 
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      />
 
       {/* .main — margin-left: var(--sw), kichik ekranda 0 */}
       <div className="main">

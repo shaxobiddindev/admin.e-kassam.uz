@@ -40,6 +40,8 @@
 
   --radius: 12px;
   --sw:     258px;
+  --sw-c:   70px;
+  --current-sw: var(--sw);
   --sh:     64px;
   --font:   'Nunito', sans-serif;
   --mono:   'JetBrains Mono', monospace;
@@ -52,19 +54,24 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); -web
 
 /* ════ LAYOUT ════════════════════════════════════════════════ */
 .app   { display: flex; min-height: 100vh; }
-.main  { margin-left: var(--sw); flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left .28s ease; }
+.main  { margin-left: var(--current-sw); flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left .3s; }
 .page  { flex: 1; padding: 22px; }
+.app.collapsed { --current-sw: var(--sw-c); }
 /* Hamburger — katta ekranda yashirin */
-.ham-btn { display: none; }
+.ham-btn { display: none !important; }
 
 /* ════ SIDEBAR ═══════════════════════════════════════════════ */
 .sb {
-  width: var(--sw); background: var(--sb);
+  width: var(--current-sw); background: var(--sb);
   position: fixed; top: 0; left: 0; bottom: 0;
   display: flex; flex-direction: column;
-  z-index: 300; transition: transform .28s ease;
+  z-index: 300; transition: transform .3s, width .3s;
   border-right: 1px solid var(--sb-border);
 }
+.sb.collapsed { width: var(--sw-c); }
+.sb.collapsed .sb-brand { padding: 10px 10px; }
+.sb.collapsed .sb-logo-wrap { padding: 4px; border-radius: 8px; min-height: 40px; }
+.sb.collapsed .sb-logo-wrap img { width: 42px; height: 42px; object-fit: contain; }
 /* Brand */
 .sb-brand { padding: 16px; border-bottom: 1px solid var(--sb-border); display: flex; align-items: center; justify-content: center; }
 .sb-logo-wrap { width: calc(var(--sw) - 32px); height: 64px; background: white; border-radius: 14px; display: flex; align-items: center; justify-content: center; padding: 10px 16px; }
@@ -78,13 +85,30 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); -web
 .sb-sec     { font-size: 9.5px; font-weight: 800; color: var(--sb-dim); text-transform: uppercase; letter-spacing: 1.3px; padding: 14px 10px 5px; }
 .sb-item    { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: var(--sb-text); cursor: pointer; transition: .15s; margin-bottom: 1px; position: relative; }
 .sb-item i  { width: 17px; text-align: center; font-size: 13.5px; flex-shrink: 0; }
-.sb-item:hover  { background: var(--sb-hover); color: white; }
+.sb-item:hover  { background: var(--sb-hover); color: white; text-decoration: none; }
 .sb-item.on     { background: var(--sb-active); color: white; box-shadow: 0 3px 12px rgba(1,125,202,.45); }
+
+.sb.collapsed .sb-sec, 
+.sb.collapsed .sb-item span,
+.sb.collapsed .sb-u-info { display: none; }
+.sb.collapsed .sb-item { justify-content: center; padding: 10px; }
+
+/* Toggle Button */
+.sb-toggle {
+  position: absolute; top: 72px; right: -12px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--blue); color: white; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 310; transition: .2s; font-size: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.sb-toggle:hover { transform: scale(1.1); background: var(--blue-d); }
+.sb.collapsed .sb-toggle { right: -12px; }
 .sb-dot         { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
 
 /* User */
-.sb-foot    { padding: 10px 10px 14px; border-top: 1px solid var(--sb-border); }
-.sb-user    { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: .15s; }
+.sb-foot    { padding: 8px 10px; border-top: 1px solid var(--sb-border); }
+.sb-user    { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; cursor: pointer; transition: .15s; }
 .sb-user:hover { background: var(--sb-hover); }
 .sb-u-name  { font-size: 13px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-u-role  { font-size: 10.5px; color: var(--sb-dim); margin-top: 1px; }

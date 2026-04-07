@@ -10,16 +10,17 @@ export default function CustomersPage({ toast }) {
   const [search,    setSearch]    = useState("");
   const [editC,     setEditC]     = useState(null);
 
-  const load = () => {
+  const load = (q = "") => {
     setLoading(true);
-    customerApi.getAll()
+    customerApi.getAll(q ? `search=${encodeURIComponent(q)}` : "")
       .then(r => setCustomers(r.data || []))
-      .catch(e => toast.error(e.message))
+      .catch(e => toast.error("Mijozlar yuklanmadi: " + e.message))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
+  // Client-side filter (server-side search mavjud, lekin past latency uchun ikkalasi)
   const filtered = customers.filter(c => {
     const q = search.toLowerCase();
     return !q || c.fullName?.toLowerCase().includes(q) || c.phone?.includes(q);
@@ -70,7 +71,7 @@ export default function CustomersPage({ toast }) {
                   </tr>
                 )) : (
                   <tr><td colSpan={4}>
-                    <Empty icon="fa-address-book" text="Mijoz topilmadi" />
+                    <Empty icon="fa-address-book" title="Mijoz topilmadi" />
                   </td></tr>
                 )}
               </tbody>

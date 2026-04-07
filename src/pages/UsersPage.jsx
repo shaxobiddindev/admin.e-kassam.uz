@@ -3,8 +3,10 @@ import { shopApi, userApi } from "../api";
 import { ROLE_LABELS } from "../utils";
 import Modal from "../components/Modal";
 import { Loader, Empty, Search, FG, Badge, Avatar } from "../components/ui";
+import { useConfirm } from "../context/ConfirmProvider";
 
 export default function UsersPage({ toast }) {
+  const confirm = useConfirm();
   const [shops,        setShops]        = useState([]);
   const [users,        setUsers]        = useState([]);
   const [selShop,      setSelShop]      = useState(null);
@@ -38,8 +40,16 @@ export default function UsersPage({ toast }) {
     : ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER"];
 
   const handleToggle = async (u) => {
-    const action = u.enabled ? "bloklash" : "faollashtirish";
-    if (!window.confirm(`${u.fullName} ni ${action}ni tasdiqlaysizmi?`)) return;
+    const isBlocking = u.enabled;
+    const ok = await confirm({
+      title: isBlocking ? "Xodimni bloklash" : "Xodimni faollashtirish",
+      message: isBlocking
+        ? `Chindan ham ${u.fullName} ni bloklamoqchimisiz? U tizimga kira olmaydi.`
+        : `${u.fullName} ni tizimga kirishini tiklamoqchimisiz?`,
+      type: isBlocking ? "warning" : "info",
+      confirmText: isBlocking ? "Bloklash" : "Faollashtirish",
+    });
+    if (!ok) return;
     try {
       await userApi.toggleBlock(selShop.id, u.id);
       toast.success(u.enabled ? "Bloklandi" : "Faollashtirildi");

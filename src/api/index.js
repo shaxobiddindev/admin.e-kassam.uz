@@ -67,8 +67,8 @@ export const userApi = {
 
 // ── Mijozlar ────────────────────────────────────────────────────
 export const customerApi = {
-  getAll:  ()          => req("/customers"),
-  getById: (id)        => req(`/customers/${id}`),
-  update:  (id, data)  => req(`/customers/${id}`, { method: "PUT", ...body(data) }),
-  delete:  (id)        => req(`/customers/${id}`, { method: "DELETE" }),
+  getAll:  (params = "") => req(`/superadmin/customers${params ? "?" + params : ""}`),
+  getById: (id)          => req(`/superadmin/customers/${id}`),
+  update:  (id, data)    => req(`/superadmin/customers/${id}`, { method: "PUT", ...body(data) }),
+  delete:  (id)          => req(`/superadmin/customers/${id}`, { method: "DELETE" }),
 };

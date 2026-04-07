@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { LOGO_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
+import { useConfirm } from "../context/ConfirmProvider";
 
 const NAV = [
   { sec: "Asosiy", items: [
@@ -78,12 +79,24 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
 }
 
 export default function Layout({ page, setPage, user, onLogout, children }) {
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem("adm_sb_collapsed") === "1");
 
   useEffect(() => {
     localStorage.setItem("adm_sb_collapsed", isCollapsed ? "1" : "0");
   }, [isCollapsed]);
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Tizimdan chiqish",
+      message: "Tizimdan chiqishni tasdiqlaysizmi?",
+      type: "warning",
+      confirmText: "Chiqish",
+      cancelText: "Bekor",
+    });
+    if (ok) onLogout();
+  };
 
   const title = TITLES[page] || TITLES.dashboard;
 
@@ -96,7 +109,7 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
       )}
 
       <Sidebar 
-        page={page} setPage={setPage} user={user} onLogout={onLogout}
+        page={page} setPage={setPage} user={user} onLogout={handleLogout}
         open={open} onClose={() => setOpen(false)} 
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}

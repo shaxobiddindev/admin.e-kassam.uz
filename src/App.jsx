@@ -6,6 +6,7 @@ import { useToast } from "./hooks/useToast";
 
 import Toast         from "./components/Toast";
 import Layout        from "./components/Layout";
+import { ConfirmProvider } from "./context/ConfirmProvider";
 import DashboardPage from "./pages/DashboardPage";
 import ShopsPage     from "./pages/ShopsPage";
 import UsersPage     from "./pages/UsersPage";
@@ -29,7 +30,7 @@ if (_authParam) {
     const _username = _p.get("username") || "";
     const _fullName = _p.get("fullName") || _username;
     const _role     = _p.get("role")     || "";
-    const _refresh  = _p.get("refresh")  || "";
+    const _refresh  = _p.get("refresh") || _p.get("refreshToken") || "";
 
     console.log("[ADMIN] auth param → type:", _type, "| token:", _token.slice(0,20));
 
@@ -66,11 +67,11 @@ export default function App() {
   const PageComponent = PAGES[page] || DashboardPage;
 
   return (
-    <>
+    <ConfirmProvider>
       <Toast toasts={toasts} onDismiss={dismiss} />
       <Layout page={page} setPage={setPage} user={user} onLogout={logout}>
         <PageComponent toast={toast} setPage={setPage} />
       </Layout>
-    </>
+    </ConfirmProvider>
   );
 }

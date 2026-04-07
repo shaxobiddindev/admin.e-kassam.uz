@@ -3,8 +3,10 @@ import { shopApi, userApi } from "../api";
 import { fmtDate, SHOP_STATUS, ROLE_LABELS, ROLE_OPTIONS } from "../utils";
 import Modal from "../components/Modal";
 import { Loader, Empty, Search, FG, Badge, Avatar } from "../components/ui";
+import { useConfirm } from "../context/ConfirmProvider";
 
 export default function ShopsPage({ toast }) {
+  const confirm = useConfirm();
   const [shops,   setShops]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState("");
@@ -31,8 +33,13 @@ export default function ShopsPage({ toast }) {
   const handleToggleStatus = async (shop) => {
     const isActive = shop.status === "ACTIVE";
     const newStatus = isActive ? "BLOCKED" : "ACTIVE";
-    const label = isActive ? "bloklash" : "faollashtirish";
-    if (!window.confirm(`"${shop.name}" ni ${label}ni tasdiqlaysizmi?`)) return;
+    const ok = await confirm({
+      title: isActive ? "Do'konni bloklash" : "Do'konni faollashtirish",
+      message: `"${shop.name}" do'konini ${isActive ? "bloklashni" : "faollashtirishni"} tasdiqlaysizmi?`,
+      type: isActive ? "warning" : "info",
+      confirmText: isActive ? "Bloklash" : "Faollashtirish",
+    });
+    if (!ok) return;
     try {
       await shopApi.update(shop.id, { status: newStatus });
       toast.success(isActive ? "Do'kon bloklandi" : "Do'kon faollashtirildi");
@@ -42,7 +49,13 @@ export default function ShopsPage({ toast }) {
 
   // O'chirish faqat ACTIVE/BLOCKED do'konlarda
   const handleDelete = async (shop) => {
-    if (!window.confirm(`"${shop.name}" do'konini o'chirishni tasdiqlaysizmi?\n\nDiqqat: Bu amalni ortga qaytarib bo'lmaydi!`)) return;
+    const ok = await confirm({
+      title: "Do'konni o'chirish",
+      message: `"${shop.name}" do'konini o'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi!`,
+      type: "danger",
+      confirmText: "O'chirish",
+    });
+    if (!ok) return;
     try { await shopApi.delete(shop.id); toast.success("Do'kon o'chirildi"); load(); }
     catch (e) { toast.error(e.message); }
   };
@@ -257,6 +270,7 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
 
 // ── Do'kon xodimlari modal ────────────────────────────────────
 function ShopUsersModal({ shop, onClose, onReload, toast }) {
+  const confirm = useConfirm();
   const [users,    setUsers]    = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [view,     setView]     = useState("list"); // "list"|"add"|{type:"edit",user}
@@ -308,7 +322,16 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
   };
 
   const handleToggle = async (u) => {
-    if (!window.confirm(`${u.fullName} ni ${u.enabled?"bloklash":"faollashtirish"}ni tasdiqlaysizmi?`)) return;
+    const isBlocking = u.enabled;
+    const ok = await confirm({
+      title: isBlocking ? "Xodimni bloklash" : "Xodimni faollashtirish",
+      message: isBlocking
+        ? `Chindan ham ${u.fullName} ni bloklamoqchimisiz? U tizimga kira olmaydi.`
+        : `${u.fullName} ni tizimga kirishini tiklamoqchimisiz?`,
+      type: isBlocking ? "warning" : "info",
+      confirmText: isBlocking ? "Bloklash" : "Faollashtirish",
+    });
+    if (!ok) return;
     try {
       await userApi.toggleBlock(shop.id, u.id);
       setUsers(prev => prev.map(x => x.id===u.id ? {...x, enabled:!u.enabled} : x));

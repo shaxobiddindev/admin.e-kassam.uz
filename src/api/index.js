@@ -25,7 +25,7 @@ async function req(path, options = {}, _retry = false) {
       // Admin uchun refresh yo'q — to'g'ridan logout
       localStorage.clear();
       window.location.replace(`${LOGIN_URL}?logged_out=1`);
-      return {};
+      throw new Error("AUTH_FAILED");
     }
     // Header yo'q, lekin 401 — bir marta qayta tekshir
     return req(path, options, true);

@@ -112,8 +112,9 @@ export default function UsersPage({ toast }) {
               <div style={{ display:"flex", gap:8 }}>
                 <Search value={search} onChange={setSearch}
                   placeholder="Ism yoki username..." style={{ width:200 }} />
-                <button className="btn btn-primary btn-sm" onClick={() => setAddOpen(true)}>
-                  <i className="fa-solid fa-user-plus" /> Qo'shish
+                <button className={`btn btn-sm ${!hasOwner ? "btn-green" : "btn-primary"}`} onClick={() => setAddOpen(true)}>
+                  <i className={`fa-solid ${!hasOwner ? "fa-crown" : "fa-user-plus"}`} />
+                  {!hasOwner ? "Owner qo'shish" : "Qo'shish"}
                 </button>
               </div>
             </div>

@@ -185,14 +185,33 @@ export default function ShopsPage({ toast }) {
 
 // ── Yangi do'kon ──────────────────────────────────────────────
 function AddShopModal({ onClose, onSaved, toast }) {
-  const [form, setForm] = useState({ name:"", code:"", phone:"", address:"" });
+  const [form, setForm] = useState({ name:"", code:"", phone:"+998 ", address:"" });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const handlePhone = (e) => {
+    let val = e.target.value.replace(/\D/g, "");
+    if (val.startsWith("998")) val = val.substring(3);
+    val = val.substring(0, 9);
+    
+    let fm = "+998";
+    if (val.length > 0) fm += " (" + val.substring(0, 2);
+    if (val.length > 2) fm += ") " + val.substring(2, 5);
+    if (val.length > 5) fm += "-" + val.substring(5, 7);
+    if (val.length > 7) fm += "-" + val.substring(7, 9);
+    if (val.length === 0) fm += " ";
+    setForm(p => ({ ...p, phone: fm }));
+  };
 
   const save = async () => {
     if (!form.name.trim() || !form.code.trim()) { toast.error("Nom va kod majburiy"); return; }
     setSaving(true);
-    try { await shopApi.create(form); toast.success("Do'kon yaratildi"); onSaved(); }
+    try { 
+      const payload = { ...form, phone: form.phone.replace(/[^+\d]/g, "") };
+      await shopApi.create(payload); 
+      toast.success("Do'kon yaratildi"); 
+      onSaved(); 
+    }
     catch (e) { toast.error(e.message); }
     finally { setSaving(false); }
   };
@@ -212,7 +231,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
       </FG>
       <div className="g2">
         <FG label="Telefon">
-          <input className="fi mono" value={form.phone} onChange={set("phone")} placeholder="+998901234567" />
+          <input className="fi mono" value={form.phone} onChange={handlePhone} placeholder="+998 (__) ___-__-__" />
         </FG>
         <FG label="Manzil">
           <input className="fi" value={form.address} onChange={set("address")} placeholder="Toshkent, Chilonzor" />
@@ -226,13 +245,32 @@ function AddShopModal({ onClose, onSaved, toast }) {
 const STATUS_OPTIONS = ["ACTIVE", "BLOCKED", "SUSPENDED"];
 
 function EditShopModal({ shop, onClose, onSaved, toast }) {
-  const [form, setForm] = useState({ name: shop.name||"", phone: shop.phone||"", address: shop.address||"", status: shop.status||"ACTIVE" });
+  const [form, setForm] = useState({ name: shop.name||"", phone: shop.phone||"+998 ", address: shop.address||"", status: shop.status||"ACTIVE" });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
+  const handlePhone = (e) => {
+    let val = e.target.value.replace(/\D/g, "");
+    if (val.startsWith("998")) val = val.substring(3);
+    val = val.substring(0, 9);
+    
+    let fm = "+998";
+    if (val.length > 0) fm += " (" + val.substring(0, 2);
+    if (val.length > 2) fm += ") " + val.substring(2, 5);
+    if (val.length > 5) fm += "-" + val.substring(5, 7);
+    if (val.length > 7) fm += "-" + val.substring(7, 9);
+    if (val.length === 0) fm += " ";
+    setForm(p => ({ ...p, phone: fm }));
+  };
+
   const save = async () => {
     setSaving(true);
-    try { await shopApi.update(shop.id, form); toast.success("Saqlandi"); onSaved(); }
+    try { 
+      const payload = { ...form, phone: form.phone.replace(/[^+\d]/g, "") };
+      await shopApi.update(shop.id, payload); 
+      toast.success("Saqlandi"); 
+      onSaved(); 
+    }
     catch (e) { toast.error(e.message); }
     finally { setSaving(false); }
   };
@@ -253,8 +291,8 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
       </FG>
       <div className="g2">
         <FG label="Telefon">
-          <input className="fi mono" value={form.phone} onChange={set("phone")} />
-        </FG>
+        <input className="fi mono" value={form.phone} onChange={handlePhone} placeholder="+998 (__) ___-__-__" />
+      </FG>
         <FG label="Manzil">
           <input className="fi" value={form.address} onChange={set("address")} />
         </FG>

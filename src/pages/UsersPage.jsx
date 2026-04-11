@@ -211,6 +211,7 @@ export default function UsersPage({ toast }) {
         <EditUserModal
           shop={selShop}
           user={editUser}
+          hasOwner={hasOwner}
           onClose={() => setEditUser(null)}
           onSaved={() => { setEditUser(null); loadUsers(selShop); }}
           toast={toast}
@@ -279,12 +280,12 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
 }
 
 // ── Xodimni tahrirlash ────────────────────────────────────────
-function EditUserModal({ shop, user, onClose, onSaved, toast }) {
+function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
   const [tab,    setTab]    = useState("info");
   const allRoles = (user.roles || []).map(r => r.name || r.type || r);
   const isOwner  = allRoles.includes("OWNER");
   const curRole  = isOwner ? "OWNER" : (allRoles[0] || "");
-  const roleOpts = isOwner ? ["OWNER"] : ["SHOP_ADMIN","STOREKEEPER","CASHIER"];
+  const roleOpts = isOwner ? ["OWNER"] : (!hasOwner ? ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER"] : ["SHOP_ADMIN","STOREKEEPER","CASHIER"]);
   const [form,   setForm]   = useState({ fullName: user.fullName || "", role: curRole });
   const [pass,   setPass]   = useState({ newPass:"", confirm:"" });
   const [saving, setSaving] = useState(false);

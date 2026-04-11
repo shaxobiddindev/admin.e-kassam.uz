@@ -280,8 +280,9 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
 // ── Xodimni tahrirlash ────────────────────────────────────────
 function EditUserModal({ shop, user, onClose, onSaved, toast }) {
   const [tab,    setTab]    = useState("info");
-  const curRole  = (user.roles || []).map(r => r.name || r.type || r)[0] || "";
-  const isOwner  = curRole === "OWNER";
+  const allRoles = (user.roles || []).map(r => r.name || r.type || r);
+  const isOwner  = allRoles.includes("OWNER");
+  const curRole  = isOwner ? "OWNER" : (allRoles[0] || "");
   const roleOpts = isOwner ? ["OWNER"] : ["SHOP_ADMIN","STOREKEEPER","CASHIER"];
   const [form,   setForm]   = useState({ fullName: user.fullName || "", role: curRole });
   const [pass,   setPass]   = useState({ newPass:"", confirm:"" });

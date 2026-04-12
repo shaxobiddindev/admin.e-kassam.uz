@@ -106,7 +106,7 @@ export default function ShopsPage({ toast }) {
           {loading ? <Loader /> : (
             <table>
               <thead>
-                <tr><th>Do'kon</th><th>Kod</th><th>Egasi</th><th>Telefon</th><th>Manzil</th><th>Status</th><th>Yaratilgan</th><th></th></tr>
+                <tr><th>Do'kon</th><th>Kod</th><th>Turi</th><th>Egasi</th><th>Telefon</th><th>Manzil</th><th>Status</th><th>Yaratilgan</th><th></th></tr>
               </thead>
               <tbody>
                 {filtered.length > 0 ? filtered.map((shop) => {
@@ -123,6 +123,16 @@ export default function ShopsPage({ toast }) {
                         </div>
                       </td>
                       <td><span className="badge badge-blue mono">{shop.code}</span></td>
+                      <td>
+                        {shop.parentShopId ? (
+                          <div style={{ display:"flex", flexDirection:"column" }}>
+                            <span className="badge badge-orange" style={{ fontSize:9 }}>FILIAL</span>
+                            <span style={{ fontSize:10, color:"var(--text3)", marginTop:2 }}>{shop.parentShopName}</span>
+                          </div>
+                        ) : (
+                          <span className="badge badge-green" style={{ fontSize:9 }}>ASOSIY</span>
+                        )}
+                      </td>
                       <td style={{ fontWeight:700 }}>
                         {shop.ownerName || <span style={{ color:"var(--text3)", fontWeight:400 }}>—</span>}
                       </td>
@@ -185,9 +195,14 @@ export default function ShopsPage({ toast }) {
 
 // ── Yangi do'kon ──────────────────────────────────────────────
 function AddShopModal({ onClose, onSaved, toast }) {
-  const [form, setForm] = useState({ name:"", code:"", phone:"+998 ", address:"" });
+  const [shops, setShops] = useState([]);
+  const [form, setForm] = useState({ name:"", code:"", phone:"+998 ", address:"", parentShopId: "" });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  useEffect(() => {
+    shopApi.getAll().then(res => setShops(res.data || [])).catch(() => {});
+  }, []);
 
   const handlePhone = (e) => {
     let val = e.target.value.replace(/\D/g, "");
@@ -207,7 +222,11 @@ function AddShopModal({ onClose, onSaved, toast }) {
     if (!form.name.trim() || !form.code.trim()) { toast.error("Nom va kod majburiy"); return; }
     setSaving(true);
     try { 
-      const payload = { ...form, phone: form.phone.replace(/[^+\d]/g, "") };
+      const payload = { 
+        ...form, 
+        phone: form.phone.replace(/[^+\d]/g, ""),
+        parentShopId: form.parentShopId || null
+      };
       await shopApi.create(payload); 
       toast.success("Do'kon yaratildi"); 
       onSaved(); 
@@ -237,6 +256,14 @@ function AddShopModal({ onClose, onSaved, toast }) {
           <input className="fi" value={form.address} onChange={set("address")} placeholder="Toshkent, Chilonzor" />
         </FG>
       </div>
+      <FG label="Parent do'kon (Filial bo'lsa)" hint="Agar bu do'kon boshqa do'konning filiali bo'lsa tanlang">
+        <select className="fi" value={form.parentShopId} onChange={set("parentShopId")}>
+          <option value="">— Mustaqil asosiy do'kon —</option>
+          {shops.filter(s => !s.parentShopId && s.status === "ACTIVE").map(s => (
+            <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
+          ))}
+        </select>
+      </FG>
     </Modal>
   );
 }

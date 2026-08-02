@@ -32,12 +32,16 @@ if (_authParam) {
     const _fullName = _p.get("fullName") || _username;
     const _role     = _p.get("role")     || "";
     const _refresh  = _p.get("refresh") || _p.get("refreshToken") || "";
+    // Refresh token login domenidagi deviceId ga bog'langan — o'shani
+    // saqlaymiz, aks holda bu yerda yangi id yaralib refresh rad etiladi.
+    const _deviceId = _p.get("deviceId") || "";
 
     console.log("[ADMIN] auth param → type:", _type, "| token:", _token.slice(0,20));
 
     if (_token && _type) {
       localStorage.setItem("ek_token",    _token);
       localStorage.setItem("ek_refresh",  _refresh);
+      if (_deviceId) localStorage.setItem("ek_deviceId", _deviceId);
       localStorage.setItem("ek_type",     _type);
       localStorage.setItem("ek_username", _username);
       localStorage.setItem("ek_fullName", _fullName);

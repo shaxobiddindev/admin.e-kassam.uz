@@ -1,8 +1,49 @@
-import { API_BASE as API, LOGIN_URL } from "../config";
+import { API_BASE as API, LOGIN_URL, getDeviceId } from "../config";
 
-// Token expired 403 hisoblagich — 2 marta kelsa logout
-let _expiredCount = 0;
-let _expiredTimer = null;
+// Bir vaqtda bir nechta so'rov 401 olsa, refresh faqat bir marta yuborilsin
+let refreshPromise = null;
+
+async function tryRefreshToken() {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const refresh = localStorage.getItem("ek_refresh");
+      if (!refresh || refresh === "null" || refresh === "undefined") return false;
+
+      const res = await fetch(`${API}/auth/admin/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept":       "application/json",
+          "X-Device-Id":  getDeviceId(),
+        },
+        body: JSON.stringify({ refreshToken: refresh }),
+      });
+
+      if (!res.ok) return false;
+
+      const json = await res.json().catch(() => ({}));
+      if (!json.success || !json?.data?.accessToken) return false;
+
+      localStorage.setItem("ek_token",   json.data.accessToken);
+      localStorage.setItem("ek_refresh", json.data.refreshToken || refresh);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+function forceLogout() {
+  localStorage.clear();
+  window.location.replace(`${LOGIN_URL}?logged_out=1`);
+  throw new Error("AUTH_FAILED");
+}
 
 async function req(path, options = {}, _retry = false) {
   const token = localStorage.getItem("ek_token");
@@ -13,21 +54,24 @@ async function req(path, options = {}, _retry = false) {
     headers: {
       "Content-Type":    "application/json",
       "Accept-Language": "uz",
+      "X-Device-Id":     getDeviceId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(extra || {}),
     },
   });
 
-  // 401 + X-Token-Expired header — token muddati o'tgan
   if (res.status === 401) {
-    const tokenExpired = res.headers.get("X-Token-Expired") === "true";
-    if (tokenExpired || _retry) {
-      // Admin uchun refresh yo'q — to'g'ridan logout
-      localStorage.clear();
-      window.location.replace(`${LOGIN_URL}?logged_out=1`);
-      throw new Error("AUTH_FAILED");
+    // Login/refresh ning o'zi 401 bersa — bu haqiqiy xato, qayta urinmaymiz
+    if (path.includes("/auth/admin/login") || path.includes("/auth/admin/refresh")) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Xatolik ${res.status}`);
     }
-    // Header yo'q, lekin 401 — bir marta qayta tekshir
+
+    if (_retry) forceLogout();
+
+    const refreshed = await tryRefreshToken();
+    if (!refreshed) forceLogout();
+
     return req(path, options, true);
   }
 
@@ -41,7 +85,10 @@ const body = (data) => ({ body: JSON.stringify(data) });
 export const authApi = {
   login:  (data) => req("/auth/admin/login", { method: "POST", ...body(data) }),
   me:     ()     => req("/auth/admin/me"),
-  logout: ()     => req("/auth/logout", { method: "POST" }),
+  logout: ()     => req("/auth/admin/logout", {
+    method: "POST",
+    ...body({ refreshToken: localStorage.getItem("ek_refresh") || "" }),
+  }),
 };
 
 // ── Do'konlar ───────────────────────────────────────────────────

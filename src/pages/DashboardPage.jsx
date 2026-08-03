@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
-import { fmtDate, SHOP_STATUS } from "../utils";
+import { fmtDate, SHOP_STATUS, shopStatus } from "../utils";
 import { Badge } from "../components/ui";
 import Kpi from "../components/ek/Kpi";
 import AttentionList from "../components/ek/AttentionList";
@@ -87,7 +87,7 @@ export default function DashboardPage({ toast, setPage }) {
                 </thead>
                 <tbody>
                   {shops.slice(0, 8).map(shop => {
-                    const st = SHOP_STATUS[shop.status] || { label: shop.status, color: "gray" };
+                    const st = { ...shopStatus(shop.status), color: SHOP_STATUS[shop.status]?.color || "gray" };
                     return (
                       <tr key={shop.id}>
                         <td style={{ fontWeight: 700 }}>{shop.name}</td>

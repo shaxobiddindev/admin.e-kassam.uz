@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
-import { ROLE_LABELS } from "../utils";
+import { ROLE_LABELS, roleEntry, roleLabel } from "../utils";
 import Modal from "../components/Modal";
 import { Loader, Empty, Search, FG, Badge, Avatar } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
@@ -159,7 +159,13 @@ export default function UsersPage({ toast }) {
                           <td>
                             {roles.map(r => {
                               const rn = r.name || r.type || r;
-                              return <Badge key={rn} color={isOwner ? "blue" : "gray"}>{ROLE_LABELS[rn] || rn}</Badge>;
+                              const re = roleEntry(rn);
+                              return (
+                                <span key={rn} className="badge"
+                                      style={{ background: re.bg || "var(--bg-sunken)", color: re.color || "var(--fg-secondary)" }}>
+                                  {re.label}
+                                </span>
+                              );
                             })}
                           </td>
                           <td>
@@ -271,7 +277,7 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
       <FG label="Rol *">
         <select className="fi" value={form.role} onChange={set("role")} disabled={!hasOwner}>
           {roleOpts.map(r => (
-            <option key={r} value={r}>{ROLE_LABELS[r] || r}</option>
+            <option key={r} value={r}>{roleLabel(r)}</option>
           ))}
         </select>
       </FG>
@@ -345,7 +351,7 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
           <FG label="Rol" hint={isOwner ? "Owner rolini o'zgartirish mumkin emas" : ""}>
             <select className="fi" value={form.role} onChange={set("role")} disabled={isOwner}>
               {roleOpts.map(r => (
-                <option key={r} value={r}>{ROLE_LABELS[r] || r}</option>
+                <option key={r} value={r}>{roleLabel(r)}</option>
               ))}
             </select>
           </FG>

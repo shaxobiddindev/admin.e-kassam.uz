@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
-import { fmtDate, SHOP_STATUS, ROLE_LABELS, ROLE_OPTIONS } from "../utils";
+import { fmtDate, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, shopStatus, roleLabel } from "../utils";
 import Modal from "../components/Modal";
 import { Loader, Empty, Search, FG, Badge, Avatar } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
@@ -110,7 +110,7 @@ export default function ShopsPage({ toast }) {
               </thead>
               <tbody>
                 {filtered.length > 0 ? filtered.map((shop) => {
-                  const st = SHOP_STATUS[shop.status] || { label: shop.status, color:"gray" };
+                  const st = { ...shopStatus(shop.status), color: SHOP_STATUS[shop.status]?.color || "gray" };
                   const isDeleted = shop.status === "DELETED";
                   return (
                     <tr key={shop.id} style={{ opacity: isDeleted ? 0.5 : 1 }}>
@@ -269,7 +269,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
 }
 
 // ── Do'konni tahrirlash ───────────────────────────────────────
-const STATUS_OPTIONS = ["ACTIVE", "BLOCKED", "SUSPENDED"];
+// ShopStatus enum'idagi barcha qiymatlar (utils dan keladi)
 
 function EditShopModal({ shop, onClose, onSaved, toast }) {
   const [form, setForm] = useState({ name: shop.name||"", phone: shop.phone||"+998 ", address: shop.address||"", status: shop.status||"ACTIVE" });
@@ -326,7 +326,7 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
       </div>
       <FG label="Status">
         <select className="fi" value={form.status} onChange={set("status")}>
-          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{SHOP_STATUS[s]?.label || s}</option>)}
+          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{shopStatus(s).label}</option>)}
         </select>
       </FG>
     </Modal>
@@ -451,7 +451,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
           </div>
           <FG label="Rol *">
             <select className="fi" value={form.role} onChange={set("role")}>
-              {availableRoles.map(r => <option key={r} value={r}>{ROLE_LABELS[r]||r}</option>)}
+              {availableRoles.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
             </select>
           </FG>
         </div>

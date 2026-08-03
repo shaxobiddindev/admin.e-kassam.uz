@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LOGO_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
+import { LOGO_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 import { useConfirm } from "../context/ConfirmProvider";
 import { getTheme, toggleTheme } from "../lib/ek-theme";
 
@@ -43,7 +43,7 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
     <aside className={`sb ${open ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}>
       <div className="sb-brand">
         <div className="sb-logo-wrap">
-          <img src={isCollapsed ? "/favicon.png" : LOGO_URL} alt="e-Kassam"
+          <img src={isCollapsed ? MARK_URL : LOGO_URL} alt="e-Kassam"
             style={{ width:"100%", height:"100%", objectFit:"contain" }}
             onError={(e) => {
               e.target.style.display = "none";

@@ -1,6 +1,23 @@
 import { useEffect, useState } from "react";
 import { saleApi } from "../api";
-import { money, fmtDateTime, SALE_STATUS, PAYMENT_LABELS } from "../utils";
+import { money, fmtDateTime, paymentEntry, saleStatus } from "../utils";
+
+/* To'lov turi yorlig'i — yagona lug'atdan (src/lib/ek-labels.js).
+   ⚠ Ilgari bu sahifa `PAYMENT_LABELS` ni `../utils` dan import qilardi, lekin
+   u yerda bunday eksport YO'Q edi: qiymat `undefined` bo'lib, birinchi sotuv
+   satrida sahifa yiqilardi. */
+function PayLabel({ type }) {
+  const p = paymentEntry(type);
+  return <><i className={`fa-solid ${p.icon || "fa-wallet"}`} style={{ color: p.color }} aria-hidden="true" /> {p.label}</>;
+}
+
+/* Sotuv holati — lug'atdagi `tone` Badge rang nomiga o'giriladi. */
+const TONE_COLOR = { success: "green", danger: "red", warning: "yellow", info: "blue", neutral: "gray" };
+const statusBadge = (v) => {
+  const e = saleStatus(v);
+  return { label: e.label, color: TONE_COLOR[e.tone] || "gray" };
+};
+
 import Modal from "../components/Modal";
 import { Loader, Empty, Search, Badge, II, StatCard, confirmOk } from "../components/ui";
 
@@ -105,14 +122,14 @@ export default function SalesPage({ toast }) {
               </thead>
               <tbody>
                 {filtered.length > 0 ? filtered.map((sale) => {
-                  const st = SALE_STATUS[sale.status] || { label: sale.status, color: "gray" };
+                  const st = statusBadge(sale.status);
                   return (
                     <tr key={sale.id}>
                       <td className="mono fw8 c-dim">#{sale.id}</td>
                       <td className="fw7">{sale.cashierName || "—"}</td>
                       <td>{sale.customerName || <span className="c-dim">—</span>}</td>
                       <td className="mono fw8 c-blue">{money(sale.totalAmount)}</td>
-                      <td style={{ fontSize: 13 }}>{PAYMENT_LABELS[sale.paymentType] || sale.paymentType}</td>
+                      <td style={{ fontSize: 13 }}><PayLabel type={sale.paymentType} /></td>
                       <td><Badge color={st.color}>{st.label}</Badge></td>
                       <td className="c-dim" style={{ fontSize: 12 }}>{fmtDateTime(sale.createdAt)}</td>
                       <td>
@@ -171,8 +188,8 @@ export default function SalesPage({ toast }) {
           <div className="ig">
             <II label="Kassir"   value={detail.cashierName} />
             <II label="Mijoz"    value={detail.customerName || "—"} />
-            <II label="To'lov"   value={PAYMENT_LABELS[detail.paymentType] || detail.paymentType} />
-            <II label="Status"   value={<Badge color={SALE_STATUS[detail.status]?.color}>{SALE_STATUS[detail.status]?.label}</Badge>} />
+            <II label="To'lov"   value={<PayLabel type={detail.paymentType} />} />
+            <II label="Status"   value={<Badge color={statusBadge(detail.status).color}>{statusBadge(detail.status).label}</Badge>} />
             <II label="Sana"     value={fmtDateTime(detail.createdAt)} />
             <II label="Jami"     value={<span className="mono fw8 c-blue">{money(detail.totalAmount)}</span>} />
           </div>

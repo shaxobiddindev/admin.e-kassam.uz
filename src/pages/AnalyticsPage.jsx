@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { reportApi } from "../api";
-import { money, fmtDate, PAYMENT_LABELS } from "../utils";
+import { money, fmtDate, paymentEntry } from "../utils";
+
+/* To'lov turi yorlig'i — yagona lug'atdan (src/lib/ek-labels.js).
+   ⚠ Ilgari bu sahifa `PAYMENT_LABELS` ni `../utils` dan import qilardi, lekin
+   u yerda bunday eksport YO'Q edi: qiymat `undefined` bo'lib, birinchi sotuv
+   satrida sahifa yiqilardi. */
+function PayLabel({ type }) {
+  const p = paymentEntry(type);
+  return <><i className={`fa-solid ${p.icon || "fa-wallet"}`} style={{ color: p.color }} aria-hidden="true" /> {p.label}</>;
+}
+
 import { Loader, Empty, StatCard, Badge } from "../components/ui";
 
 const PERIOD_TABS = [
@@ -117,7 +127,7 @@ export default function AnalyticsPage({ toast }) {
                         }}
                       >
                         <span className="fw7" style={{ fontSize: 14 }}>
-                          {PAYMENT_LABELS[p.paymentType] || p.paymentType}
+                          <PayLabel type={p.paymentType} />
                         </span>
                         <div style={{ textAlign: "right" }}>
                           <div className="mono fw8 c-blue">{money(p.amount)}</div>

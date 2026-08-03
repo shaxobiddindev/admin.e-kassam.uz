@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authApi } from "../api";
 import { LOGO_URL } from "../utils";
+import { Spinner } from "../components/ek/Loading";
 
 export default function LoginPage({ onLogin, toast }) {
   const [form, setForm]     = useState({ username: "", password: "" });
@@ -113,7 +114,7 @@ export default function LoginPage({ onLogin, toast }) {
 
           <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
             {loading
-              ? <><i className="fa-solid fa-spinner fa-spin" /> Kirish...</>
+              ? <><Spinner /> Kirish...</>
               : <><i className="fa-solid fa-right-to-bracket" /> Kirish</>}
           </button>
         </form>

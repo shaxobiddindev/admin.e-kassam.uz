@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { customerApi } from "../api";
 import { fmtDate } from "../utils";
 import Modal from "../components/Modal";
-import { Loader, Empty, Search, FG, Avatar } from "../components/ui";
+import { Empty, Search, FG, Avatar } from "../components/ui";
+import { SkeletonTable, Spinner } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
 
 export default function CustomersPage({ toast }) {
   const [customers, setCustomers] = useState([]);
   const [loading,   setLoading]   = useState(true);
+  // Tez javobda skeleton umuman chizilmaydi; chizilsa kamida 400ms turadi.
+  const busy = useLoading(loading);
   const [search,    setSearch]    = useState("");
   const [editC,     setEditC]     = useState(null);
 
@@ -37,7 +41,7 @@ export default function CustomersPage({ toast }) {
           </div>
         </div>
         <div className="tw">
-          {loading ? <Loader /> : (
+          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "num", "narrow"]} /> : (
             <table>
               <thead>
                 <tr>
@@ -116,7 +120,7 @@ function EditCustomerModal({ customer, onClose, onSaved, toast }) {
       <>
         <button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Saqlanmoqda...</>
+          {saving ? <><Spinner /> Saqlanmoqda...</>
                   : <><i className="fa-solid fa-check" /> Saqlash</>}
         </button>
       </>

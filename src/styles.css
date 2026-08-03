@@ -3,6 +3,8 @@
 @import url('./styles/ekassam-tokens.css');
 @import url('./styles/ek-motion.css');
 @import url('./styles/ek-components.css');
+@import url('./styles/ek-loading.css');
+@import url('./styles/ek-select.css');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -109,9 +111,14 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
    Logotip temaga qarab almashadi — so'z belgisi to'q siyoh rangida bo'lgani
    uchun qorong'i fonda ko'rinmay qolardi. */
 .sb-logo-wrap { width: calc(var(--sw) - 32px); height: 48px; display: flex; align-items: center; justify-content: center; }
-.logo--dark { display: none; }
-[data-theme="dark"] .logo--light { display: none; }
-[data-theme="dark"] .logo--dark  { display: block; }
+/* Logotip temaga qarab almashadi.
+   ⚠ Selektor ATAYLAB `img.logo--*`: yon menyudagi `.sb-logo img` qoidasi
+   `display: block` beradi va bir xil aniqlikda (0,1,1) bo'lgani uchun oddiy
+   `.logo--dark` uni yenga olmaydi — natijada IKKALA logotip ham ko'rinib
+   qolgan edi. Konteyner sinfi bilan aniqlik oshiriladi. */
+.sb-logo-wrap img.logo--dark { display: none; }
+[data-theme="dark"] .sb-logo-wrap img.logo--light { display: none; }
+[data-theme="dark"] .sb-logo-wrap img.logo--dark  { display: block; }
 .sb-logo-wrap img { max-width: 100%; height: 34px; width: auto; object-fit: contain; display: block; }
 .sb-logo-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg,var(--blue),var(--ek-blue-400)); border-radius: 10px; font-size: 22px; color: var(--fg-on-brand); }
 .sb-logo-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--blue), var(--ek-blue-400)); border-radius: 9px; font-size: 22px; color: var(--fg-on-brand); }

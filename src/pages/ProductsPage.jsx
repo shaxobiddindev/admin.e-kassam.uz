@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { productApi } from "../api";
 import { money } from "../utils";
-import { Loader, Empty, Search, Badge } from "../components/ui";
+import { Empty, Search, Badge } from "../components/ui";
+import { SkeletonTable } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
 
 export default function ProductsPage({ toast }) {
   const [products, setProducts]   = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]     = useState(true);
+  const busy = useLoading(loading);
   const [search, setSearch]       = useState("");
   const [catFilter, setCatFilter] = useState("ALL");
 
@@ -65,7 +68,7 @@ export default function ProductsPage({ toast }) {
         </div>
 
         <div className="tw">
-          {loading ? <Loader /> : (
+          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "num", "num", "narrow"]} /> : (
             <table>
               <thead>
                 <tr>

@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
 import { ROLE_LABELS, roleEntry, roleLabel } from "../utils";
 import Modal from "../components/Modal";
-import { Loader, Empty, Search, FG, Badge, Avatar } from "../components/ui";
+import { Empty, Search, FG, Badge, Avatar } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
+import Select from "../components/ek/Select";
+import { SkeletonList, Spinner } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
 
 export default function UsersPage({ toast }) {
   const confirm = useConfirm();
@@ -11,6 +14,8 @@ export default function UsersPage({ toast }) {
   const [users,        setUsers]        = useState([]);
   const [selShop,      setSelShop]      = useState(null);
   const [loading,      setLoading]      = useState(false);
+  // Tez javobda skeleton umuman chizilmaydi; chizilsa kamida 400ms turadi.
+  const busy = useLoading(loading);
   const [shopsLoading, setShopsLoading] = useState(true);
   const [search,       setSearch]       = useState("");
   const [addOpen,      setAddOpen]      = useState(false);
@@ -73,7 +78,7 @@ export default function UsersPage({ toast }) {
               <i className="fa-solid fa-store" /> Do'konlar
             </span>
           </div>
-          {shopsLoading ? <Loader /> : shops.length === 0
+          {shopsLoading ? <SkeletonList rows={3} avatar={false} /> : shops.length === 0
             ? <Empty icon="fa-store" text="Do'kon yo'q" />
             : (
               <div style={{ padding:"4px 0" }}>
@@ -126,7 +131,7 @@ export default function UsersPage({ toast }) {
               </div>
             )}
 
-            {loading ? <Loader /> : (
+            {busy ? <SkeletonList rows={6} /> : (
               <div className="tw">
                 <table>
                   <thead>
@@ -249,7 +254,7 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
       <>
         <button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Qo'shilmoqda...</>
+          {saving ? <><Spinner /> Qo'shilmoqda...</>
                   : <><i className="fa-solid fa-user-plus" /> Qo'shish</>}
         </button>
       </>
@@ -275,11 +280,12 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
         </FG>
       </div>
       <FG label="Rol *">
-        <select className="fi" value={form.role} onChange={set("role")} disabled={!hasOwner}>
-          {roleOpts.map(r => (
-            <option key={r} value={r}>{roleLabel(r)}</option>
-          ))}
-        </select>
+        <Select
+          block variant="field" ariaLabel="Xodim roli" disabled={!hasOwner}
+          value={form.role}
+          onChange={(v) => set("role")({ target: { value: v } })}
+          options={roleOpts.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
+        />
       </FG>
     </Modal>
   );
@@ -329,7 +335,7 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
         <button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
         <button className="btn btn-primary btn-sm"
           onClick={tab === "info" ? saveInfo : savePass} disabled={saving}>
-          {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Saqlanmoqda...</>
+          {saving ? <><Spinner /> Saqlanmoqda...</>
                   : <><i className="fa-solid fa-check" /> Saqlash</>}
         </button>
       </>
@@ -349,11 +355,12 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
             <input className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
           </FG>
           <FG label="Rol" hint={isOwner ? "Owner rolini o'zgartirish mumkin emas" : ""}>
-            <select className="fi" value={form.role} onChange={set("role")} disabled={isOwner}>
-              {roleOpts.map(r => (
-                <option key={r} value={r}>{roleLabel(r)}</option>
-              ))}
-            </select>
+            <Select
+              block variant="field" ariaLabel="Xodim roli" disabled={isOwner}
+              value={form.role}
+              onChange={(v) => set("role")({ target: { value: v } })}
+              options={roleOpts.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
+            />
           </FG>
         </>
       ) : (

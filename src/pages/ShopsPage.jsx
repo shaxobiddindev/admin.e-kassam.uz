@@ -2,13 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
 import { fmtDate, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, shopStatus, roleLabel } from "../utils";
 import Modal from "../components/Modal";
-import { Loader, Empty, Search, FG, Badge, Avatar } from "../components/ui";
+import { Empty, Search, FG, Badge, Avatar } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
+import Select from "../components/ek/Select";
+import { SkeletonTable, Spinner } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
+import { SkeletonList } from "../components/ek/Loading";
 
 export default function ShopsPage({ toast }) {
   const confirm = useConfirm();
   const [shops,   setShops]   = useState([]);
   const [loading, setLoading] = useState(true);
+  // Ekranda ko'rsatiladigan holat: tez javobda skeleton UMUMAN chizilmaydi
+  // (180ms kechikish), chizilgan bo'lsa esa kamida 400ms turadi — miltillamaydi.
+  const busy = useLoading(loading);
   const [search,  setSearch]  = useState("");
   const [filter,  setFilter]  = useState("ALL");
   const [modal,   setModal]   = useState(null);
@@ -103,7 +110,7 @@ export default function ShopsPage({ toast }) {
         </div>
 
         <div className="tw">
-          {loading ? <Loader /> : (
+          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "text", "text", "text"]} /> : (
             <table>
               <thead>
                 <tr><th>Do'kon</th><th>Kod</th><th>Turi</th><th>Egasi</th><th>Telefon</th><th>Manzil</th><th>Status</th><th>Yaratilgan</th><th></th></tr>
@@ -239,7 +246,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
     <Modal title="Yangi do'kon yaratish" onClose={onClose} footer={
       <><button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Yaratilmoqda...</> : <><i className="fa-solid fa-plus" /> Yaratish</>}
+          {saving ? <><Spinner /> Yaratilmoqda...</> : <><i className="fa-solid fa-plus" /> Yaratish</>}
         </button></>
     }>
       <FG label="Do'kon nomi *">
@@ -257,12 +264,16 @@ function AddShopModal({ onClose, onSaved, toast }) {
         </FG>
       </div>
       <FG label="Parent do'kon (Filial bo'lsa)" hint="Agar bu do'kon boshqa do'konning filiali bo'lsa tanlang">
-        <select className="fi" value={form.parentShopId} onChange={set("parentShopId")}>
-          <option value="">— Mustaqil asosiy do'kon —</option>
-          {shops.filter(s => !s.parentShopId && s.status === "ACTIVE").map(s => (
-            <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-          ))}
-        </select>
+        <Select
+          block variant="field" ariaLabel="Parent do'kon"
+          value={form.parentShopId ? String(form.parentShopId) : ""}
+          onChange={(v) => set("parentShopId")({ target: { value: v } })}
+          options={[
+            { value: "", label: "Mustaqil asosiy do'kon", icon: "fa-store" },
+            ...shops.filter(s => !s.parentShopId && s.status === "ACTIVE")
+                    .map(s => ({ value: String(s.id), label: `${s.name} (${s.code})`, icon: "fa-code-branch" })),
+          ]}
+        />
       </FG>
     </Modal>
   );
@@ -306,7 +317,7 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
     <Modal title={`Tahrirlash — ${shop.name}`} onClose={onClose} footer={
       <><button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Saqlanmoqda...</> : <><i className="fa-solid fa-check" /> Saqlash</>}
+          {saving ? <><Spinner /> Saqlanmoqda...</> : <><i className="fa-solid fa-check" /> Saqlash</>}
         </button></>
     }>
       <FG label="Do'kon nomi">
@@ -325,9 +336,12 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
         </FG>
       </div>
       <FG label="Status">
-        <select className="fi" value={form.status} onChange={set("status")}>
-          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{shopStatus(s).label}</option>)}
-        </select>
+        <Select
+          block variant="field" ariaLabel="Do'kon holati"
+          value={form.status}
+          onChange={(v) => set("status")({ target: { value: v } })}
+          options={STATUS_OPTIONS.map(k => ({ value: k, label: shopStatus(k).label, icon: SHOP_STATUS[k]?.icon }))}
+        />
       </FG>
     </Modal>
   );
@@ -426,7 +440,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
             <i className="fa-solid fa-arrow-left" /> Orqaga
           </button>
           <button className="btn btn-primary btn-sm" onClick={isAdd ? handleAdd : handleEdit} disabled={saving}>
-            {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Saqlanmoqda...</> : <><i className="fa-solid fa-check" /> {isAdd?"Qo'shish":"Saqlash"}</>}
+            {saving ? <><Spinner /> Saqlanmoqda...</> : <><i className="fa-solid fa-check" /> {isAdd?"Qo'shish":"Saqlash"}</>}
           </button></>
       )
     }>
@@ -450,9 +464,12 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
             </FG>
           </div>
           <FG label="Rol *">
-            <select className="fi" value={form.role} onChange={set("role")}>
-              {availableRoles.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-            </select>
+            <Select
+              block variant="field" ariaLabel="Xodim roli"
+              value={form.role}
+              onChange={(v) => set("role")({ target: { value: v } })}
+              options={availableRoles.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
+            />
           </FG>
         </div>
       )}
@@ -473,7 +490,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
       )}
 
       {isList && (
-        loading ? <Loader /> : users.length === 0 ? (
+        loading ? <SkeletonList rows={4} /> : users.length === 0 ? (
           <Empty icon="fa-users" title="Xodim yo'q" subtitle="Owner qo'shishdan boshlang" />
         ) : (
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>

@@ -19,11 +19,14 @@ const statusBadge = (v) => {
 };
 
 import Modal from "../components/Modal";
-import { Loader, Empty, Search, Badge, II, StatCard, confirmOk } from "../components/ui";
+import { Empty, Search, Badge, II, StatCard, confirmOk } from "../components/ui";
+import { SkeletonTable } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
 
 export default function SalesPage({ toast }) {
   const [sales, setSales]       = useState([]);
   const [loading, setLoading]   = useState(true);
+  const busy = useLoading(loading);
   const [search, setSearch]     = useState("");
   const [filter, setFilter]     = useState("ALL");
   const [detail, setDetail]     = useState(null);
@@ -106,7 +109,7 @@ export default function SalesPage({ toast }) {
         </div>
 
         <div className="tw">
-          {loading ? <Loader /> : (
+          {busy ? <SkeletonTable rows={7} cols={["narrow", "text", "text", "num", "text", "text", "text"]} /> : (
             <table>
               <thead>
                 <tr>
@@ -144,7 +147,7 @@ export default function SalesPage({ toast }) {
                               onClick={() => handleCancel(sale)}
                               disabled={cancelling === sale.id}
                             >
-                              <i className={`fa-solid ${cancelling === sale.id ? "fa-spinner fa-spin" : "fa-ban"}`} />
+                              {cancelling === sale.id ? <Spinner small /> : <i className="fa-solid fa-ban" />}
                             </button>
                           )}
                         </div>
@@ -174,7 +177,7 @@ export default function SalesPage({ toast }) {
                   onClick={() => handleCancel(detail)}
                   disabled={cancelling === detail.id}
                 >
-                  <i className={`fa-solid ${cancelling === detail.id ? "fa-spinner fa-spin" : "fa-ban"}`} />
+                  {cancelling === detail.id ? <Spinner small /> : <i className="fa-solid fa-ban" />}
                   Bekor qilish
                 </button>
               )}

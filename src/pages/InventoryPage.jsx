@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { inventoryApi } from "../api";
-import { Loader, Empty, Search, Badge } from "../components/ui";
+import { Empty, Search, Badge } from "../components/ui";
+import { SkeletonTable } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
 
 export default function InventoryPage({ toast }) {
   const [items, setItems]     = useState([]);
   const [loading, setLoading] = useState(true);
+  const busy = useLoading(loading);
   const [search, setSearch]   = useState("");
   const [filter, setFilter]   = useState("ALL"); // ALL | LOW | OK
 
@@ -61,7 +64,7 @@ export default function InventoryPage({ toast }) {
         </div>
 
         <div className="tw">
-          {loading ? <Loader /> : (
+          {busy ? <SkeletonTable rows={7} cols={["wide", "num", "num", "text"]} /> : (
             <table>
               <thead>
                 <tr>

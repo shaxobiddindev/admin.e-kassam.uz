@@ -11,7 +11,9 @@ function PayLabel({ type }) {
   return <><i className={`fa-solid ${p.icon || "fa-wallet"}`} style={{ color: p.color }} aria-hidden="true" /> {p.label}</>;
 }
 
-import { Loader, Empty, StatCard, Badge } from "../components/ui";
+import { Empty, StatCard, Badge } from "../components/ui";
+import { SkeletonCards, Spinner } from "../components/ek/Loading";
+import { useLoading } from "../lib/use-loading";
 
 const PERIOD_TABS = [
   { k: "daily",   l: "Bugun"      },
@@ -35,6 +37,8 @@ export default function AnalyticsPage({ toast }) {
   const [to, setTo]         = useState(today);
   const [data, setData]     = useState(null);
   const [loading, setLoading] = useState(false);
+  // Tez javobda skeleton umuman chizilmaydi; chizilsa kamida 400ms turadi.
+  const busy = useLoading(loading);
 
   const fetchData = async (p = period) => {
     setLoading(true);
@@ -84,7 +88,7 @@ export default function AnalyticsPage({ toast }) {
                 <input className="fi" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
               </div>
               <button className="btn btn-primary" onClick={() => fetchData("custom")} disabled={loading}>
-                <i className={`fa-solid ${loading ? "fa-spinner fa-spin" : "fa-search"}`} />
+                {loading ? <Spinner /> : <i className="fa-solid fa-search" />}
                 Hisobot olish
               </button>
             </>
@@ -92,7 +96,7 @@ export default function AnalyticsPage({ toast }) {
         </div>
       </div>
 
-      {loading ? <Loader /> : data ? (
+      {busy ? <SkeletonCards count={4} className="stats" /> : data ? (
         <>
           {/* Stat kartochkalar */}
           <div className="stats">

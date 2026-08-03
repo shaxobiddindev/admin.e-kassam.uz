@@ -1,6 +1,23 @@
 import { useState, useEffect } from "react";
 import { LOGO_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 import { useConfirm } from "../context/ConfirmProvider";
+import { getTheme, toggleTheme } from "../lib/ek-theme";
+
+/** Qorong'i rejim almashtirgichi — yon menyuda, ko'rinadigan joyda. */
+function ThemeToggle({ collapsed }) {
+  const [theme, setTheme] = useState(getTheme);
+  const dark = theme === "dark";
+  return (
+    <div className="sb-item" role="button" tabIndex={0}
+      aria-pressed={dark}
+      onClick={() => setTheme(toggleTheme())}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTheme(toggleTheme()); } }}
+      title={collapsed ? (dark ? "Yorug' rejim" : "Qorong'i rejim") : ""}>
+      <i className={`fa-solid ${dark ? "fa-sun" : "fa-moon"}`} aria-hidden="true" />
+      <span>{dark ? "Yorug' rejim" : "Qorong'i rejim"}</span>
+    </div>
+  );
+}
 
 const NAV = [
   { sec: "Asosiy", items: [
@@ -61,6 +78,7 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
 
       {/* Footer — CSS da sb-foot */}
       <div className="sb-foot">
+        <ThemeToggle collapsed={isCollapsed} />
         <div className="sb-user" onClick={onLogout} title={isCollapsed ? "Chiqish" : ""}>
           <div className="av" style={{ width: isCollapsed ? 28 : 34, height: isCollapsed ? 28 : 34, borderRadius:9, fontSize:13 }}>
             {initials(user?.fullName || user?.username)}
@@ -104,8 +122,8 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
     <div className={`app ${isCollapsed ? "collapsed" : ""}`}>
       {/* Overlay — mobil va sidebar ochiq bo'lganda */}
       {open && (
-        <div onClick={() => setOpen(false)}
-          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:200 }} />
+        <div className="ek-overlay" onClick={() => setOpen(false)}
+          style={{ position:"fixed", inset:0, background:"var(--scrim)", zIndex:200 }} />
       )}
 
       <Sidebar 
@@ -128,13 +146,16 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
             <span style={{ fontWeight:900, fontSize:16 }}>{title.label}</span>
           </div>
 
-          <div style={{ marginLeft:"auto", background:"var(--blue-l)", color:"var(--blue-d)", fontSize:11, fontWeight:800, padding:"4px 11px", borderRadius:20 }}>
-            <i className="fa-solid fa-shield-halved" style={{ marginRight:5 }} />
+          {/* 07-ADMIN.md — superadmin bo'limi qizil urg'u oladi: foydalanuvchi
+              qayerda ekanini adashtirmasin. */}
+          <div className="tb-badge" style={{ marginLeft:"auto" }}>
+            <i className="fa-solid fa-shield-halved" style={{ marginRight:5 }} aria-hidden="true" />
             SUPERADMIN
           </div>
         </div>
 
-        <div className="page">{children}</div>
+        {/* Sahifa o'tishi — faqat opacity, 140ms */}
+        <div className="page ek-page-in" key={page}>{children}</div>
       </div>
     </div>
   );

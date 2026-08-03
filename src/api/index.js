@@ -11,8 +11,10 @@ async function tryRefreshToken() {
       const refresh = localStorage.getItem("ek_refresh");
       if (!refresh || refresh === "null" || refresh === "undefined") return false;
 
+      // `credentials: include` — refresh token httpOnly cookie'da keladi (05-AUTH.md)
       const res = await fetch(`${API}/auth/admin/refresh`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           "Accept":       "application/json",
@@ -51,6 +53,7 @@ async function req(path, options = {}, _retry = false) {
 
   const res = await fetch(`${API}${path}`, {
     ...rest,
+    credentials: "include",
     headers: {
       "Content-Type":    "application/json",
       "Accept-Language": "uz",

@@ -37,13 +37,19 @@
   --text3:     var(--fg-tertiary);
 
   /* Yon menyu — SUPERADMIN paneli. 07-ADMIN.md: bu bo'lim boshqa rang urg'usi
-     oladi (qizil), foydalanuvchi qayerda ekanini adashtirmasin. */
-  --sb:        var(--ek-ink-950);
-  --sb-border: rgba(255,255,255,.05);
-  --sb-hover:  rgba(255,255,255,.06);
+     oladi (qizil), foydalanuvchi qayerda ekanini adashtirmasin.
+     ⚠ Fon endi TEMAGA bo'ysunadi. Ilgari u ikkala rejimda ham `ink-950` edi:
+     yorug' rejimda ekranning chap chorak qismi qora bo'lib turardi.
+     Qizil urg'u faqat FAOL bandda qoladi — u temaga bog'liq emas. */
+  --sb:        var(--bg-surface);
+  --sb-border: var(--border-subtle);
+  --sb-hover:  var(--bg-sunken);
   --sb-active: var(--ek-red-600);
-  --sb-text:   rgba(255,255,255,.55);
-  --sb-dim:    rgba(255,255,255,.25);
+  --sb-text:   var(--fg-secondary);
+  --sb-dim:    var(--fg-tertiary);
+  /* ThemeSelect yon menyu ichida shu qiymatlarni oladi */
+  --sb-control-fg:     var(--fg-secondary);
+  --sb-control-border: var(--border-subtle);
 
   --radius: var(--r-lg);
   --sw:     258px;
@@ -57,7 +63,7 @@
   --s3:     var(--sh-lg);
 }
 
-[data-theme="dark"] { --sb: #060D17; }
+/* Yon menyu `--bg-surface` dan foydalanadi — tema uchun alohida tuzatish kerak emas. */
 
 body {
   font-family: var(--font-sans);
@@ -95,12 +101,18 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
 }
 .sb.collapsed { width: var(--sw-c); }
 .sb.collapsed .sb-brand { padding: 10px 10px; }
-.sb.collapsed .sb-logo-wrap { padding: 4px; border-radius: 8px; min-height: 40px; }
-.sb.collapsed .sb-logo-wrap img { width: 42px; height: 42px; object-fit: contain; }
+.sb.collapsed .sb-logo-wrap { width: auto; min-height: 40px; }
+.sb.collapsed .sb-logo-wrap img { width: 30px; height: 30px; object-fit: contain; }
 /* Brand */
 .sb-brand { padding: 16px; border-bottom: 1px solid var(--sb-border); display: flex; align-items: center; justify-content: center; }
-.sb-logo-wrap { width: calc(var(--sw) - 32px); height: 64px; background: #FFFFFF; border-radius: 14px; display: flex; align-items: center; justify-content: center; padding: 10px 16px; }
-.sb-logo-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* Oq plastinka olib tashlandi: yon menyu fonining o'zi endi to'g'ri.
+   Logotip temaga qarab almashadi — so'z belgisi to'q siyoh rangida bo'lgani
+   uchun qorong'i fonda ko'rinmay qolardi. */
+.sb-logo-wrap { width: calc(var(--sw) - 32px); height: 48px; display: flex; align-items: center; justify-content: center; }
+.logo--dark { display: none; }
+[data-theme="dark"] .logo--light { display: none; }
+[data-theme="dark"] .logo--dark  { display: block; }
+.sb-logo-wrap img { max-width: 100%; height: 34px; width: auto; object-fit: contain; display: block; }
 .sb-logo-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg,var(--blue),var(--ek-blue-400)); border-radius: 10px; font-size: 22px; color: var(--fg-on-brand); }
 .sb-logo-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--blue), var(--ek-blue-400)); border-radius: 9px; font-size: 22px; color: var(--fg-on-brand); }
 
@@ -108,10 +120,10 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
 .sb-nav     { flex: 1; overflow-y: auto; padding: 10px 10px; scrollbar-width: none; }
 .sb-nav::-webkit-scrollbar { display: none; }
 .sb-sec     { font-size: 9.5px; font-weight: 800; color: var(--sb-dim); text-transform: uppercase; letter-spacing: 1.3px; padding: 14px 10px 5px; }
-.sb-item    { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: var(--sb-text); cursor: pointer; transition: .15s; margin-bottom: 1px; position: relative; }
+.sb-item    { display: flex; align-items: center; gap: 10px; min-height: var(--hit-min); padding: 10px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: var(--sb-text); cursor: pointer; transition: .15s; margin-bottom: 1px; position: relative; }
 .sb-item i  { width: 17px; text-align: center; font-size: 13.5px; flex-shrink: 0; }
-.sb-item:hover  { background: var(--sb-hover); color: var(--fg-on-brand); text-decoration: none; }
-.sb-item.on     { background: var(--sb-active); color: var(--fg-on-brand); box-shadow: var(--sh-brand); }
+.sb-item:hover  { background: var(--sb-hover); color: var(--fg-primary); text-decoration: none; }
+.sb-item.on     { background: var(--sb-active); color: #FFFFFF; box-shadow: 0 4px 14px rgba(217, 45, 32, .34); }
 
 .sb.collapsed .sb-sec, 
 .sb.collapsed .sb-item span,
@@ -125,17 +137,17 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
   background: var(--blue); color: var(--fg-on-brand); border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 310; transition: .2s; font-size: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  box-shadow: var(--sh-sm);
 }
-.sb-toggle:hover { transform: scale(1.1); background: var(--blue-d); }
+.sb-toggle:hover { transform: scale(1.1); background: var(--bg-brand-hover); }
 .sb.collapsed .sb-toggle { right: -12px; }
 .sb-dot         { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
 
 /* User */
-.sb-foot    { padding: 8px 10px; border-top: 1px solid var(--sb-border); }
+.sb-foot    { padding: 8px 10px; border-top: 1px solid var(--sb-border); display: grid; gap: 4px; }
 .sb-user    { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; cursor: pointer; transition: .15s; }
 .sb-user:hover { background: var(--sb-hover); }
-.sb-u-name  { font-size: 13px; font-weight: 700; color: var(--fg-on-brand); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-u-name  { font-size: 13px; font-weight: 600; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-u-role  { font-size: 10.5px; color: var(--sb-dim); margin-top: 1px; }
 
 /* ════ TOPBAR ════════════════════════════════════════════════ */
@@ -351,7 +363,6 @@ textarea.fi { resize: vertical; min-height: 80px; }
   color: var(--fg-on-brand);
   letter-spacing: .04em;
 }
-.sb-item.on { box-shadow: 0 4px 14px rgba(217, 45, 32, .34); }
 
 /* Jadval standarti, KPI va "E'tibor talab qiladi" uslublari endi
    packages/ui/ek-components.css da — ikkala panel ham shu manbadan oladi. */

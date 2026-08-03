@@ -1,23 +1,7 @@
 import { useState, useEffect } from "react";
-import { LOGO_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
+import { LOGO_URL, LOGO_DARK_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 import { useConfirm } from "../context/ConfirmProvider";
-import { getTheme, toggleTheme } from "../lib/ek-theme";
-
-/** Qorong'i rejim almashtirgichi — yon menyuda, ko'rinadigan joyda. */
-function ThemeToggle({ collapsed }) {
-  const [theme, setTheme] = useState(getTheme);
-  const dark = theme === "dark";
-  return (
-    <div className="sb-item" role="button" tabIndex={0}
-      aria-pressed={dark}
-      onClick={() => setTheme(toggleTheme())}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTheme(toggleTheme()); } }}
-      title={collapsed ? (dark ? "Yorug' rejim" : "Qorong'i rejim") : ""}>
-      <i className={`fa-solid ${dark ? "fa-sun" : "fa-moon"}`} aria-hidden="true" />
-      <span>{dark ? "Yorug' rejim" : "Qorong'i rejim"}</span>
-    </div>
-  );
-}
+import ThemeSelect from "./ek/ThemeSelect";
 
 const NAV = [
   { sec: "Asosiy", items: [
@@ -43,15 +27,14 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
     <aside className={`sb ${open ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}>
       <div className="sb-brand">
         <div className="sb-logo-wrap">
-          <img src={isCollapsed ? MARK_URL : LOGO_URL} alt="e-Kassam"
-            style={{ width:"100%", height:"100%", objectFit:"contain" }}
-            onError={(e) => {
-              e.target.style.display = "none";
-              e.target.nextSibling.style.display = "flex";
-            }} />
-          <div className="sb-logo-fallback">
-            <i className="fa-solid fa-shield-halved" />
-          </div>
+          {isCollapsed ? (
+            <img src={MARK_URL} alt="e-Kassam" />
+          ) : (
+            <>
+              <img className="logo--light" src={LOGO_URL} alt="e-Kassam" />
+              <img className="logo--dark" src={LOGO_DARK_URL} alt="" aria-hidden="true" />
+            </>
+          )}
         </div>
       </div>
 
@@ -78,7 +61,7 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
 
       {/* Footer — CSS da sb-foot */}
       <div className="sb-foot">
-        <ThemeToggle collapsed={isCollapsed} />
+        <ThemeSelect compact={isCollapsed} />
         <div className="sb-user" onClick={onLogout} title={isCollapsed ? "Chiqish" : ""}>
           <div className="av" style={{ width: isCollapsed ? 28 : 34, height: isCollapsed ? 28 : 34, borderRadius:9, fontSize:13 }}>
             {initials(user?.fullName || user?.username)}

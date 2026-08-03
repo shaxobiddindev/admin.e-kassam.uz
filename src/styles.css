@@ -103,14 +103,15 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
 }
 .sb.collapsed { width: var(--sw-c); }
 .sb.collapsed .sb-brand { padding: 10px 10px; }
-.sb.collapsed .sb-logo-wrap { width: auto; min-height: 40px; }
-.sb.collapsed .sb-logo-wrap img { width: 30px; height: 30px; object-fit: contain; }
+.sb.collapsed .sb-brand { padding: 12px 8px; }
+.sb.collapsed .sb-logo-wrap { width: auto; }
+.sb.collapsed .sb-logo-wrap img { width: 42px; height: 42px; object-fit: contain; }
 /* Brand */
-.sb-brand { padding: 16px; border-bottom: 1px solid var(--sb-border); display: flex; align-items: center; justify-content: center; }
+.sb-brand { padding: 14px 12px; border-bottom: 1px solid var(--sb-border); display: flex; align-items: center; justify-content: center; }
 /* Oq plastinka olib tashlandi: yon menyu fonining o'zi endi to'g'ri.
    Logotip temaga qarab almashadi — so'z belgisi to'q siyoh rangida bo'lgani
    uchun qorong'i fonda ko'rinmay qolardi. */
-.sb-logo-wrap { width: calc(var(--sw) - 32px); height: 48px; display: flex; align-items: center; justify-content: center; }
+.sb-logo-wrap { width: 100%; display: flex; align-items: center; justify-content: center; }
 /* Logotip temaga qarab almashadi.
    ⚠ Selektor ATAYLAB `img.logo--*`: yon menyudagi `.sb-logo img` qoidasi
    `display: block` beradi va bir xil aniqlikda (0,1,1) bo'lgani uchun oddiy
@@ -119,7 +120,8 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
 .sb-logo-wrap img.logo--dark { display: none; }
 [data-theme="dark"] .sb-logo-wrap img.logo--light { display: none; }
 [data-theme="dark"] .sb-logo-wrap img.logo--dark  { display: block; }
-.sb-logo-wrap img { max-width: 100%; height: 34px; width: auto; object-fit: contain; display: block; }
+/* Kenglik bo'yicha — lockup nisbati 3.95:1, balandlik o'z-o'zidan chiqadi */
+.sb-logo-wrap img { width: 100%; max-width: 100%; height: auto; object-fit: contain; display: block; }
 .sb-logo-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg,var(--blue),var(--ek-blue-400)); border-radius: 10px; font-size: 22px; color: var(--fg-on-brand); }
 .sb-logo-fallback { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--blue), var(--ek-blue-400)); border-radius: 9px; font-size: 22px; color: var(--fg-on-brand); }
 

@@ -19,12 +19,27 @@ export {
   roleEntry, roleLabel, adminRole, inventoryState, rolesLabel,
 } from "../lib/ek-labels";
 
+// ── Til ────────────────────────────────────────────────────────
+export { t, useT, getLang, setLang, withLang, LANGS } from "../lib/ek-i18n";
+
 /** tone → Badge rang nomi */
 const TONE_COLOR = { success: "green", danger: "red", warning: "yellow", info: "blue", neutral: "gray" };
 
+/**
+ * Lug'atga Badge rangini qo'shadi.
+ *
+ * ⚠ `{ ...v }` ISHLATILMAYDI. `ek-labels.js` dagi `label` — getter va spread
+ * uni O'SHA ONDA qiymatga aylantirib qotirib qo'yardi: til almashtirilganda
+ * yorliq eski tilda qolardi. Shuning uchun prototip sifatida asl yozuv
+ * qoldiriladi va faqat `color` ustiga qo'yiladi — `label`/`short` getterlari
+ * prototipdan o'qiladi va har doim joriy tilni beradi.
+ */
 const withColor = (dict) =>
   Object.fromEntries(
-    Object.entries(dict).map(([k, v]) => [k, { ...v, color: TONE_COLOR[v.tone] || "gray" }])
+    Object.entries(dict).map(([k, v]) => [
+      k,
+      Object.create(v, { color: { value: TONE_COLOR[v.tone] || "gray", enumerable: true } }),
+    ])
   );
 
 /** ShopStatus — ACTIVE, BLOCKED, SUSPENDED, INACTIVE (+ DELETED) */
@@ -33,10 +48,8 @@ export const SHOP_STATUS = withColor(STATUS_DICT);
 /** ShopPlan — FREE, BASIC, PREMIUM */
 export const SHOP_PLAN = withColor(PLAN_DICT);
 
-/** Do'kon xodimi rollari — faqat matn kerak */
-export const ROLE_LABELS = Object.fromEntries(
-  Object.entries(ROLE_DICT).map(([k, v]) => [k, v.short || v.label])
-);
+/** Do'kon xodimi rollari — faqat matn kerak. Til o'zgarsa qayta chaqiring. */
+export const roleShort = (k) => ROLE_DICT[k]?.short || ROLE_DICT[k]?.label || k;
 export const ROLE_OPTIONS = Object.keys(ROLE_DICT);
 
 /** Tizim admini rollari — AdminRole enum'idagi TO'RTTA qiymat ham bor */

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { customerApi } from "../api";
 import { fmtDate } from "../utils";
+import { useT } from "../lib/ek-i18n";
 import Modal from "../components/Modal";
 import { Empty, Search, FG, Avatar } from "../components/ui";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 
 export default function CustomersPage({ toast }) {
+  const { t } = useT();
   const [customers, setCustomers] = useState([]);
   const [loading,   setLoading]   = useState(true);
   // Tez javobda skeleton umuman chizilmaydi; chizilsa kamida 400ms turadi.
@@ -18,26 +20,29 @@ export default function CustomersPage({ toast }) {
     setLoading(true);
     customerApi.getAll(q ? `search=${encodeURIComponent(q)}` : "")
       .then(r => setCustomers(r.data || []))
-      .catch(e => toast.error("Mijozlar yuklanmadi: " + e.message))
+      .catch(e => toast.error(t("adm.customers.loadFailed", { msg: e.message })))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  // Qidiruv SERVERDA bajariladi. Ilgari `load(q)` server parametrini
+  // qo'llardi, lekin uni hech kim chaqirmasdi va filtr faqat brauzerda
+  // ishlardi — 10 000 mijozda sahifa cho'kardi.
+  // 300ms kechikish: har harfda so'rov yuborilmasin.
+  useEffect(() => {
+    const id = setTimeout(() => load(search.trim()), search ? 300 : 0);
+    return () => clearTimeout(id);
+  }, [search]);
 
-  // Client-side filter (server-side search mavjud, lekin past latency uchun ikkalasi)
-  const filtered = customers.filter(c => {
-    const q = search.toLowerCase();
-    return !q || c.fullName?.toLowerCase().includes(q) || c.phone?.includes(q);
-  });
+  const filtered = customers;
 
   return (
     <div>
       <div className="card">
         <div className="c-head">
-          <span className="c-title"><i className="fa-solid fa-address-book" />Mijozlar</span>
+          <span className="c-title"><i className="fa-solid fa-address-book" aria-hidden="true" />{t("adm.customers.title")}</span>
           <div style={{ display:"flex", gap:8 }}>
             <Search value={search} onChange={setSearch}
-              placeholder="Ism yoki telefon..." style={{ width:240 }} />
+              placeholder={t("adm.customers.searchPlaceholder")} style={{ width:240 }} />
           </div>
         </div>
         <div className="tw">
@@ -45,10 +50,10 @@ export default function CustomersPage({ toast }) {
             <table>
               <thead>
                 <tr>
-                  <th>Mijoz</th>
-                  <th>Telefon</th>
-                  <th>Ro'yxatdan o'tgan</th>
-                  <th></th>
+                  <th>{t("adm.customers.colCustomer")}</th>
+                  <th>{t("common.phone")}</th>
+                  <th>{t("adm.customers.colRegistered")}</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -60,22 +65,22 @@ export default function CustomersPage({ toast }) {
                         <span style={{ fontWeight:700 }}>{c.fullName}</span>
                       </div>
                     </td>
-                    <td style={{ fontFamily:"monospace", fontSize:12, color:"var(--text3)" }}>
+                    <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
                       {c.phone || "—"}
                     </td>
-                    <td style={{ fontSize:12, color:"var(--text3)" }}>
+                    <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
                       {fmtDate(c.createdAt)}
                     </td>
                     <td>
                       <button className="btn btn-sm btn-outline"
-                        onClick={() => setEditC(c)} title="Tahrirlash">
+                        onClick={() => setEditC(c)} title={t("common.edit")}>
                         <i className="fa-solid fa-pen" />
                       </button>
                     </td>
                   </tr>
                 )) : (
                   <tr><td colSpan={4}>
-                    <Empty icon="fa-address-book" title="Mijoz topilmadi" />
+                    <Empty icon="fa-address-book" title={t("adm.customers.notFound")} />
                   </td></tr>
                 )}
               </tbody>
@@ -97,6 +102,7 @@ export default function CustomersPage({ toast }) {
 }
 
 function EditCustomerModal({ customer, onClose, onSaved, toast }) {
+  const { t } = useT();
   const [form,   setForm]   = useState({
     fullName: customer.fullName || "",
     phone:    customer.phone    || "",
@@ -105,31 +111,31 @@ function EditCustomerModal({ customer, onClose, onSaved, toast }) {
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const save = async () => {
-    if (!form.fullName.trim()) { toast.error("Ism majburiy"); return; }
+    if (!form.fullName.trim()) { toast.error(t("adm.customers.errName")); return; }
     setSaving(true);
     try {
       await customerApi.update(customer.id, form);
-      toast.success("Mijoz ma'lumotlari yangilandi");
+      toast.success(t("adm.customers.updated"));
       onSaved();
     } catch (e) { toast.error(e.message); }
     finally     { setSaving(false); }
   };
 
   return (
-    <Modal title={`Tahrirlash — ${customer.fullName}`} onClose={onClose} footer={
+    <Modal title={t("adm.users.editTitle", { name: customer.fullName })} onClose={onClose} footer={
       <>
-        <button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
+        <button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><Spinner /> Saqlanmoqda...</>
-                  : <><i className="fa-solid fa-check" /> Saqlash</>}
+          {saving ? <><Spinner /> {t("common.saving")}</>
+                  : <><i className="fa-solid fa-check" /> {t("common.save")}</>}
         </button>
       </>
     }>
-      <FG label="Ism Familiya *">
+      <FG label={`${t("common.fullName")} *`}>
         <input className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
       </FG>
-      <FG label="Telefon">
-        <input className="fi mono" value={form.phone} onChange={set("phone")}
+      <FG label={t("common.phone")}>
+        <input className="fi ek-num" value={form.phone} onChange={set("phone")}
           placeholder="+998901234567" />
       </FG>
     </Modal>

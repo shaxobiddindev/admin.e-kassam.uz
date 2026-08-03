@@ -1,4 +1,5 @@
 import { API_BASE as API, LOGIN_URL, getDeviceId } from "../config";
+import { getLang, withLang } from "../lib/ek-i18n";
 
 // Bir vaqtda bir nechta so'rov 401 olsa, refresh faqat bir marta yuborilsin
 let refreshPromise = null;
@@ -43,7 +44,8 @@ async function tryRefreshToken() {
 
 function forceLogout() {
   localStorage.clear();
-  window.location.replace(`${LOGIN_URL}?logged_out=1`);
+  // Til kirish ekraniga ham o'tsin: originlar turli, localStorage bo'linmaydi
+  window.location.replace(withLang(`${LOGIN_URL}?logged_out=1`));
   throw new Error("AUTH_FAILED");
 }
 
@@ -56,7 +58,8 @@ async function req(path, options = {}, _retry = false) {
     credentials: "include",
     headers: {
       "Content-Type":    "application/json",
-      "Accept-Language": "uz",
+      // Backend xato xabarlari foydalanuvchi tilida kelsin
+      "Accept-Language": getLang(),
       "X-Device-Id":     getDeviceId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(extra || {}),

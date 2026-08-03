@@ -1,28 +1,44 @@
 import { useState, useEffect } from "react";
 import { LOGO_URL, LOGO_DARK_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 import { useConfirm } from "../context/ConfirmProvider";
-import ThemeSelect from "./ek/ThemeSelect";
+import { useT } from "../lib/ek-i18n";
 
+/* Yon menyu tuzilishi — YORLIQ EMAS, KALIT saqlanadi. Yorliq har render'da
+   `t()` dan olinadi, aks holda til almashtirilganda menyu eski tilda qolardi. */
 const NAV = [
-  { sec: "Asosiy", items: [
-    { id: "dashboard", label: "Dashboard",        icon: "fa-chart-pie"    },
+  { sec: "nav.section.main", items: [
+    { id: "dashboard", key: "nav.dashboard", icon: "fa-chart-pie" },
   ]},
-  { sec: "Tizim boshqaruvi", items: [
-    { id: "shops",     label: "Do'konlar",        icon: "fa-store"        },
-    { id: "users",     label: "Foydalanuvchilar", icon: "fa-users"        },
-    { id: "customers", label: "Mijozlar",         icon: "fa-address-book" },
+  { sec: "nav.section.system", items: [
+    { id: "shops",     key: "nav.shops",     icon: "fa-store"        },
+    { id: "users",     key: "nav.users",     icon: "fa-users"        },
+    { id: "customers", key: "nav.customers", icon: "fa-address-book" },
+  ]},
+  { sec: "nav.section.settings", items: [
+    { id: "settings",  key: "nav.settings",  icon: "fa-gear" },
   ]},
 ];
 
-const TITLES = {
-  dashboard: { label: "Dashboard",        icon: "fa-chart-pie"    },
-  shops:     { label: "Do'konlar",        icon: "fa-store"        },
-  users:     { label: "Foydalanuvchilar", icon: "fa-users"        },
-  customers: { label: "Mijozlar",         icon: "fa-address-book" },
+const ICONS = {
+  dashboard: "fa-chart-pie",
+  shops:     "fa-store",
+  users:     "fa-users",
+  customers: "fa-address-book",
+  settings:  "fa-gear",
+};
+const TITLE_KEYS = {
+  dashboard: "nav.dashboard",
+  shops:     "nav.shops",
+  users:     "nav.users",
+  customers: "nav.customers",
+  settings:  "nav.settings",
 };
 
 function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, onToggleCollapse }) {
-  const roleInfo = ADMIN_ROLE_LABELS[user?.role] || { label: "Admin" };
+  const { t } = useT();
+  const roleInfo = ADMIN_ROLE_LABELS[user?.role];
+  const roleLabel = roleInfo?.label || t("enum.adminRole.SUPER_ADMIN");
+
   return (
     <aside className={`sb ${open ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}>
       <div className="sb-brand">
@@ -38,39 +54,51 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
         </div>
       </div>
 
-      <button className="sb-toggle" onClick={onToggleCollapse}>
+      <button className="sb-toggle" onClick={onToggleCollapse}
+              aria-label={t("layout.menu")}>
         <i className={`fa-solid ${isCollapsed ? "fa-chevron-right" : "fa-chevron-left"}`} />
       </button>
 
       <nav className="sb-nav">
         {NAV.map((group) => (
           <div key={group.sec}>
-            <div className="sb-sec">{group.sec}</div>
-            {group.items.map((item) => (
-              <div key={item.id}
-                className={`sb-item ${page === item.id ? "on" : ""}`}
-                onClick={() => { setPage(item.id); onClose(); }}
-                title={isCollapsed ? item.label : ""}>
-                <i className={`fa-solid ${item.icon}`} />
-                <span>{item.label}</span>
-              </div>
-            ))}
+            <div className="sb-sec">{t(group.sec)}</div>
+            {group.items.map((item) => {
+              const label = t(item.key);
+              return (
+                /* Bosiladigan element — TUGMA, `<div>` emas: klaviatura bilan
+                   yetib boriladi va ekran o'quvchi uni bosiladigan deb o'qiydi. */
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`sb-item ${page === item.id ? "on" : ""}`}
+                  onClick={() => { setPage(item.id); onClose(); }}
+                  title={isCollapsed ? label : ""}
+                  aria-current={page === item.id ? "page" : undefined}
+                >
+                  <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         ))}
       </nav>
 
-      {/* Footer — CSS da sb-foot */}
+      {/* Footer — tema tanlagichi bu yerdan OLIB TASHLANDI: barcha sozlamalar
+          endi «Sozlamalar» sahifasida turadi (bitta joy, bitta qidiruv). */}
       <div className="sb-foot">
-        <ThemeSelect compact={isCollapsed} />
-        <div className="sb-user" onClick={onLogout} title={isCollapsed ? "Chiqish" : ""}>
+        <div className="sb-user" onClick={onLogout} title={isCollapsed ? t("layout.logout") : ""}
+             role="button" tabIndex={0}
+             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onLogout(); } }}>
           <div className="av" style={{ width: isCollapsed ? 28 : 34, height: isCollapsed ? 28 : 34, borderRadius:9, fontSize:13 }}>
             {initials(user?.fullName || user?.username)}
           </div>
           <div className="sb-u-info" style={{ flex:1, minWidth:0 }}>
             <div className="sb-u-name">{user?.fullName || user?.username}</div>
             <div className="sb-u-role">
-              {roleInfo?.label || "Admin"}
-              <i className="fa-solid fa-right-from-bracket" style={{ marginLeft:5 }} />
+              {roleLabel}
+              <i className="fa-solid fa-right-from-bracket" style={{ marginLeft:5 }} aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -80,6 +108,7 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
 }
 
 export default function Layout({ page, setPage, user, onLogout, children }) {
+  const { t } = useT();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem("adm_sb_collapsed") === "1");
@@ -88,18 +117,26 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
     localStorage.setItem("adm_sb_collapsed", isCollapsed ? "1" : "0");
   }, [isCollapsed]);
 
+  // Sozlamalar sahifasidan yig'ish holati o'zgarsa, menyu ham ergashsin
+  useEffect(() => {
+    const sync = () => setIsCollapsed(localStorage.getItem("adm_sb_collapsed") === "1");
+    window.addEventListener("ek:sidebar", sync);
+    return () => window.removeEventListener("ek:sidebar", sync);
+  }, []);
+
   const handleLogout = async () => {
     const ok = await confirm({
-      title: "Tizimdan chiqish",
-      message: "Tizimdan chiqishni tasdiqlaysizmi?",
+      title: t("layout.logout"),
+      message: t("layout.logoutConfirm"),
       type: "warning",
-      confirmText: "Chiqish",
-      cancelText: "Bekor",
+      confirmText: t("layout.logout"),
+      cancelText: t("common.cancel"),
     });
     if (ok) onLogout();
   };
 
-  const title = TITLES[page] || TITLES.dashboard;
+  const titleKey  = TITLE_KEYS[page] || TITLE_KEYS.dashboard;
+  const titleIcon = ICONS[page] || ICONS.dashboard;
 
   return (
     <div className={`app ${isCollapsed ? "collapsed" : ""}`}>
@@ -109,9 +146,9 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
           style={{ position:"fixed", inset:0, background:"var(--scrim)", zIndex:200 }} />
       )}
 
-      <Sidebar 
+      <Sidebar
         page={page} setPage={setPage} user={user} onLogout={handleLogout}
-        open={open} onClose={() => setOpen(false)} 
+        open={open} onClose={() => setOpen(false)}
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
@@ -120,20 +157,21 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
       <div className="main">
         <div className="topbar">
           {/* Hamburger — faqat kichik ekranda ko'rinadi (CSS bilan) */}
-          <button className="bic ham-btn" onClick={() => setOpen(v => !v)}>
-            <i className={`fa-solid ${open ? "fa-xmark" : "fa-bars"}`} />
+          <button className="bic ham-btn" onClick={() => setOpen(v => !v)}
+                  aria-label={t("layout.menu")} aria-expanded={open}>
+            <i className={`fa-solid ${open ? "fa-xmark" : "fa-bars"}`} aria-hidden="true" />
           </button>
 
           <div style={{ display:"flex", alignItems:"center", gap:9 }}>
-            <i className={`fa-solid ${title.icon}`} style={{ color:"var(--blue)", fontSize:16 }} />
-            <span style={{ fontWeight:900, fontSize:16 }}>{title.label}</span>
+            <i className={`fa-solid ${titleIcon}`} style={{ color:"var(--fg-brand)", fontSize:16 }} aria-hidden="true" />
+            <span style={{ fontWeight:900, fontSize:16 }}>{t(titleKey)}</span>
           </div>
 
           {/* 07-ADMIN.md — superadmin bo'limi qizil urg'u oladi: foydalanuvchi
               qayerda ekanini adashtirmasin. */}
           <div className="tb-badge" style={{ marginLeft:"auto" }}>
             <i className="fa-solid fa-shield-halved" style={{ marginRight:5 }} aria-hidden="true" />
-            SUPERADMIN
+            {t("layout.superadmin")}
           </div>
         </div>
 

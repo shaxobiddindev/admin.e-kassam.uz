@@ -1,4 +1,5 @@
 import { createContext, useContext, useRef, useState } from "react";
+import { t } from "../lib/ek-i18n";
 
 const ConfirmCtx = createContext(null);
 
@@ -12,11 +13,16 @@ export function ConfirmProvider({ children }) {
   const [state, setState] = useState(null);
   const resolveRef = useRef(null);
 
-  const confirm = ({ title = "Tasdiqlash", message, type = "danger",
-    confirmText = "Tasdiqlash", cancelText = "Bekor" }) =>
+  const confirm = ({ title, message, type = "danger", confirmText, cancelText }) =>
     new Promise((res) => {
       resolveRef.current = res;
-      setState({ title, message, type, confirmText, cancelText });
+      setState({
+        title:       title       ?? t("common.confirm"),
+        message,
+        type,
+        confirmText: confirmText ?? t("common.confirm"),
+        cancelText:  cancelText  ?? t("common.cancel"),
+      });
     });
 
   const handle = (ok) => {
@@ -51,6 +57,7 @@ export function ConfirmProvider({ children }) {
               </div>
               <button
                 onClick={() => handle(false)}
+                aria-label={t("common.close")}
                 style={{ background: "none", border: "none", cursor: "pointer",
                   color: "var(--text3)", fontSize: 18, padding: "4px 6px" }}
               >

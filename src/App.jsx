@@ -1,7 +1,8 @@
 import "./styles.css";
-/* BUILD_ID: ADMIN_PHONE_MASK_UPDATE_V1 */
+/* BUILD_ID: ADMIN_I18N_V1 */
 import { useState } from "react";
 import { LOGIN_URL } from "./config";
+import { initLang, withLang, useT } from "./lib/ek-i18n";
 import { useAuth }  from "./hooks/useAuth";
 import { useToast } from "./hooks/useToast";
 
@@ -12,13 +13,21 @@ import DashboardPage from "./pages/DashboardPage";
 import ShopsPage     from "./pages/ShopsPage";
 import UsersPage     from "./pages/UsersPage";
 import CustomersPage from "./pages/CustomersPage";
+import SettingsPage  from "./pages/SettingsPage";
 
 const PAGES = {
   dashboard: DashboardPage,
   shops:     ShopsPage,
   users:     UsersPage,
   customers: CustomersPage,
+  settings:  SettingsPage,
 };
+
+// ⚠ Tilni URL dan olish MODUL TANASIDA, `replaceState` dan OLDIN bo'lishi shart.
+// Bu fayl `main.jsx` dan import qilinadi va ES modul tartibiga ko'ra shu tana
+// `main.jsx` dagi `initLang()` dan OLDIN ishlaydi. Agar avval URL tozalansa,
+// `?lang=` yo'qoladi va login'da tanlangan til bu yerga umuman yetib kelmaydi.
+initLang();
 
 // ── URL dan auth param olib localStorage ga yozish ──────────
 const _urlParams = new URLSearchParams(window.location.search);
@@ -35,8 +44,6 @@ if (_authParam) {
     // Refresh token login domenidagi deviceId ga bog'langan — o'shani
     // saqlaymiz, aks holda bu yerda yangi id yaralib refresh rad etiladi.
     const _deviceId = _p.get("deviceId") || "";
-
-    console.log("[ADMIN] auth param → type:", _type, "| token:", _token.slice(0,20));
 
     if (_token && _type) {
       localStorage.setItem("ek_token",    _token);
@@ -56,13 +63,19 @@ if (_authParam) {
 // Token tekshirish
 const token = localStorage.getItem("ek_token");
 const type  = localStorage.getItem("ek_type");
-console.log("[ADMIN] token check → token:", token?.slice(0,20), "| type:", type);
 if (!token || type !== "admin") {
+  // Til tanlovi sessiyaga emas, brauzerga tegishli — `clear()` dan omon qolsin,
+  // aks holda chiqarilgan foydalanuvchi kirish ekranini yana boshqa tilda ko'radi.
+  const _lang = localStorage.getItem("ek_lang");
   localStorage.clear();
-  window.location.replace(`${LOGIN_URL}?logged_out=1`);
+  if (_lang) localStorage.setItem("ek_lang", _lang);
+  window.location.replace(withLang(`${LOGIN_URL}?logged_out=1`));
 }
 
 export default function App() {
+  // Yagona til obunasi: til o'zgarganda BUTUN daraxt qayta chiziladi va
+  // ichkaridagi barcha `t()` chaqiruvlari yangi tilni oladi.
+  useT();
   const { user, logout }           = useAuth();
   const { toasts, toast, dismiss } = useToast();
   const [page, setPage]            = useState("dashboard");
@@ -75,7 +88,7 @@ export default function App() {
     <ConfirmProvider>
       <Toast toasts={toasts} onDismiss={dismiss} />
       <Layout page={page} setPage={setPage} user={user} onLogout={logout}>
-        <PageComponent toast={toast} setPage={setPage} />
+        <PageComponent toast={toast} setPage={setPage} user={user} onLogout={logout} />
       </Layout>
     </ConfirmProvider>
   );

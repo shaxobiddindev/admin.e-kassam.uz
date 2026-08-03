@@ -1,3 +1,5 @@
+import { t } from "../lib/ek-i18n";
+
 export default function Modal({ title, onClose, children, footer, size = "sm" }) {
   return (
     <div className="ov" onClick={onClose}>
@@ -7,7 +9,7 @@ export default function Modal({ title, onClose, children, footer, size = "sm" })
       >
         <div className="mh">
           <span className="mt">{title}</span>
-          <button className="bic" onClick={onClose}>
+          <button className="bic" onClick={onClose} aria-label={t("common.close")}>
             <i className="fa-solid fa-xmark" />
           </button>
         </div>

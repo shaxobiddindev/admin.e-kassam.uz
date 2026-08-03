@@ -1,4 +1,5 @@
 import { initials } from "../../utils";
+import { t } from "../../lib/ek-i18n";
 
 // ── Loader ────────────────────────────────────────────────────
 export function Loader() {
@@ -10,11 +11,13 @@ export function Loader() {
 }
 
 // ── Empty state ───────────────────────────────────────────────
-export function Empty({ icon = "fa-inbox", title = "Ma'lumot yo'q", subtitle }) {
+export function Empty({ icon = "fa-inbox", title, subtitle, text }) {
+  // `title` berilmasa umumiy matn; `text` — eski nom, mos-kelish uchun
+  const heading = title ?? text ?? t("common.empty");
   return (
     <div className="empty">
       <i className={`fa-solid ${icon}`} />
-      <div className="e-ttl">{title}</div>
+      <div className="e-ttl">{heading}</div>
       {subtitle && <div className="e-sub">{subtitle}</div>}
     </div>
   );
@@ -69,18 +72,19 @@ export function StatCard({ label, value, icon, bg, color, change, up = true }) {
 }
 
 // ── Search Bar ────────────────────────────────────────────────
-export function Search({ value, onChange, placeholder = "Qidirish...", style }) {
+export function Search({ value, onChange, placeholder, style }) {
   return (
     <div className="srch" style={style}>
       <i className="fa-solid fa-magnifying-glass" />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? `${t("common.search")}…`}
       />
       {value && (
         <button
           onClick={() => onChange("")}
+          aria-label={t("common.reset")}
           style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text3)", fontSize: 13, padding: 0 }}
         >
           <i className="fa-solid fa-xmark" />
@@ -101,4 +105,4 @@ export function II({ label, value }) {
 }
 
 // ── Confirm delete ────────────────────────────────────────────
-export const confirmOk = (msg) => window.confirm(msg || "Tasdiqlaysizmi?");
+export const confirmOk = (msg) => window.confirm(msg || t("common.confirm"));

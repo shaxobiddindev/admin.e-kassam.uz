@@ -1,4 +1,5 @@
 import { LOGIN_URL, API_BASE, getDeviceId } from "../config";
+import { getLang, withLang } from "../lib/ek-i18n";
 import { useState, useCallback } from "react";
 
 // null yoki "null" string bo'lsa bo'sh qaytaradi
@@ -33,6 +34,7 @@ export function useAuth() {
           headers: {
             "Content-Type": "application/json",
             "X-Device-Id":  getDeviceId(),
+            "Accept-Language": getLang(),
             ...(ls("ek_token") ? { Authorization: `Bearer ${ls("ek_token")}` } : {}),
           },
           body: JSON.stringify({ refreshToken: refresh }),
@@ -46,7 +48,9 @@ export function useAuth() {
      "ek_user","ek_name","ek_shop","ek_shopCode","ek_refresh","ek_deviceId",
      "adm_token","adm_user","adm_fullName","adm_role"
     ].forEach((k) => localStorage.removeItem(k));
-    window.location.replace(`${LOGIN_URL}?logged_out=1`);
+    // `ek_lang` ro'yxatda YO'Q — til brauzerga tegishli, sessiyaga emas.
+    // Baribir uzatamiz: kirish sahifasi boshqa origin.
+    window.location.replace(withLang(`${LOGIN_URL}?logged_out=1`));
   }, []);
 
   return { user, logout };

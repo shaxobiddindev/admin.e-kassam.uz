@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
-import { ROLE_LABELS, roleEntry, roleLabel } from "../utils";
+import { roleEntry, roleLabel } from "../utils";
+import { useT } from "../lib/ek-i18n";
 import Modal from "../components/Modal";
 import { Empty, Search, FG, Badge, Avatar } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
@@ -9,6 +10,7 @@ import { SkeletonList, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 
 export default function UsersPage({ toast }) {
+  const { t } = useT();
   const confirm = useConfirm();
   const [shops,        setShops]        = useState([]);
   const [users,        setUsers]        = useState([]);
@@ -47,17 +49,15 @@ export default function UsersPage({ toast }) {
   const handleToggle = async (u) => {
     const isBlocking = u.enabled;
     const ok = await confirm({
-      title: isBlocking ? "Xodimni bloklash" : "Xodimni faollashtirish",
-      message: isBlocking
-        ? `Chindan ham ${u.fullName} ni bloklamoqchimisiz? U tizimga kira olmaydi.`
-        : `${u.fullName} ni tizimga kirishini tiklamoqchimisiz?`,
+      title: t(isBlocking ? "adm.users.blockTitle" : "adm.users.unblockTitle"),
+      message: t(isBlocking ? "adm.users.blockMsg" : "adm.users.unblockMsg", { name: u.fullName }),
       type: isBlocking ? "warning" : "info",
-      confirmText: isBlocking ? "Bloklash" : "Faollashtirish",
+      confirmText: t(isBlocking ? "adm.shops.block" : "adm.shops.activate"),
     });
     if (!ok) return;
     try {
       await userApi.toggleBlock(selShop.id, u.id);
-      toast.success(u.enabled ? "Bloklandi" : "Faollashtirildi");
+      toast.success(t(u.enabled ? "adm.users.blockedToast" : "adm.users.activatedToast"));
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, enabled: !x.enabled } : x));
     } catch (e) { toast.error(e.message); }
   };
@@ -75,22 +75,28 @@ export default function UsersPage({ toast }) {
         <div className="card">
           <div className="c-head" style={{ padding:"12px 14px" }}>
             <span className="c-title" style={{ fontSize:13 }}>
-              <i className="fa-solid fa-store" /> Do'konlar
+              <i className="fa-solid fa-store" aria-hidden="true" /> {t("nav.shops")}
             </span>
           </div>
           {shopsLoading ? <SkeletonList rows={3} avatar={false} /> : shops.length === 0
-            ? <Empty icon="fa-store" text="Do'kon yo'q" />
+            ? <Empty icon="fa-store" text={t("adm.users.noShops")} />
             : (
               <div style={{ padding:"4px 0" }}>
                 {shops.map(shop => (
-                  <div key={shop.id} onClick={() => setSelShop(shop)} style={{
-                    padding:"9px 14px", cursor:"pointer", transition:".15s",
-                    background: selShop?.id === shop.id ? "var(--blue-l)" : "transparent",
-                    borderLeft: selShop?.id === shop.id ? "3px solid var(--blue)" : "3px solid transparent",
-                  }}>
+                  /* Tugma, `<div>` emas: klaviatura bilan yetib boriladi
+                     va ekran o'quvchi uni bosiladigan deb o'qiydi. */
+                  <button key={shop.id} type="button" onClick={() => setSelShop(shop)}
+                    aria-current={selShop?.id === shop.id ? "true" : undefined}
+                    style={{
+                      display:"block", width:"100%", textAlign:"left", border:"none",
+                      fontFamily:"inherit", minHeight:"var(--hit-min)",
+                      padding:"9px 14px", cursor:"pointer", transition:".15s",
+                      background: selShop?.id === shop.id ? "var(--bg-brand-subtle)" : "transparent",
+                      borderLeft: selShop?.id === shop.id ? "3px solid var(--bg-brand)" : "3px solid transparent",
+                    }}>
                     <div style={{ fontSize:13, fontWeight:700 }}>{shop.name}</div>
-                    <div style={{ fontSize:11, color:"var(--text3)", fontFamily:"monospace" }}>{shop.code}</div>
-                  </div>
+                    <div className="ek-num" style={{ fontSize:11, color:"var(--fg-secondary)" }}>{shop.code}</div>
+                  </button>
                 ))}
               </div>
             )}
@@ -100,34 +106,36 @@ export default function UsersPage({ toast }) {
       {/* O'ng: foydalanuvchilar */}
       <div style={{ flex:1, minWidth:0 }}>
         {!selShop ? (
-          <div className="card"><Empty icon="fa-store" text="Do'kon tanlang" /></div>
+          <div className="card"><Empty icon="fa-store" text={t("adm.users.pickShop")} /></div>
         ) : (
           <div className="card">
             <div className="c-head">
               <div>
                 <span className="c-title">
-                  <i className="fa-solid fa-users" /> {selShop.name}
+                  <i className="fa-solid fa-users" aria-hidden="true" /> {selShop.name}
                 </span>
-                <div style={{ fontSize:12, color:"var(--text3)", marginTop:3 }}>
-                  Jami: <strong>{users.length}</strong> &nbsp;·&nbsp;
-                  Aktiv: <strong>{users.filter(u=>u.enabled).length}</strong> &nbsp;·&nbsp;
-                  Bloklangan: <strong>{users.filter(u=>!u.enabled).length}</strong>
+                <div style={{ fontSize:12, color:"var(--fg-secondary)", marginTop:3 }}>
+                  {t("adm.users.summary", {
+                    total:   users.length,
+                    active:  users.filter(u => u.enabled).length,
+                    blocked: users.filter(u => !u.enabled).length,
+                  })}
                 </div>
               </div>
               <div style={{ display:"flex", gap:8 }}>
                 <Search value={search} onChange={setSearch}
-                  placeholder="Ism yoki username..." style={{ width:200 }} />
+                  placeholder={t("adm.users.searchPlaceholder")} style={{ width:200 }} />
                 <button className={`btn btn-sm ${!hasOwner ? "btn-green" : "btn-primary"}`} onClick={() => setAddOpen(true)}>
                   <i className={`fa-solid ${!hasOwner ? "fa-crown" : "fa-user-plus"}`} />
-                  {!hasOwner ? "Owner qo'shish" : "Qo'shish"}
+                  {t(hasOwner ? "common.add" : "adm.users.addOwner")}
                 </button>
               </div>
             </div>
 
             {!hasOwner && (
-              <div style={{ margin:"0 18px 14px", background:"#fffbeb", border:"1.5px solid #fcd34d", borderRadius:10, padding:"10px 14px", fontSize:12, fontWeight:700, color:"#92400e", display:"flex", gap:8 }}>
-                <i className="fa-solid fa-triangle-exclamation" style={{ flexShrink:0, marginTop:1 }} />
-                Owner qo'shilmagan. Boshqa rollarni qo'shish uchun avval Owner tayinlang.
+              <div className="ek-note ek-note--warning" style={{ margin:"0 18px 14px" }}>
+                <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+                {t("adm.users.ownerMissing")}
               </div>
             )}
 
@@ -136,11 +144,11 @@ export default function UsersPage({ toast }) {
                 <table>
                   <thead>
                     <tr>
-                      <th>Foydalanuvchi</th>
-                      <th>Username</th>
-                      <th>Rol</th>
-                      <th>Holat</th>
-                      <th></th>
+                      <th>{t("adm.users.colUser")}</th>
+                      <th>{t("common.username")}</th>
+                      <th>{t("common.role")}</th>
+                      <th>{t("common.status")}</th>
+                      <th />
                     </tr>
                   </thead>
                   <tbody>
@@ -154,11 +162,11 @@ export default function UsersPage({ toast }) {
                               <Avatar name={u.fullName} size={32} />
                               <div>
                                 <div style={{ fontWeight:700 }}>{u.fullName}</div>
-                                {isOwner && <span style={{ fontSize:10, background:"var(--blue)", color:"white", padding:"1px 7px", borderRadius:20, fontWeight:700 }}>OWNER</span>}
+                                {isOwner && <span className="badge" style={{ fontSize:10, background:"var(--ek-role-owner-bg)", color:"var(--ek-role-owner)" }}>{t("enum.role.OWNER.short")}</span>}
                               </div>
                             </div>
                           </td>
-                          <td style={{ fontFamily:"monospace", fontSize:12, color:"var(--text3)" }}>
+                          <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
                             @{u.username}
                           </td>
                           <td>
@@ -175,27 +183,27 @@ export default function UsersPage({ toast }) {
                           </td>
                           <td>
                             <Badge color={u.enabled ? "green" : "red"}>
-                              {u.enabled ? "Aktiv" : "Bloklangan"}
+                              {t(u.enabled ? "common.active" : "common.blocked")}
                             </Badge>
                           </td>
                           <td>
                             <div style={{ display:"flex", gap:6 }}>
                               <button className="btn btn-sm btn-outline"
-                                onClick={() => setEditUser(u)} title="Tahrirlash">
+                                onClick={() => setEditUser(u)} title={t("common.edit")}>
                                 <i className="fa-solid fa-pen" />
                               </button>
                               <button
                                 className={`btn btn-sm ${u.enabled ? "btn-danger" : "btn-activate"}`}
                                 onClick={() => handleToggle(u)}>
                                 <i className={`fa-solid ${u.enabled ? "fa-ban" : "fa-check"}`} />
-                                {u.enabled ? "Bloklash" : "Faollashtirish"}
+                                {t(u.enabled ? "adm.shops.block" : "adm.shops.activate")}
                               </button>
                             </div>
                           </td>
                         </tr>
                       );
                     }) : (
-                      <tr><td colSpan={5}><Empty icon="fa-user-slash" text="Topilmadi" /></td></tr>
+                      <tr><td colSpan={5}><Empty icon="fa-user-slash" text={t("common.notFound")} /></td></tr>
                     )}
                   </tbody>
                 </table>
@@ -234,54 +242,55 @@ export default function UsersPage({ toast }) {
 
 // ── Yangi xodim ───────────────────────────────────────────────
 function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
+  const { t } = useT();
   const defaultRole = !hasOwner ? "OWNER" : roleOpts[0];
   const [form,   setForm]   = useState({ fullName:"", username:"", password:"", role: defaultRole });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const save = async () => {
-    if (!form.fullName.trim()) { toast.error("Ism Familiyani kiriting"); return; }
-    if (!form.username.trim()) { toast.error("Usernameni kiriting"); return; }
-    if (!form.password)        { toast.error("Parolni kiriting"); return; }
+    if (!form.fullName.trim()) { toast.error(t("adm.users.errName")); return; }
+    if (!form.username.trim()) { toast.error(t("adm.users.errUsername")); return; }
+    if (!form.password)        { toast.error(t("adm.users.errPassword")); return; }
     setSaving(true);
-    try { await userApi.create(shop.id, form); toast.success("Xodim qo'shildi"); onSaved(); }
+    try { await userApi.create(shop.id, form); toast.success(t("adm.users.added")); onSaved(); }
     catch (e) { toast.error(e.message); }
     finally   { setSaving(false); }
   };
 
   return (
-    <Modal title={`Yangi xodim — ${shop.name}`} onClose={onClose} footer={
+    <Modal title={t("adm.users.newTitle", { name: shop.name })} onClose={onClose} footer={
       <>
-        <button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
+        <button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><Spinner /> Qo'shilmoqda...</>
-                  : <><i className="fa-solid fa-user-plus" /> Qo'shish</>}
+          {saving ? <><Spinner /> {t("common.adding")}</>
+                  : <><i className="fa-solid fa-user-plus" /> {t("common.add")}</>}
         </button>
       </>
     }>
       {!hasOwner && (
-        <div style={{ background:"#fffbeb", border:"1.5px solid #fcd34d", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:12, fontWeight:700, color:"#92400e" }}>
-          <i className="fa-solid fa-triangle-exclamation" style={{ marginRight:6 }} />
-          Owner qo'shilmagan. Rol majburiy OWNER bo'lishi kerak.
+        <div className="ek-note ek-note--warning">
+          <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+          {t("adm.users.ownerMissingRole")}
         </div>
       )}
-      <FG label="Ism Familiya *">
+      <FG label={`${t("common.fullName")} *`}>
         <input className="fi" value={form.fullName} onChange={set("fullName")}
           placeholder="Abdullayev Ali" autoFocus />
       </FG>
       <div className="g2">
-        <FG label="Username *">
-          <input className="fi mono" value={form.username} onChange={set("username")}
+        <FG label={`${t("common.username")} *`}>
+          <input className="fi ek-num" value={form.username} onChange={set("username")}
             placeholder="ali_abdullayev" />
         </FG>
-        <FG label="Parol *">
+        <FG label={`${t("common.password")} *`}>
           <input className="fi" type="password" value={form.password} onChange={set("password")}
-            placeholder="min 6 belgi" />
+            placeholder={t("adm.users.passwordMin")} />
         </FG>
       </div>
-      <FG label="Rol *">
+      <FG label={`${t("common.role")} *`}>
         <Select
-          block variant="field" ariaLabel="Xodim roli" disabled={!hasOwner}
+          block variant="field" ariaLabel={t("common.role")} disabled={!hasOwner}
           value={form.role}
           onChange={(v) => set("role")({ target: { value: v } })}
           options={roleOpts.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
@@ -293,10 +302,16 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
 
 // ── Xodimni tahrirlash ────────────────────────────────────────
 function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
+  const { t } = useT();
   const [tab,    setTab]    = useState("info");
   const allRoles = (user.roles || []).map(r => r.name || r.type || r);
   const isOwner  = allRoles.includes("OWNER");
-  const curRole  = isOwner ? "OWNER" : (allRoles[0] || "");
+  // ⚠ `allRoles[0]` ISHLATILMAYDI: backend rollarni `Set` da qaytaradi va
+  // tartibi barqaror emas. Do'kon admini {SHOP_ADMIN, STOREKEEPER, CASHIER}
+  // olgani uchun bu yerda tasodifan "Kassir" ko'rinib, saqlanganda xodim
+  // chindan kassirga tushib qolardi. Endi ierarxiyaning ENG YUQORISI olinadi.
+  const RANK = ["OWNER", "SHOP_ADMIN", "STOREKEEPER", "CASHIER"];
+  const curRole  = isOwner ? "OWNER" : (RANK.find((r) => allRoles.includes(r)) || allRoles[0] || "");
   const roleOpts = isOwner ? ["OWNER"] : (!hasOwner ? ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER"] : ["SHOP_ADMIN","STOREKEEPER","CASHIER"]);
   const [form,   setForm]   = useState({ fullName: user.fullName || "", role: curRole });
   const [pass,   setPass]   = useState({ newPass:"", confirm:"" });
@@ -304,19 +319,19 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const saveInfo = async () => {
-    if (!form.fullName.trim()) { toast.error("Ism Familiya bo'sh bo'lmaydi"); return; }
+    if (!form.fullName.trim()) { toast.error(t("adm.users.errName")); return; }
     setSaving(true);
-    try { await userApi.update(shop.id, user.id, { fullName:form.fullName, role:form.role }); toast.success("Saqlandi"); onSaved(); }
+    try { await userApi.update(shop.id, user.id, { fullName:form.fullName, role:form.role }); toast.success(t("common.saved")); onSaved(); }
     catch (e) { toast.error(e.message); }
     finally   { setSaving(false); }
   };
 
   const savePass = async () => {
-    if (!pass.newPass)                 { toast.error("Yangi parolni kiriting"); return; }
-    if (pass.newPass.length < 6)       { toast.error("Parol kamida 6 belgi"); return; }
-    if (pass.newPass !== pass.confirm) { toast.error("Parollar mos kelmaydi"); return; }
+    if (!pass.newPass)                 { toast.error(t("adm.users.errPassword")); return; }
+    if (pass.newPass.length < 6)       { toast.error(t("adm.users.errPassMin")); return; }
+    if (pass.newPass !== pass.confirm) { toast.error(t("adm.users.errPassMatch")); return; }
     setSaving(true);
-    try { await userApi.changePass(shop.id, user.id, pass.newPass); toast.success("Parol yangilandi"); onSaved(); }
+    try { await userApi.changePass(shop.id, user.id, pass.newPass); toast.success(t("adm.users.passUpdated")); onSaved(); }
     catch (e) { toast.error(e.message); }
     finally   { setSaving(false); }
   };
@@ -324,39 +339,39 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
   const tabStyle = (k) => ({
     flex:1, padding:"8px 0", border:"none", borderRadius:6, fontSize:12, fontWeight:700,
     fontFamily:"var(--font)", cursor:"pointer",
-    background: tab === k ? "white" : "transparent",
-    color: tab === k ? "var(--blue)" : "var(--text2)",
+    background: tab === k ? "var(--bg-surface)" : "transparent",
+    color: tab === k ? "var(--fg-brand)" : "var(--fg-secondary)",
     boxShadow: tab === k ? "0 1px 4px rgba(0,0,0,.1)" : "none",
   });
 
   return (
-    <Modal title={`Tahrirlash — ${user.fullName}`} onClose={onClose} footer={
+    <Modal title={t("adm.users.editTitle", { name: user.fullName })} onClose={onClose} footer={
       <>
-        <button className="btn btn-outline btn-sm" onClick={onClose}>Bekor</button>
+        <button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
         <button className="btn btn-primary btn-sm"
           onClick={tab === "info" ? saveInfo : savePass} disabled={saving}>
-          {saving ? <><Spinner /> Saqlanmoqda...</>
-                  : <><i className="fa-solid fa-check" /> Saqlash</>}
+          {saving ? <><Spinner /> {t("common.saving")}</>
+                  : <><i className="fa-solid fa-check" /> {t("common.save")}</>}
         </button>
       </>
     }>
-      <div style={{ display:"flex", background:"#f1f5f9", borderRadius:8, padding:3, marginBottom:16, gap:3 }}>
+      <div style={{ display:"flex", background:"var(--bg-sunken)", borderRadius:8, padding:3, marginBottom:16, gap:3 }}>
         <button type="button" style={tabStyle("info")} onClick={() => setTab("info")}>
-          Ma'lumotlar
+          {t("adm.users.tabInfo")}
         </button>
         <button type="button" style={tabStyle("pass")} onClick={() => setTab("pass")}>
-          Parol yangilash
+          {t("adm.users.tabPass")}
         </button>
       </div>
 
       {tab === "info" ? (
         <>
-          <FG label="Ism Familiya *">
+          <FG label={`${t("common.fullName")} *`}>
             <input className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
           </FG>
-          <FG label="Rol" hint={isOwner ? "Owner rolini o'zgartirish mumkin emas" : ""}>
+          <FG label={t("common.role")} hint={isOwner ? t("adm.users.ownerRoleLocked") : ""}>
             <Select
-              block variant="field" ariaLabel="Xodim roli" disabled={isOwner}
+              block variant="field" ariaLabel={t("common.role")} disabled={isOwner}
               value={form.role}
               onChange={(v) => set("role")({ target: { value: v } })}
               options={roleOpts.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
@@ -365,15 +380,15 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
         </>
       ) : (
         <>
-          <FG label="Yangi parol *">
+          <FG label={`${t("common.newPassword")} *`}>
             <input className="fi" type="password" value={pass.newPass}
               onChange={e => setPass(p => ({ ...p, newPass: e.target.value }))}
-              placeholder="min 6 belgi" autoFocus />
+              placeholder={t("adm.users.passwordMin")} autoFocus />
           </FG>
-          <FG label="Tasdiqlang *">
+          <FG label={`${t("common.confirmPassword")} *`}>
             <input className="fi" type="password" value={pass.confirm}
               onChange={e => setPass(p => ({ ...p, confirm: e.target.value }))}
-              placeholder="Qayta kiriting" />
+              placeholder={t("common.confirmPassword")} />
           </FG>
         </>
       )}

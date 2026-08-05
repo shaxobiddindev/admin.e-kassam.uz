@@ -138,6 +138,13 @@ export const contactApi = {
   markHandled: (id) => req(`/contact/${id}/handled`, { method: "PATCH" }),
 };
 
+// ── Audit jurnali — FAQAT O'QISH ────────────────────────────────
+// Yozish/tahrirlash/o'chirish endpointi YO'Q va bo'lmasligi kerak:
+// o'zgartirilishi mumkin bo'lgan jurnal audit bo'lishdan to'xtaydi.
+export const auditApi = {
+  search: (qs = "") => req(`/superadmin/audit${qs ? "?" + qs : ""}`),
+};
+
 // ── Mijozlar — FAQAT O'QISH ─────────────────────────────────────
 // `update` va `delete` OLIB TASHLANDI: backendda bunday endpointlar yo'q
 // (har doim 405 qaytarardi). Mijoz — do'konning ma'lumoti, uni do'kon

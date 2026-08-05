@@ -16,6 +16,9 @@ const NAV = [
     { id: "shops",     key: "nav.shops",     icon: "fa-store"        },
     { id: "users",     key: "nav.users",     icon: "fa-users"        },
     { id: "customers", key: "nav.customers", icon: "fa-address-book" },
+    // Audit — tizim boshqaruvining oxirida: kundalik emas, lekin
+    // kerak bo'lganda topilishi oson joyda.
+    { id: "audit",     key: "nav.audit",     icon: "fa-clipboard-list" },
   ]},
   { sec: "nav.section.settings", items: [
     { id: "settings",  key: "nav.settings",  icon: "fa-gear" },
@@ -28,6 +31,7 @@ const ICONS = {
   shops:     "fa-store",
   users:     "fa-users",
   customers: "fa-address-book",
+  audit:     "fa-clipboard-list",
   settings:  "fa-gear",
 };
 const TITLE_KEYS = {
@@ -36,6 +40,7 @@ const TITLE_KEYS = {
   shops:     "nav.shops",
   users:     "nav.users",
   customers: "nav.customers",
+  audit:     "nav.audit",
   settings:  "nav.settings",
 };
 

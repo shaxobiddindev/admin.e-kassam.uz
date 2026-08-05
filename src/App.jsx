@@ -14,6 +14,7 @@ import ShopsPage     from "./pages/ShopsPage";
 import UsersPage     from "./pages/UsersPage";
 import CustomersPage from "./pages/CustomersPage";
 import RequestsPage  from "./pages/RequestsPage";
+import AuditPage     from "./pages/AuditPage";
 import SettingsPage  from "./pages/SettingsPage";
 
 const PAGES = {
@@ -22,6 +23,7 @@ const PAGES = {
   shops:     ShopsPage,
   users:     UsersPage,
   customers: CustomersPage,
+  audit:     AuditPage,
   settings:  SettingsPage,
 };
 

@@ -8,6 +8,9 @@ import { useT } from "../lib/ek-i18n";
 const NAV = [
   { sec: "nav.section.main", items: [
     { id: "dashboard", key: "nav.dashboard", icon: "fa-chart-pie" },
+    // Arizalar — Dashboard'dan keyin darhol: landingdan kelgan lid
+    // javobsiz qolmasligi kerak, bu bo'lim ko'zga birinchi tushsin.
+    { id: "requests",  key: "nav.requests",  icon: "fa-inbox" },
   ]},
   { sec: "nav.section.system", items: [
     { id: "shops",     key: "nav.shops",     icon: "fa-store"        },
@@ -21,6 +24,7 @@ const NAV = [
 
 const ICONS = {
   dashboard: "fa-chart-pie",
+  requests:  "fa-inbox",
   shops:     "fa-store",
   users:     "fa-users",
   customers: "fa-address-book",
@@ -28,6 +32,7 @@ const ICONS = {
 };
 const TITLE_KEYS = {
   dashboard: "nav.dashboard",
+  requests:  "nav.requests",
   shops:     "nav.shops",
   users:     "nav.users",
   customers: "nav.customers",

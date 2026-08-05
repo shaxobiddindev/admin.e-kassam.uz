@@ -119,6 +119,16 @@ export const userApi = {
   delete:      (shopId, userId) => req(`/superadmin/shops/${shopId}/users/${userId}`,    { method: "DELETE" }),
 };
 
+// ── Arizalar (landing "Demo so'rash" formasi) ───────────────────
+// Backend allaqachon tayyor edi (`POST /contact` ochiq, o'qish SUPER_ADMIN),
+// lekin panelda unga BITTA ham chaqiruv yo'q edi: landingdan kelgan har bir
+// lid bazaga tushib, hech kim o'qimasdi. 00-OVERVIEW.md ning asosiy mezoni —
+// "landing → demo so'rash konversiyasi" — aynan shu yerda uzilardi.
+export const contactApi = {
+  getAll:      ()   => req("/contact"),
+  markHandled: (id) => req(`/contact/${id}/handled`, { method: "PATCH" }),
+};
+
 // ── Mijozlar — FAQAT O'QISH ─────────────────────────────────────
 // `update` va `delete` OLIB TASHLANDI: backendda bunday endpointlar yo'q
 // (har doim 405 qaytarardi). Mijoz — do'konning ma'lumoti, uni do'kon

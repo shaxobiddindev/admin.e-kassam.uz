@@ -13,10 +13,12 @@ import DashboardPage from "./pages/DashboardPage";
 import ShopsPage     from "./pages/ShopsPage";
 import UsersPage     from "./pages/UsersPage";
 import CustomersPage from "./pages/CustomersPage";
+import RequestsPage  from "./pages/RequestsPage";
 import SettingsPage  from "./pages/SettingsPage";
 
 const PAGES = {
   dashboard: DashboardPage,
+  requests:  RequestsPage,
   shops:     ShopsPage,
   users:     UsersPage,
   customers: CustomersPage,

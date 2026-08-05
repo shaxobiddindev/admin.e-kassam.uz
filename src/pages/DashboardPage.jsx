@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { shopApi, userApi } from "../api";
+import { shopApi, userApi, contactApi } from "../api";
 import { fmtDate, SHOP_STATUS, shopStatus } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import { SkeletonTable } from "../components/ek/Loading";
@@ -18,20 +18,32 @@ import AttentionList from "../components/ek/AttentionList";
 export default function DashboardPage({ toast, setPage }) {
   const { t } = useT();
   const [shops,   setShops]   = useState([]);
+  const [requests, setRequests] = useState([]);
   const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
   // Tez javobda skeleton umuman chizilmaydi (180ms), chizilsa 400ms turadi.
   const busy = useLoading(loading);
 
   useEffect(() => {
-    Promise.all([shopApi.getAll(), userApi.getAll()])
-      .then(([s, u]) => {
-        setShops(s?.data || []);
-        setUsers(u?.data || []);
+    // `allSettled`, `all` EMAS: uchta mustaqil manba bor va bittasi yiqilsa
+    // qolgan ikkitasi ham ko'rinmay qolishi noto'g'ri bo'lardi — masalan
+    // arizalar kelmasa ham do'konlar ro'yxati foydali.
+    //
+    // Xato esa JIMGINA yutilmaydi (A10): ilgari `.catch(() => ({data:[]}))`
+    // tufayli foydalanuvchi bo'sh, "hammasi joyida" ko'rinishdagi panelni
+    // ko'rardi va nimadir ishlamayotganini bilmasdi.
+    Promise.allSettled([shopApi.getAll(), userApi.getAll(), contactApi.getAll()])
+      .then((res) => {
+        const [s, u, c] = res;
+        if (s.status === "fulfilled") setShops(s.value?.data || []);
+        if (u.status === "fulfilled") setUsers(u.value?.data || []);
+        if (c.status === "fulfilled") setRequests(c.value?.data || []);
+
+        const failed = res.filter(r => r.status === "rejected");
+        if (failed.length) {
+          toast?.error?.(`${t("common.loadFailed")}: ${failed[0].reason?.message || ""}`);
+        }
       })
-      // Ilgari xato JIMGINA yutilardi va foydalanuvchi bo'sh, "hammasi joyida"
-      // ko'rinishdagi panelni ko'rardi. Endi aniq aytiladi.
-      .catch((e) => toast?.error?.(`${t("common.loadFailed")}: ${e.message}`))
       .finally(() => setLoading(false));
   }, []);
 
@@ -41,9 +53,17 @@ export default function DashboardPage({ toast, setPage }) {
   const activeUsers  = users.filter(u => u.enabled).length;
   const blockedUsers = users.filter(u => !u.enabled).length;
   const ownerless    = shops.filter(s => !s.ownerName).length;
+  const newRequests  = requests.filter(r => !r.handled).length;
 
   /* ── "E'tibor talab qiladi" — bo'sh satrlar ko'rsatilmaydi ─────────────── */
   const attention = [
+    /* Javobsiz ariza — BIRINCHI qator. 00-OVERVIEW.md ning asosiy mezoni
+       "landing → demo so'rash konversiyasi": lid javobsiz qolsa, landingga
+       qilingan butun ish shu nuqtada bekor bo'ladi. Bloklangan do'kondan
+       ham muhimroq, chunki u — yo'qotilgan pul. */
+    newRequests && { id: "requests", icon: "fa-inbox", tone: "danger",
+      text: t("adm.dash.attNewRequests"), count: newRequests,
+      onClick: () => setPage("requests") },
     blockedShops && { id: "blocked", icon: "fa-ban", tone: "danger",
       text: t("adm.dash.attBlockedShops"), count: blockedShops, onClick: () => setPage("shops") },
     suspended && { id: "suspended", icon: "fa-pause", tone: "warning",

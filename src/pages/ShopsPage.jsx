@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { shopApi, userApi } from "../api";
-import { fmtDate, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, shopStatus, roleLabel } from "../utils";
+import { fmtDate, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, shopStatus, roleLabel, money } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import Modal from "../components/Modal";
 import { Empty, Search, FG, Badge, Avatar } from "../components/ui";
@@ -22,11 +22,20 @@ export default function ShopsPage({ toast }) {
   const [filter,  setFilter]  = useState("ALL");
   const [modal,   setModal]   = useState(null);
 
+  // Faollik kesimi ALOHIDA so'rov bilan keladi va u yiqilsa ro'yxat
+  // baribir chiziladi — do'kon nomi/holati statistikadan mustaqil.
+  const [stats, setStats] = useState({});
+
   const load = useCallback(async () => {
     setLoading(true);
     try { setShops((await shopApi.getAll()).data || []); }
     catch (e) { toast.error(e.message); }
     finally { setLoading(false); }
+
+    try {
+      const rows = (await shopApi.stats()).data?.shops || [];
+      setStats(Object.fromEntries(rows.map(r => [r.shopId, r])));
+    } catch (_) { /* statistika ixtiyoriy — ro'yxatni to'sib qo'ymaydi */ }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -117,7 +126,13 @@ export default function ShopsPage({ toast }) {
                   <th>{t("adm.shops.colShop")}</th><th>{t("adm.shops.colCode")}</th>
                   <th>{t("adm.shops.colType")}</th><th>{t("adm.shops.colOwner")}</th>
                   <th>{t("common.phone")}</th><th>{t("common.address")}</th>
-                  <th>{t("common.status")}</th><th>{t("common.createdAt")}</th><th />
+                  <th>{t("common.status")}</th>
+                  {/* Tartib TANA bilan bir xil bo'lishi shart: yangi ustunlar
+                      holatdan keyin qo'shildi, "Yaratilgan" esa ulardan keyin. */}
+                  <th>{t("adm.shops.colLastSale")}</th>
+                  <th className="num">{t("adm.shops.colRevenue30d")}</th>
+                  <th>{t("common.createdAt")}</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -151,6 +166,18 @@ export default function ShopsPage({ toast }) {
                       <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>{shop.phone||"—"}</td>
                       <td style={{ fontSize:12, color:"var(--text3)", maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{shop.address||"—"}</td>
                       <td><Badge color={st.color}>{st.label}</Badge></td>
+                      {/* "Oxirgi sotuv" — panelning eng foydali ustuni:
+                          do'kon tashlab ketilganini bitta qarashda ko'rsatadi.
+                          Ro'yxatdan o'tgan do'kon soni buni aytmaydi. */}
+                      <td className="ek-num" style={{ fontSize:12, whiteSpace:"nowrap",
+                            color: stats[shop.id]?.lastSaleAt ? "var(--fg-primary)" : "var(--fg-secondary)" }}>
+                        {stats[shop.id]?.lastSaleAt
+                          ? fmtDate(stats[shop.id].lastSaleAt)
+                          : <span style={{ fontStyle:"italic" }}>{t("adm.shops.neverSold")}</span>}
+                      </td>
+                      <td className="num ek-num" style={{ fontSize:12, fontWeight:700 }}>
+                        {money(stats[shop.id]?.revenue30d || 0)}
+                      </td>
                       <td style={{ fontSize:12, color:"var(--text3)" }}>{fmtDate(shop.createdAt)}</td>
                       <td>
                         {isDeleted ? (
@@ -184,7 +211,7 @@ export default function ShopsPage({ toast }) {
                     </tr>
                   );
                 }) : (
-                  <tr><td colSpan={9}><Empty icon="fa-store" title={t("adm.shops.notFound")} /></td></tr>
+                  <tr><td colSpan={11}><Empty icon="fa-store" title={t("adm.shops.notFound")} /></td></tr>
                 )}
               </tbody>
             </table>

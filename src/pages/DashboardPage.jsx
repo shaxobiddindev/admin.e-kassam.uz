@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { shopApi, userApi, contactApi } from "../api";
-import { fmtDate, SHOP_STATUS, shopStatus } from "../utils";
+import { fmtDate, SHOP_STATUS, shopStatus, money } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
@@ -19,6 +19,7 @@ export default function DashboardPage({ toast, setPage }) {
   const { t } = useT();
   const [shops,   setShops]   = useState([]);
   const [requests, setRequests] = useState([]);
+  const [stats,    setStats]    = useState(null);
   const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
   // Tez javobda skeleton umuman chizilmaydi (180ms), chizilsa 400ms turadi.
@@ -32,12 +33,13 @@ export default function DashboardPage({ toast, setPage }) {
     // Xato esa JIMGINA yutilmaydi (A10): ilgari `.catch(() => ({data:[]}))`
     // tufayli foydalanuvchi bo'sh, "hammasi joyida" ko'rinishdagi panelni
     // ko'rardi va nimadir ishlamayotganini bilmasdi.
-    Promise.allSettled([shopApi.getAll(), userApi.getAll(), contactApi.getAll()])
+    Promise.allSettled([shopApi.getAll(), userApi.getAll(), contactApi.getAll(), shopApi.stats()])
       .then((res) => {
-        const [s, u, c] = res;
+        const [s, u, c, st] = res;
         if (s.status === "fulfilled") setShops(s.value?.data || []);
         if (u.status === "fulfilled") setUsers(u.value?.data || []);
         if (c.status === "fulfilled") setRequests(c.value?.data || []);
+        if (st.status === "fulfilled") setStats(st.value?.data || null);
 
         const failed = res.filter(r => r.status === "rejected");
         if (failed.length) {
@@ -77,15 +79,23 @@ export default function DashboardPage({ toast, setPage }) {
   return (
     <div>
       {/* ── KPI qatori — raqamlar sanaladi (.ek-countup) ─────────────────── */}
+      {/* KPI qatori do'kon SONI dan biznes holatiga o'zgartirildi.
+          Ilgari to'rttala katakcha ham ro'yxat uzunligini ko'rsatardi:
+          tizimda qancha pul aylanayotgani va qaysi do'kon tashlab
+          ketilgani hech qayerda ko'rinmasdi.
+
+          `delta` ATAYLAB berilmaydi — u "avvalgi davrga nisbatan
+          o'zgarish" degani va buning uchun backend tarixiy raqamni
+          qaytarishi kerak. Ilgari bu yerda `aktiv/jami*100-100` turardi
+          va 4 tadan 3 tasi aktiv bo'lsa "−25% pasayish" deb ko'rsatardi. */}
       <div className="kpi-row">
-        <Kpi label={t("adm.dash.totalShops")}  value={shops.length} />
-        {/* `delta` ATAYLAB berilmaydi: u "avvalgi davrga nisbatan o'zgarish"
-            degani. Ilgari bu yerda `aktiv/jami*100-100` turardi va 4 tadan
-            3 tasi aktiv bo'lsa "−25% pasayish" deb qizil ko'rsatardi.
-            Haqiqiy taqqoslash uchun backend tarixiy raqamni qaytarishi kerak. */}
-        <Kpi label={t("adm.dash.activeShops")} value={activeShops} />
-        <Kpi label={t("adm.dash.totalUsers")}   value={users.length} />
-        <Kpi label={t("adm.dash.activeUsers")}  value={activeUsers} />
+        <Kpi label={t("adm.dash.activeShops30d")}
+             value={stats?.activeShops30d ?? activeShops}
+             hint={t("adm.dash.activeHint")} />
+        <Kpi label={t("adm.dash.revenue30d")}
+             value={stats?.revenue30d ?? 0} format={money} />
+        <Kpi label={t("adm.dash.newRequests")} value={newRequests} />
+        <Kpi label={t("adm.dash.totalShops")}  value={stats?.totalShops ?? shops.length} />
       </div>
 
       <div className="g2c">

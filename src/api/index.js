@@ -100,6 +100,10 @@ export const authApi = {
 // ── Do'konlar ───────────────────────────────────────────────────
 export const shopApi = {
   getAll:  ()         => req("/superadmin/shops"),
+  // Faollik kesimi: oxirgi sotuv sanasi va 30 kunlik tushum.
+  // Do'kon ro'yxatidan ALOHIDA: ro'yxatni chizish uchun agregatsiya
+  // kerak emas va uni har safar hisoblash bekorga bo'lardi.
+  stats:   ()         => req("/superadmin/shops/stats"),
   getById: (id)       => req(`/superadmin/shops/${id}`),
   create:  (data)     => req("/superadmin/shops",       { method: "POST",   ...body(data) }),
   update:  (id, data) => req(`/superadmin/shops/${id}`, { method: "PUT",    ...body(data) }),

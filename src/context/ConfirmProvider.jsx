@@ -3,10 +3,13 @@ import { t } from "../lib/ek-i18n";
 
 const ConfirmCtx = createContext(null);
 
+/* Ranglar TOKENLARDAN. Ilgari bu yerda `#ef4444` turardi va fon uni
+   `color + "18"` deb yasardi — ya'ni qorong'i rejimda ham o'zgarmaydigan
+   och qizil dog'. Endi ikkala qiymat ham temaga bo'ysunadi. */
 const TYPE_STYLES = {
-  danger:  { icon: "fa-triangle-exclamation", color: "#ef4444", btnClass: "btn-danger" },
-  warning: { icon: "fa-circle-exclamation",   color: "#f59e0b", btnClass: "btn-warning" },
-  info:    { icon: "fa-circle-info",          color: "#017dca", btnClass: "btn-primary" },
+  danger:  { icon: "fa-triangle-exclamation", fg: "var(--fg-danger)",  bg: "var(--bg-danger-subtle)",  btnClass: "btn-danger"  },
+  warning: { icon: "fa-circle-exclamation",   fg: "var(--fg-warning)", bg: "var(--bg-warning-subtle)", btnClass: "btn-warning" },
+  info:    { icon: "fa-circle-info",          fg: "var(--fg-brand)",   bg: "var(--bg-brand-subtle)",   btnClass: "btn-primary" },
 };
 
 export function ConfirmProvider({ children }) {
@@ -45,8 +48,8 @@ export function ConfirmProvider({ children }) {
                 <div
                   style={{
                     width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                    background: TYPE_STYLES[state.type]?.color + "18",
-                    color: TYPE_STYLES[state.type]?.color,
+                    background: TYPE_STYLES[state.type]?.bg,
+                    color:      TYPE_STYLES[state.type]?.fg,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 18,
                   }}
@@ -59,13 +62,13 @@ export function ConfirmProvider({ children }) {
                 onClick={() => handle(false)}
                 aria-label={t("common.close")}
                 style={{ background: "none", border: "none", cursor: "pointer",
-                  color: "var(--text3)", fontSize: 18, padding: "4px 6px" }}
+                  color: "var(--fg-tertiary)", fontSize: 18, padding: "4px 6px" }}
               >
                 <i className="fa-solid fa-xmark" />
               </button>
             </div>
             <div className="mbody" style={{ paddingTop: 0, paddingBottom: 8 }}>
-              <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: "var(--fg-secondary)", lineHeight: 1.6 }}>
                 {state.message}
               </p>
             </div>

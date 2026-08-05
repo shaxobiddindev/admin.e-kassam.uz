@@ -1,6 +1,5 @@
 import "./styles.css";
-/* BUILD_ID: ADMIN_I18N_V1 */
-import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LOGIN_URL } from "./config";
 import { initLang, withLang, useT } from "./lib/ek-i18n";
 import { useAuth }  from "./hooks/useAuth";
@@ -8,6 +7,7 @@ import { useToast } from "./hooks/useToast";
 
 import Toast         from "./components/Toast";
 import Layout        from "./components/Layout";
+import { BootLoader } from "./components/ek/Loading";
 import { ConfirmProvider } from "./context/ConfirmProvider";
 import DashboardPage from "./pages/DashboardPage";
 import ShopsPage     from "./pages/ShopsPage";
@@ -16,16 +16,7 @@ import CustomersPage from "./pages/CustomersPage";
 import RequestsPage  from "./pages/RequestsPage";
 import AuditPage     from "./pages/AuditPage";
 import SettingsPage  from "./pages/SettingsPage";
-
-const PAGES = {
-  dashboard: DashboardPage,
-  requests:  RequestsPage,
-  shops:     ShopsPage,
-  users:     UsersPage,
-  customers: CustomersPage,
-  audit:     AuditPage,
-  settings:  SettingsPage,
-};
+import NotFound      from "./pages/NotFound";
 
 // ⚠ Tilni URL dan olish MODUL TANASIDA, `replaceState` dan OLDIN bo'lishi shart.
 // Bu fayl `main.jsx` dan import qilinadi va ES modul tartibiga ko'ra shu tana
@@ -80,20 +71,35 @@ export default function App() {
   // Yagona til obunasi: til o'zgarganda BUTUN daraxt qayta chiziladi va
   // ichkaridagi barcha `t()` chaqiruvlari yangi tilni oladi.
   useT();
-  const { user, logout }           = useAuth();
+  const { user, ready, logout }    = useAuth();
   const { toasts, toast, dismiss } = useToast();
-  const [page, setPage]            = useState("dashboard");
 
-  if (!user) return null;
-
-  const PageComponent = PAGES[page] || DashboardPage;
+  // Serverdan tasdiq kelmaguncha panel CHIZILMAYDI. localStorage'ga qarab
+  // "optimistik" ko'rsatish mumkin edi, lekin aynan o'sha yolg'on B9 ning
+  // mohiyati: `ek_role` ni qo'lda o'zgartirgan odam bir zumga bo'lsa ham
+  // o'ziga tegishli bo'lmagan bo'limlarni ko'rardi.
+  if (!ready) return <BootLoader />;
+  if (!user)  return null;
 
   return (
     <ConfirmProvider>
-      <Toast toasts={toasts} onDismiss={dismiss} />
-      <Layout page={page} setPage={setPage} user={user} onLogout={logout}>
-        <PageComponent toast={toast} setPage={setPage} user={user} onLogout={logout} />
-      </Layout>
+      <BrowserRouter>
+        <Toast toasts={toasts} onDismiss={dismiss} />
+        <Layout user={user} onLogout={logout}>
+          <Routes>
+            <Route path="/"          element={<DashboardPage toast={toast} />} />
+            <Route path="/requests"  element={<RequestsPage  toast={toast} />} />
+            <Route path="/shops"     element={<ShopsPage     toast={toast} />} />
+            <Route path="/users"     element={<UsersPage     toast={toast} />} />
+            <Route path="/customers" element={<CustomersPage toast={toast} />} />
+            <Route path="/audit"     element={<AuditPage     toast={toast} />} />
+            <Route path="/settings"  element={<SettingsPage  toast={toast} user={user} onLogout={logout} />} />
+            {/* Noma'lum manzil — Dashboard'ga JIMGINA qaytarilmaydi:
+                foydalanuvchi so'ragan sahifada ekanman deb o'ylardi. */}
+            <Route path="*"          element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </BrowserRouter>
     </ConfirmProvider>
   );
 }

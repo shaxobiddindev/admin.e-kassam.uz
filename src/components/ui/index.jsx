@@ -85,7 +85,7 @@ export function Search({ value, onChange, placeholder, style }) {
         <button
           onClick={() => onChange("")}
           aria-label={t("common.reset")}
-          style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text3)", fontSize: 13, padding: 0 }}
+          style={{ border: "none", background: "none", cursor: "pointer", color: "var(--fg-tertiary)", fontSize: 13, padding: 0 }}
         >
           <i className="fa-solid fa-xmark" />
         </button>

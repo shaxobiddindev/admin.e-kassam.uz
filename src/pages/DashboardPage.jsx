@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { shopApi, userApi, contactApi } from "../api";
 import { fmtDate, SHOP_STATUS, shopStatus, money } from "../utils";
 import { useT } from "../lib/ek-i18n";
@@ -7,6 +8,7 @@ import { useLoading } from "../lib/use-loading";
 import { Badge } from "../components/ui";
 import Kpi from "../components/ek/Kpi";
 import AttentionList from "../components/ek/AttentionList";
+import RevenueChart from "../components/RevenueChart";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Superadmin bosh sahifasi — 07-ADMIN.md
@@ -15,8 +17,12 @@ import AttentionList from "../components/ek/AttentionList";
    Ekran bitta savolga javob beradi: tizimda bugun nima e'tibor talab qiladi?
    ══════════════════════════════════════════════════════════════════════════ */
 
-export default function DashboardPage({ toast, setPage }) {
+export default function DashboardPage({ toast }) {
   const { t } = useT();
+  // "E'tibor talab qiladi" qatorlari endi HAQIQIY manzilga olib boradi:
+  // ilgari `setPage` faqat holatni almashtirardi va o'sha ko'rinishga
+  // havola berib bo'lmasdi.
+  const navigate = useNavigate();
   const [shops,   setShops]   = useState([]);
   const [requests, setRequests] = useState([]);
   const [stats,    setStats]    = useState(null);
@@ -70,15 +76,15 @@ export default function DashboardPage({ toast, setPage }) {
        pul masalasi. Bloklangan do'kon esa ma'muriy holat. */
     (stats?.expiringSoon || 0) > 0 && { id: "expiring", icon: "fa-hourglass-half", tone: "warning",
       text: t("adm.dash.attExpiring"), count: stats.expiringSoon,
-      onClick: () => setPage("shops") },
+      onClick: () => navigate("/shops") },
     blockedShops && { id: "blocked", icon: "fa-ban", tone: "danger",
-      text: t("adm.dash.attBlockedShops"), count: blockedShops, onClick: () => setPage("shops") },
+      text: t("adm.dash.attBlockedShops"), count: blockedShops, onClick: () => navigate("/shops") },
     suspended && { id: "suspended", icon: "fa-pause", tone: "warning",
-      text: t("adm.dash.attSuspended"), count: suspended, onClick: () => setPage("shops") },
+      text: t("adm.dash.attSuspended"), count: suspended, onClick: () => navigate("/shops") },
     ownerless && { id: "ownerless", icon: "fa-user-slash", tone: "warning",
-      text: t("adm.dash.attOwnerless"), count: ownerless, onClick: () => setPage("shops") },
+      text: t("adm.dash.attOwnerless"), count: ownerless, onClick: () => navigate("/shops") },
     blockedUsers && { id: "blockedUsers", icon: "fa-user-lock", tone: "info",
-      text: t("adm.dash.attBlockedUsers"), count: blockedUsers, onClick: () => setPage("users") },
+      text: t("adm.dash.attBlockedUsers"), count: blockedUsers, onClick: () => navigate("/users") },
   ].filter(Boolean);
 
   return (
@@ -103,12 +109,19 @@ export default function DashboardPage({ toast, setPage }) {
         <Kpi label={t("adm.dash.totalShops")}  value={stats?.totalShops ?? shops.length} />
       </div>
 
+      {/* ── 14 kunlik tushum grafigi ──────────────────────────────────────
+          07-ADMIN.md: "Grafik: 14 kunlik tushum. Bugungi ustun ajratilgan."
+          Yonida raqamli jadval varianti va eksport tugmalari bor. */}
+      {!busy && <div style={{ marginBottom: 14 }}>
+        <RevenueChart data={stats?.daily || []} toast={toast} />
+      </div>}
+
       <div className="g2c">
         {/* ── Do'konlar jadvali ─────────────────────────────────────────── */}
         <div className="card">
           <div className="c-head">
             <span className="c-title"><i className="fa-solid fa-store" aria-hidden="true" />{t("adm.dash.shops")}</span>
-            <button className="btn btn-outline btn-sm" onClick={() => setPage("shops")}>
+            <button className="btn btn-outline btn-sm" onClick={() => navigate("/shops")}>
               {t("adm.dash.seeAll")} <i className="fa-solid fa-arrow-right" aria-hidden="true" />
             </button>
           </div>

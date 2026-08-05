@@ -8,6 +8,7 @@ import { useConfirm } from "../context/ConfirmProvider";
 import Select from "../components/ek/Select";
 import { SkeletonList, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
+import ExportButtons from "../components/ExportButtons";
 
 export default function UsersPage({ toast }) {
   const { t } = useT();
@@ -67,6 +68,19 @@ export default function UsersPage({ toast }) {
     return !q || u.fullName?.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q);
   });
 
+  /* Eksport — tanlangan DO'KONNING ekrandagi ro'yxati. Fayl nomiga do'kon
+     kodi qo'shiladi, aks holda uchta do'konning uchta fayli bir xil nom
+     bilan tushib, qaysi biri qaysiligi bilinmasdi. */
+  const exportHeaders = [
+    t("adm.users.colUser"), t("common.username"), t("common.role"), t("common.status"),
+  ];
+  const exportRows = filtered.map((u) => [
+    u.fullName,
+    u.username,
+    (u.roles || []).map(r => roleLabel(r.name || r.type || r)).join(", "),
+    t(u.enabled ? "common.active" : "common.blocked"),
+  ]);
+
   return (
     <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
 
@@ -122,9 +136,11 @@ export default function UsersPage({ toast }) {
                   })}
                 </div>
               </div>
-              <div style={{ display:"flex", gap:8 }}>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                 <Search value={search} onChange={setSearch}
                   placeholder={t("adm.users.searchPlaceholder")} style={{ width:200 }} />
+                <ExportButtons name={`xodimlar-${selShop.code || selShop.id}`}
+                               headers={exportHeaders} rows={exportRows} toast={toast} />
                 <button className={`btn btn-sm ${!hasOwner ? "btn-green" : "btn-primary"}`} onClick={() => setAddOpen(true)}>
                   <i className={`fa-solid ${!hasOwner ? "fa-crown" : "fa-user-plus"}`} />
                   {t(hasOwner ? "common.add" : "adm.users.addOwner")}
@@ -341,7 +357,9 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
     fontFamily:"var(--font)", cursor:"pointer",
     background: tab === k ? "var(--bg-surface)" : "transparent",
     color: tab === k ? "var(--fg-brand)" : "var(--fg-secondary)",
-    boxShadow: tab === k ? "0 1px 4px rgba(0,0,0,.1)" : "none",
+    // Qattiq `rgba(0,0,0,.1)` emas: qorong'i rejimda qora soya ko'rinmaydi,
+    // token esa ikkala temaga ham moslangan.
+    boxShadow: tab === k ? "var(--sh-sm)" : "none",
   });
 
   return (

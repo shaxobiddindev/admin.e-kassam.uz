@@ -5,6 +5,9 @@ import { useT } from "../lib/ek-i18n";
 import { Empty, Search, Avatar } from "../components/ui";
 import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
+import VirtualTable from "../components/VirtualTable";
+import ExportButtons from "../components/ExportButtons";
+import { isoDate } from "../utils/export";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Mijozlar — FAQAT O'QISH.
@@ -45,6 +48,63 @@ export default function CustomersPage({ toast }) {
     return () => clearTimeout(id);
   }, [search]);
 
+  /* Eksport EKRANDAGI ro'yxatni oladi: qidiruv qo'llanilgan bo'lsa, faylga
+     ham o'sha natija tushadi. Summa RAQAM, sana esa ISO shaklida yoziladi —
+     aks holda Excel'da ustunni yig'ib ham, saralab ham bo'lmasdi. */
+  const exportHeaders = [
+    t("adm.customers.colCustomer"), t("common.phone"),
+    t("adm.shops.colShop"), t("adm.shops.colCode"),
+    t("cust.totalSpent"), t("adm.customers.colRegistered"),
+  ];
+  const exportRows = customers.map(c => [
+    c.fullName, c.phone || "", c.shopName || "", c.shopCode || "",
+    c.totalSpent || 0, isoDate(c.createdAt),
+  ]);
+
+  const head = (
+    <thead>
+      <tr>
+        <th>{t("adm.customers.colCustomer")}</th>
+        <th>{t("common.phone")}</th>
+        <th>{t("adm.shops.colShop")}</th>
+        <th className="num">{t("cust.totalSpent")}</th>
+        <th className="num">{t("adm.customers.colRegistered")}</th>
+      </tr>
+    </thead>
+  );
+
+  const row = (c) => (
+    <tr key={c.id}>
+      <td>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <Avatar name={c.fullName} size={30} radius={8} />
+          <span style={{ fontWeight:700 }}>{c.fullName}</span>
+        </div>
+      </td>
+      <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
+        {c.phone || "—"}
+      </td>
+      <td style={{ fontSize:12 }}>
+        {c.shopName ? (
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            <span style={{ fontWeight:600 }}>{c.shopName}</span>
+            <span className="ek-num" style={{ fontSize:10, color:"var(--fg-secondary)" }}>
+              {c.shopCode}
+            </span>
+          </div>
+        ) : (
+          <span style={{ color:"var(--fg-secondary)" }}>—</span>
+        )}
+      </td>
+      <td className="num ek-num" style={{ fontWeight:700 }}>
+        {money(c.totalSpent || 0)}
+      </td>
+      <td className="num ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
+        {fmtDate(c.createdAt)}
+      </td>
+    </tr>
+  );
+
   return (
     <div>
       <div className="card">
@@ -53,63 +113,29 @@ export default function CustomersPage({ toast }) {
             <i className="fa-solid fa-address-book" aria-hidden="true" />
             {t("adm.customers.title")}
           </span>
-          <div style={{ display:"flex", gap:8 }}>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
             <Search value={search} onChange={setSearch}
               placeholder={t("adm.customers.searchPlaceholder")} style={{ width:240 }} />
+            <ExportButtons name="mijozlar" headers={exportHeaders} rows={exportRows} toast={toast} />
           </div>
         </div>
-        <div className="tw">
-          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "text", "num", "num"]} /> : (
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("adm.customers.colCustomer")}</th>
-                  <th>{t("common.phone")}</th>
-                  <th>{t("adm.shops.colShop")}</th>
-                  <th className="num">{t("cust.totalSpent")}</th>
-                  <th className="num">{t("adm.customers.colRegistered")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customers.length > 0 ? customers.map(c => (
-                  <tr key={c.id}>
-                    <td>
-                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                        <Avatar name={c.fullName} size={30} radius={8} />
-                        <span style={{ fontWeight:700 }}>{c.fullName}</span>
-                      </div>
-                    </td>
-                    <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
-                      {c.phone || "—"}
-                    </td>
-                    <td style={{ fontSize:12 }}>
-                      {c.shopName ? (
-                        <div style={{ display:"flex", flexDirection:"column" }}>
-                          <span style={{ fontWeight:600 }}>{c.shopName}</span>
-                          <span className="ek-num" style={{ fontSize:10, color:"var(--fg-secondary)" }}>
-                            {c.shopCode}
-                          </span>
-                        </div>
-                      ) : (
-                        <span style={{ color:"var(--fg-secondary)" }}>—</span>
-                      )}
-                    </td>
-                    <td className="num ek-num" style={{ fontWeight:700 }}>
-                      {money(c.totalSpent || 0)}
-                    </td>
-                    <td className="num ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
-                      {fmtDate(c.createdAt)}
-                    </td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={5}>
-                    <Empty icon="fa-address-book" title={t("adm.customers.notFound")} />
-                  </td></tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {busy ? (
+          <div className="tw">
+            <SkeletonTable rows={7} cols={["wide", "text", "text", "num", "num"]} />
+          </div>
+        ) : (
+          /* Mijozlar ro'yxati serverdan BUTUNLAY keladi — aynan shu jadval
+             minglab qatorga yetishi mumkin. 50 qatordan oshsa
+             `VirtualTable` faqat ko'rinadigan qismini chizadi. */
+          <VirtualTable
+            rows={customers}
+            head={head}
+            renderRow={row}
+            empty={<tr><td colSpan={5}>
+              <Empty icon="fa-address-book" title={t("adm.customers.notFound")} />
+            </td></tr>}
+          />
+        )}
       </div>
     </div>
   );

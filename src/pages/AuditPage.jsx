@@ -6,6 +6,8 @@ import { Empty, Search, Badge } from "../components/ui";
 import Select from "../components/ek/Select";
 import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
+import ExportButtons from "../components/ExportButtons";
+import { isoDateTime } from "../utils/export";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Audit jurnali — kim, nima qildi va qachon.
@@ -75,6 +77,20 @@ export default function AuditPage({ toast }) {
     return () => clearTimeout(id);
   }, [load]);
 
+  const exportHeaders = [
+    t("audit.colTime"), t("audit.colActor"),
+    t("audit.colAction"), t("audit.colSummary"), "IP",
+  ];
+  const exportRows = (data.items || []).map((row) => [
+    isoDateTime(row.createdAt),
+    // Ekranda ism va tur ikki qatorda turadi; faylda bitta katakda,
+    // chunki CSV da "ikkinchi qator" degan tushuncha yo'q.
+    `${row.actorUsername || "—"} (${t(`audit.actor.${row.actorType || "SYSTEM"}`)})`,
+    t(`enum.audit.${row.action}`),
+    [row.summary, row.details].filter(Boolean).join(" — "),
+    row.ip || "",
+  ]);
+
   return (
     <div>
       <div className="card">
@@ -93,6 +109,11 @@ export default function AuditPage({ toast }) {
             />
             <Search value={actor} onChange={setActor}
               placeholder={t("audit.filterActor")} style={{ width:200 }} />
+            {/* ⚠ Eksport JORIY SAHIFANI oladi (50 qator), butun jurnalni emas:
+                jurnal cheksiz o'sadi va uni to'liq yuklash panelni yiqitardi.
+                Butun jurnal kerak bo'lsa — bazadan, filtr bilan. */}
+            <ExportButtons name={`audit-${data.page + 1}`}
+                           headers={exportHeaders} rows={exportRows} toast={toast} />
           </div>
         </div>
 

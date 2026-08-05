@@ -10,6 +10,8 @@ import Select from "../components/ek/Select";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import { SkeletonList } from "../components/ek/Loading";
+import ExportButtons from "../components/ExportButtons";
+import { isoDate } from "../utils/export";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -107,6 +109,24 @@ export default function ShopsPage({ toast }) {
     catch (e) { toast.error(e.message); }
   };
 
+  /* Eksport EKRANDAGI ro'yxatni oladi (`filtered`): tab va qidiruvdan keyin
+     nima ko'rinayotgan bo'lsa, faylga ham o'sha tushadi. Summa va sana
+     xom holida yoziladi — Excel'da yig'ish va saralash uchun. */
+  const exportHeaders = [
+    t("adm.shops.colShop"), t("adm.shops.colCode"), t("adm.shops.colType"),
+    t("adm.shops.colOwner"), t("common.phone"), t("common.address"),
+    t("common.status"), t("adm.shops.colPlan"),
+    t("adm.shops.colLastSale"), t("adm.shops.colRevenue30d"), t("common.createdAt"),
+  ];
+  const exportRows = filtered.map((s) => [
+    s.name, s.code, s.parentShopName || "", s.ownerName || "",
+    s.phone || "", s.address || "",
+    shopStatus(s.status).label, s.plan || "",
+    isoDate(stats[s.id]?.lastSaleAt),
+    stats[s.id]?.revenue30d ?? 0,
+    isoDate(s.createdAt),
+  ]);
+
   const counts = {
     ALL:       shops.length,
     ACTIVE:    shops.filter(s => s.status === "ACTIVE").length,
@@ -138,8 +158,9 @@ export default function ShopsPage({ toast }) {
               <button key={k} className={`tab ${filter===k?"on":""}`} onClick={() => setFilter(k)}>{l}</button>
             ))}
           </div>
-          <div style={{ display:"flex", gap:8 }}>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
             <Search value={search} onChange={setSearch} placeholder={t("adm.shops.searchPlaceholder")} style={{ width:220 }} />
+            <ExportButtons name="dokonlar" headers={exportHeaders} rows={exportRows} toast={toast} />
             <button className="btn btn-primary btn-sm" onClick={() => setModal("add")}>
               <i className="fa-solid fa-plus" /> {t("adm.shops.new")}
             </button>
@@ -172,7 +193,7 @@ export default function ShopsPage({ toast }) {
                     <tr key={shop.id} style={{ opacity: isDeleted ? 0.5 : 1 }}>
                       <td>
                         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                          <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, background:"var(--blue-l)", color:"var(--blue)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:900 }}>
+                          <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, background:"var(--bg-brand-subtle)", color:"var(--bg-brand)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:900 }}>
                             {shop.name?.[0]?.toUpperCase()}
                           </div>
                           <span style={{ fontWeight:700 }}>{shop.name}</span>
@@ -183,17 +204,17 @@ export default function ShopsPage({ toast }) {
                         {shop.parentShopId ? (
                           <div style={{ display:"flex", flexDirection:"column" }}>
                             <span className="badge badge-orange" style={{ fontSize:9 }}>{t("adm.shops.typeBranch")}</span>
-                            <span style={{ fontSize:10, color:"var(--text3)", marginTop:2 }}>{shop.parentShopName}</span>
+                            <span style={{ fontSize:10, color:"var(--fg-tertiary)", marginTop:2 }}>{shop.parentShopName}</span>
                           </div>
                         ) : (
                           <span className="badge badge-green" style={{ fontSize:9 }}>{t("adm.shops.typeMain")}</span>
                         )}
                       </td>
                       <td style={{ fontWeight:700 }}>
-                        {shop.ownerName || <span style={{ color:"var(--text3)", fontWeight:400 }}>—</span>}
+                        {shop.ownerName || <span style={{ color:"var(--fg-tertiary)", fontWeight:400 }}>—</span>}
                       </td>
                       <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>{shop.phone||"—"}</td>
-                      <td style={{ fontSize:12, color:"var(--text3)", maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{shop.address||"—"}</td>
+                      <td style={{ fontSize:12, color:"var(--fg-tertiary)", maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{shop.address||"—"}</td>
                       <td><Badge color={st.color}>{st.label}</Badge></td>
                       {/* Tarif + muddat. Filialda obuna yo'q — u bosh
                           do'konning obunasi ichida yashaydi. */}
@@ -223,7 +244,7 @@ export default function ShopsPage({ toast }) {
                       <td className="num ek-num" style={{ fontSize:12, fontWeight:700 }}>
                         {money(stats[shop.id]?.revenue30d || 0)}
                       </td>
-                      <td style={{ fontSize:12, color:"var(--text3)" }}>{fmtDate(shop.createdAt)}</td>
+                      <td style={{ fontSize:12, color:"var(--fg-tertiary)" }}>{fmtDate(shop.createdAt)}</td>
                       <td>
                         {isDeleted ? (
                           /* O'chirilgan do'konlarda hech qanday amal yo'q */

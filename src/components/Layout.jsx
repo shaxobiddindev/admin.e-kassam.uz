@@ -1,50 +1,11 @@
 import { useState, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { LOGO_URL, LOGO_DARK_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 import { useConfirm } from "../context/ConfirmProvider";
 import { useT } from "../lib/ek-i18n";
+import { NAV, navItemByPath } from "../routes";
 
-/* Yon menyu tuzilishi — YORLIQ EMAS, KALIT saqlanadi. Yorliq har render'da
-   `t()` dan olinadi, aks holda til almashtirilganda menyu eski tilda qolardi. */
-const NAV = [
-  { sec: "nav.section.main", items: [
-    { id: "dashboard", key: "nav.dashboard", icon: "fa-chart-pie" },
-    // Arizalar — Dashboard'dan keyin darhol: landingdan kelgan lid
-    // javobsiz qolmasligi kerak, bu bo'lim ko'zga birinchi tushsin.
-    { id: "requests",  key: "nav.requests",  icon: "fa-inbox" },
-  ]},
-  { sec: "nav.section.system", items: [
-    { id: "shops",     key: "nav.shops",     icon: "fa-store"        },
-    { id: "users",     key: "nav.users",     icon: "fa-users"        },
-    { id: "customers", key: "nav.customers", icon: "fa-address-book" },
-    // Audit — tizim boshqaruvining oxirida: kundalik emas, lekin
-    // kerak bo'lganda topilishi oson joyda.
-    { id: "audit",     key: "nav.audit",     icon: "fa-clipboard-list" },
-  ]},
-  { sec: "nav.section.settings", items: [
-    { id: "settings",  key: "nav.settings",  icon: "fa-gear" },
-  ]},
-];
-
-const ICONS = {
-  dashboard: "fa-chart-pie",
-  requests:  "fa-inbox",
-  shops:     "fa-store",
-  users:     "fa-users",
-  customers: "fa-address-book",
-  audit:     "fa-clipboard-list",
-  settings:  "fa-gear",
-};
-const TITLE_KEYS = {
-  dashboard: "nav.dashboard",
-  requests:  "nav.requests",
-  shops:     "nav.shops",
-  users:     "nav.users",
-  customers: "nav.customers",
-  audit:     "nav.audit",
-  settings:  "nav.settings",
-};
-
-function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, onToggleCollapse }) {
+function Sidebar({ user, onLogout, open, onClose, isCollapsed, onToggleCollapse }) {
   const { t } = useT();
   const roleInfo = ADMIN_ROLE_LABELS[user?.role];
   const roleLabel = roleInfo?.label || t("enum.adminRole.SUPER_ADMIN");
@@ -76,19 +37,23 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
             {group.items.map((item) => {
               const label = t(item.key);
               return (
-                /* Bosiladigan element — TUGMA, `<div>` emas: klaviatura bilan
-                   yetib boriladi va ekran o'quvchi uni bosiladigan deb o'qiydi. */
-                <button
+                /* Bosiladigan element — HAVOLA, tugma emas: manzili bor,
+                   yangi oynada ochish va nusxa olish ishlaydi. Faol holat
+                   `NavLink` dan keladi, ya'ni manzil qanday o'zgarishidan
+                   qat'i nazar (menyu, "orqaga", F5) to'g'ri bo'ladi.
+                   `end` — faqat Dashboard uchun: aks holda "/" barcha
+                   sahifalarda faol bo'lib turardi. */
+                <NavLink
                   key={item.id}
-                  type="button"
-                  className={`sb-item ${page === item.id ? "on" : ""}`}
-                  onClick={() => { setPage(item.id); onClose(); }}
+                  to={item.path}
+                  end={item.path === "/"}
+                  className={({ isActive }) => `sb-item ${isActive ? "on" : ""}`}
+                  onClick={onClose}
                   title={isCollapsed ? label : ""}
-                  aria-current={page === item.id ? "page" : undefined}
                 >
                   <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
                   <span>{label}</span>
-                </button>
+                </NavLink>
               );
             })}
           </div>
@@ -117,9 +82,10 @@ function Sidebar({ page, setPage, user, onLogout, open, onClose, isCollapsed, on
   );
 }
 
-export default function Layout({ page, setPage, user, onLogout, children }) {
+export default function Layout({ user, onLogout, children }) {
   const { t } = useT();
   const confirm = useConfirm();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem("adm_sb_collapsed") === "1");
 
@@ -145,8 +111,12 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
     if (ok) onLogout();
   };
 
-  const titleKey  = TITLE_KEYS[page] || TITLE_KEYS.dashboard;
-  const titleIcon = ICONS[page] || ICONS.dashboard;
+  // Noma'lum manzil — 404. Sarlavha ham shunga mos bo'lsin, aks holda
+  // ekranda "Sahifa topilmadi" yozuvi turib, tepada "Boshqaruv paneli"
+  // deb ko'rinardi.
+  const current    = navItemByPath(pathname);
+  const titleKey   = current?.key  || "notFound.title";
+  const titleIcon  = current?.icon || "fa-map-signs";
 
   return (
     <div className={`app ${isCollapsed ? "collapsed" : ""}`}>
@@ -157,7 +127,7 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
       )}
 
       <Sidebar
-        page={page} setPage={setPage} user={user} onLogout={handleLogout}
+        user={user} onLogout={handleLogout}
         open={open} onClose={() => setOpen(false)}
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
@@ -185,8 +155,9 @@ export default function Layout({ page, setPage, user, onLogout, children }) {
           </div>
         </div>
 
-        {/* Sahifa o'tishi — faqat opacity, 140ms */}
-        <div className="page ek-page-in" key={page}>{children}</div>
+        {/* Sahifa o'tishi — faqat opacity, 140ms. `key` manzil bo'ylab
+            o'zgaradi: shundagina har almashishda animatsiya qayta ishlaydi. */}
+        <div className="page ek-page-in" key={pathname}>{children}</div>
       </div>
     </div>
   );

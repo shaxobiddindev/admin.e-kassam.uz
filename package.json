@@ -4,16 +4,19 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev":     "vite",
-    "build":   "node node_modules/vite/bin/vite.js build",
+    "dev": "vite",
+    "build": "node node_modules/vite/bin/vite.js build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react":     "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@tanstack/react-virtual": "^3.14.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.20.0",
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite":                 "^5.4.10"
+    "vite": "^5.4.10"
   }
 }

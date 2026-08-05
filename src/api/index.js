@@ -104,7 +104,8 @@ export const shopApi = {
   create:  (data)     => req("/superadmin/shops",       { method: "POST",   ...body(data) }),
   update:  (id, data) => req(`/superadmin/shops/${id}`, { method: "PUT",    ...body(data) }),
   delete:  (id)       => req(`/superadmin/shops/${id}`, { method: "DELETE" }),
-  setStatus: (id, status) => req(`/superadmin/shops/${id}/status`, { method: "PATCH", ...body({ status }) }),
+  // ⚠ `PATCH /shops/{id}/status` QO'SHILMAYDI — backendda bunday endpoint
+  // yo'q va hech qachon bo'lmagan. Holat `update` (PUT) orqali yuboriladi.
 };
 
 // ── Foydalanuvchilar ────────────────────────────────────────────
@@ -118,10 +119,11 @@ export const userApi = {
   delete:      (shopId, userId) => req(`/superadmin/shops/${shopId}/users/${userId}`,    { method: "DELETE" }),
 };
 
-// ── Mijozlar ────────────────────────────────────────────────────
+// ── Mijozlar — FAQAT O'QISH ─────────────────────────────────────
+// `update` va `delete` OLIB TASHLANDI: backendda bunday endpointlar yo'q
+// (har doim 405 qaytarardi). Mijoz — do'konning ma'lumoti, uni do'kon
+// xodimi kassir ilovasida tahrirlaydi.
 export const customerApi = {
   getAll:  (params = "") => req(`/superadmin/customers${params ? "?" + params : ""}`),
   getById: (id)          => req(`/superadmin/customers/${id}`),
-  update:  (id, data)    => req(`/superadmin/customers/${id}`, { method: "PUT", ...body(data) }),
-  delete:  (id)          => req(`/superadmin/customers/${id}`, { method: "DELETE" }),
 };

@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
 import { customerApi } from "../api";
-import { fmtDate } from "../utils";
+import { fmtDate, money } from "../utils";
 import { useT } from "../lib/ek-i18n";
-import Modal from "../components/Modal";
-import { Empty, Search, FG, Avatar } from "../components/ui";
-import { SkeletonTable, Spinner } from "../components/ek/Loading";
+import { Empty, Search, Avatar } from "../components/ui";
+import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Mijozlar — FAQAT O'QISH.
+
+   Tahrirlash olib tashlandi: front `PUT /superadmin/customers/{id}` ni
+   chaqirardi, backendda esa bunday endpoint yo'q edi — "Saqlash" har doim
+   405 qaytarardi. Endpoint qo'shish o'rniga amal olib tashlandi, chunki
+   mijoz — DO'KONNING ma'lumoti va uni do'kon xodimi kassir ilovasida
+   tahrirlaydi (o'sha yo'l tenant bilan chegaralangan).
+
+   Buning o'rniga ekranga nazorat uchun kerak narsa qo'shildi: mijoz QAYSI
+   DO'KONGA tegishli va qancha xarid qilgan. Ilgari barcha do'konlarning
+   mijozlari aralash chiqardi va bir xil ismlarni ajratib bo'lmasdi.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 export default function CustomersPage({ toast }) {
   const { t } = useT();
@@ -14,7 +27,6 @@ export default function CustomersPage({ toast }) {
   // Tez javobda skeleton umuman chizilmaydi; chizilsa kamida 400ms turadi.
   const busy = useLoading(loading);
   const [search,    setSearch]    = useState("");
-  const [editC,     setEditC]     = useState(null);
 
   const load = (q = "") => {
     setLoading(true);
@@ -24,40 +36,42 @@ export default function CustomersPage({ toast }) {
       .finally(() => setLoading(false));
   };
 
-  // Qidiruv SERVERDA bajariladi. Ilgari `load(q)` server parametrini
-  // qo'llardi, lekin uni hech kim chaqirmasdi va filtr faqat brauzerda
-  // ishlardi — 10 000 mijozda sahifa cho'kardi.
+  // Qidiruv SERVERDA bajariladi (ism va telefon bo'yicha). Ilgari `load(q)`
+  // server parametrini qo'llardi, lekin uni hech kim chaqirmasdi va filtr
+  // faqat brauzerda ishlardi — 10 000 mijozda sahifa cho'kardi.
   // 300ms kechikish: har harfda so'rov yuborilmasin.
   useEffect(() => {
     const id = setTimeout(() => load(search.trim()), search ? 300 : 0);
     return () => clearTimeout(id);
   }, [search]);
 
-  const filtered = customers;
-
   return (
     <div>
       <div className="card">
         <div className="c-head">
-          <span className="c-title"><i className="fa-solid fa-address-book" aria-hidden="true" />{t("adm.customers.title")}</span>
+          <span className="c-title">
+            <i className="fa-solid fa-address-book" aria-hidden="true" />
+            {t("adm.customers.title")}
+          </span>
           <div style={{ display:"flex", gap:8 }}>
             <Search value={search} onChange={setSearch}
               placeholder={t("adm.customers.searchPlaceholder")} style={{ width:240 }} />
           </div>
         </div>
         <div className="tw">
-          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "num", "narrow"]} /> : (
+          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "text", "num", "num"]} /> : (
             <table>
               <thead>
                 <tr>
                   <th>{t("adm.customers.colCustomer")}</th>
                   <th>{t("common.phone")}</th>
-                  <th>{t("adm.customers.colRegistered")}</th>
-                  <th />
+                  <th>{t("adm.shops.colShop")}</th>
+                  <th className="num">{t("cust.totalSpent")}</th>
+                  <th className="num">{t("adm.customers.colRegistered")}</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.length > 0 ? filtered.map(c => (
+                {customers.length > 0 ? customers.map(c => (
                   <tr key={c.id}>
                     <td>
                       <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -68,18 +82,27 @@ export default function CustomersPage({ toast }) {
                     <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
                       {c.phone || "—"}
                     </td>
-                    <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
-                      {fmtDate(c.createdAt)}
+                    <td style={{ fontSize:12 }}>
+                      {c.shopName ? (
+                        <div style={{ display:"flex", flexDirection:"column" }}>
+                          <span style={{ fontWeight:600 }}>{c.shopName}</span>
+                          <span className="ek-num" style={{ fontSize:10, color:"var(--fg-secondary)" }}>
+                            {c.shopCode}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ color:"var(--fg-secondary)" }}>—</span>
+                      )}
                     </td>
-                    <td>
-                      <button className="btn btn-sm btn-outline"
-                        onClick={() => setEditC(c)} title={t("common.edit")}>
-                        <i className="fa-solid fa-pen" />
-                      </button>
+                    <td className="num ek-num" style={{ fontWeight:700 }}>
+                      {money(c.totalSpent || 0)}
+                    </td>
+                    <td className="num ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
+                      {fmtDate(c.createdAt)}
                     </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={4}>
+                  <tr><td colSpan={5}>
                     <Empty icon="fa-address-book" title={t("adm.customers.notFound")} />
                   </td></tr>
                 )}
@@ -88,56 +111,6 @@ export default function CustomersPage({ toast }) {
           )}
         </div>
       </div>
-
-      {editC && (
-        <EditCustomerModal
-          customer={editC}
-          onClose={() => setEditC(null)}
-          onSaved={() => { setEditC(null); load(); }}
-          toast={toast}
-        />
-      )}
     </div>
-  );
-}
-
-function EditCustomerModal({ customer, onClose, onSaved, toast }) {
-  const { t } = useT();
-  const [form,   setForm]   = useState({
-    fullName: customer.fullName || "",
-    phone:    customer.phone    || "",
-  });
-  const [saving, setSaving] = useState(false);
-  const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-
-  const save = async () => {
-    if (!form.fullName.trim()) { toast.error(t("adm.customers.errName")); return; }
-    setSaving(true);
-    try {
-      await customerApi.update(customer.id, form);
-      toast.success(t("adm.customers.updated"));
-      onSaved();
-    } catch (e) { toast.error(e.message); }
-    finally     { setSaving(false); }
-  };
-
-  return (
-    <Modal title={t("adm.users.editTitle", { name: customer.fullName })} onClose={onClose} footer={
-      <>
-        <button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
-        <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><Spinner /> {t("common.saving")}</>
-                  : <><i className="fa-solid fa-check" /> {t("common.save")}</>}
-        </button>
-      </>
-    }>
-      <FG label={`${t("common.fullName")} *`}>
-        <input className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
-      </FG>
-      <FG label={t("common.phone")}>
-        <input className="fi ek-num" value={form.phone} onChange={set("phone")}
-          placeholder="+998901234567" />
-      </FG>
-    </Modal>
   );
 }

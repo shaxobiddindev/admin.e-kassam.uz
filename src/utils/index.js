@@ -56,4 +56,7 @@ export const ROLE_OPTIONS = Object.keys(ROLE_DICT);
 export const ADMIN_ROLE_LABELS = ADMIN_DICT;
 
 // ── Admin-specific konstantalar ────────────────────────────────
+// Tahrirlash formasida tanlanadigan holatlar. `DELETED` ATAYLAB yo'q:
+// do'kon o'chirish alohida amal (tasdiqlash bilan), tanlagichdan tasodifan
+// tanlab qo'yiladigan qiymat emas.
 export const STATUS_OPTIONS = ["ACTIVE", "BLOCKED", "SUSPENDED", "INACTIVE"];

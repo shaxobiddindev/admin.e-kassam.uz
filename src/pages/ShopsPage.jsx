@@ -401,8 +401,14 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
     if (!form.fullName.trim()) { toast.error(t("adm.users.errName")); return; }
     setSaving(true);
     try {
-      await userApi.update(shop.id, view.user.id, { fullName: form.fullName });
-      if (form.password) await userApi.changePass(shop.id, view.user.id, form.password);
+      // Ism va parol BITTA so'rovda. Ilgari ikkita alohida so'rov edi va
+      // ikkinchisi yiqilsa ism saqlanib, parol saqlanmay qolardi.
+      // `role` YUBORILMAYDI — u bu formada tahrirlanmaydi va backend endi
+      // yuborilmagan rolni "tegilmasin" deb tushunadi.
+      await userApi.update(shop.id, view.user.id, {
+        fullName: form.fullName,
+        ...(form.password ? { password: form.password } : {}),
+      });
       toast.success(t("common.saved"));
       setView("list"); load(); onReload();
     } catch (e) { toast.error(e.message); }

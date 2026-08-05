@@ -104,6 +104,11 @@ export const shopApi = {
   // Do'kon ro'yxatidan ALOHIDA: ro'yxatni chizish uchun agregatsiya
   // kerak emas va uni har safar hisoblash bekorga bo'lardi.
   stats:   ()         => req("/superadmin/shops/stats"),
+  // Obuna to'lovlari. `POST` — hozircha qo'lda qayd etish, lekin
+  // so'rov shakli Payme/Click callback'i bilan bir xil (provider +
+  // providerTransactionId), ya'ni shlyuz ulanganda o'zgarmaydi.
+  payments:    (id)       => req(`/superadmin/shops/${id}/payments`),
+  addPayment:  (id, data) => req(`/superadmin/shops/${id}/payments`, { method: "POST", ...body(data) }),
   getById: (id)       => req(`/superadmin/shops/${id}`),
   create:  (data)     => req("/superadmin/shops",       { method: "POST",   ...body(data) }),
   update:  (id, data) => req(`/superadmin/shops/${id}`, { method: "PUT",    ...body(data) }),

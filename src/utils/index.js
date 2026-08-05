@@ -17,6 +17,7 @@ export {
   entry, label, options,
   paymentLabel, paymentEntry, saleStatus, shopStatus, shopPlan,
   roleEntry, roleLabel, adminRole, inventoryState, rolesLabel,
+  PAYMENT_PROVIDER, paymentProvider,
 } from "../lib/ek-labels";
 
 // ── Til ────────────────────────────────────────────────────────

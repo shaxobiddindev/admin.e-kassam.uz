@@ -66,6 +66,11 @@ export default function DashboardPage({ toast, setPage }) {
     newRequests && { id: "requests", icon: "fa-inbox", tone: "danger",
       text: t("adm.dash.attNewRequests"), count: newRequests,
       onClick: () => setPage("requests") },
+    /* Obunasi tugayotgan do'kon — ariza bilan bir qatorda: ikkalasi ham
+       pul masalasi. Bloklangan do'kon esa ma'muriy holat. */
+    (stats?.expiringSoon || 0) > 0 && { id: "expiring", icon: "fa-hourglass-half", tone: "warning",
+      text: t("adm.dash.attExpiring"), count: stats.expiringSoon,
+      onClick: () => setPage("shops") },
     blockedShops && { id: "blocked", icon: "fa-ban", tone: "danger",
       text: t("adm.dash.attBlockedShops"), count: blockedShops, onClick: () => setPage("shops") },
     suspended && { id: "suspended", icon: "fa-pause", tone: "warning",

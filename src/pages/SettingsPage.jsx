@@ -4,6 +4,7 @@ import { ADMIN_ROLE_LABELS } from "../utils";
 import ThemeSelect from "../components/ek/ThemeSelect";
 import LangSelect from "../components/ek/LangSelect";
 import { useConfirm } from "../context/ConfirmProvider";
+import TwoFactorCard from "../components/TwoFactorCard";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Sozlamalar — BARCHA sozlamalar uchun YAGONA joy.
@@ -43,7 +44,7 @@ function Section({ icon, title, hint, children }) {
   );
 }
 
-export default function SettingsPage({ user, onLogout }) {
+export default function SettingsPage({ user, onLogout, toast }) {
   const { t } = useT();
   const confirm = useConfirm();
 
@@ -126,6 +127,11 @@ export default function SettingsPage({ user, onLogout }) {
           </button>
         </Row>
       </Section>
+
+      {/* Ikki bosqichli kirish — hisob bo'limidan KEYIN: u ham shu
+          hisobning xavfsizligi haqida, lekin alohida kartochka bo'lishi
+          kerak (ichida ko'p qadamli oqim bor). */}
+      <TwoFactorCard toast={toast} />
 
       <Section icon="fa-circle-info" title={t("settings.about")}>
         <Row label="e-Kassam">

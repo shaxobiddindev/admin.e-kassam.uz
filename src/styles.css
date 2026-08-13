@@ -67,11 +67,22 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
 
 /* ════ LAYOUT ════════════════════════════════════════════════ */
 .app   { display: flex; min-height: 100vh; }
-.main  { margin-left: var(--current-sw); flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left .3s; }
-.page  { flex: 1; padding: 22px; }
+/* ⚠ `min-width: 0` — HAL QILUVCHI QATOR, bezak emas.
+   Flex bolasining standart `min-width: auto` qiymati uni MAZMUNIDAN
+   kichrayishga qo'ymaydi. Do'konlar jadvali 1396px bo'lgani uchun
+   `.main` 1442px gacha cho'zilib, BUTUN SAHIFA gorizontal aylanardi:
+   yon menyu ham, tepadagi panel ham surilib ketardi, `.tw` dagi
+   `overflow-x: auto` esa hech qachon ishga tushmasdi — siqiladigan
+   narsa qolmagandi. Nol bilan jadval o'z kartochkasi ichida aylanadi. */
+.main  { margin-left: var(--current-sw); flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left .3s; }
+.page  { flex: 1; min-width: 0; padding: 22px; }
 .app.collapsed { --current-sw: var(--sw-c); }
-/* Hamburger — katta ekranda yashirin */
-.ham-btn { display: none !important; }
+/* Hamburger — katta ekranda yashirin.
+   ⚠ `!important` OLIB TASHLANDI: u mobil media qoidasidagi
+   `display: flex` ni ham bosib turardi va telefonda tugma HECH QACHON
+   chiqmasdi. Yon menyu esa o'sha kenglikda ekrandan chiqarilgan —
+   natijada mobil qurilmada navigatsiyaga umuman kirib bo'lmasdi. */
+.ham-btn { display: none; }
 
 /* ════ SIDEBAR ═══════════════════════════════════════════════ */
 .sb {

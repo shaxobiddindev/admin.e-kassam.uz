@@ -117,6 +117,16 @@ export const shopApi = {
   // yo'q va hech qachon bo'lmagan. Holat `update` (PUT) orqali yuboriladi.
 };
 
+// ── Ikki bosqichli kirish — TOTP (V26) ──────────────────────────
+/* ⚠ `confirm` javobidagi tiklash kodlari FAQAT SHU YERDA, bir marta
+   keladi: bazada ularning xeshi turadi va qayta ko'rsatib bo'lmaydi. */
+export const twoFactorApi = {
+  status:  ()      => req("/auth/admin/2fa"),
+  setup:   ()      => req("/auth/admin/2fa/setup",   { method: "POST" }),
+  confirm: (code)  => req("/auth/admin/2fa/confirm", { method: "POST", ...body({ code }) }),
+  disable: (code)  => req("/auth/admin/2fa/disable", { method: "POST", ...body({ code }) }),
+};
+
 // ── Zaxira nusxa holati (V24) ───────────────────────────────────
 /* ⚠ Zaxirani ILOVA olmaydi — uni serverdagi `ops/backup.sh` oladi va
    natijani `backup_runs` ga yozadi. Bu yerda faqat O'QISH: oxirgi

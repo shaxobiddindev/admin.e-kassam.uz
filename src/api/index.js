@@ -159,9 +159,13 @@ export const userApi = {
 // lekin panelda unga BITTA ham chaqiruv yo'q edi: landingdan kelgan har bir
 // lid bazaga tushib, hech kim o'qimasdi. 00-OVERVIEW.md ning asosiy mezoni —
 // "landing → demo so'rash konversiyasi" — aynan shu yerda uzilardi.
+/* ⚠ O'CHIRISH METODI YO'Q va qo'shilmaydi. Ariza — tashqi odamning izi;
+   uni yo'q qilish imkoni «siz ariza bermagansiz» degan bahsni hal qilib
+   bo'lmaydigan qiladi. Spam ro'yxatdan holat bilan yashiriladi. */
 export const contactApi = {
   getAll:      ()   => req("/contact"),
   markHandled: (id) => req(`/contact/${id}/handled`, { method: "PATCH" }),
+  setStatus:   (id, value) => req(`/contact/${id}/status?value=${value}`, { method: "PATCH" }),
 };
 
 // ── Audit jurnali — FAQAT O'QISH ────────────────────────────────

@@ -44,36 +44,60 @@ export default function RequestsPage({ toast }) {
 
   useEffect(() => { load(); }, [load]);
 
+  /* `status` — NEW · HANDLED · SPAM. Eski javobda faqat `handled` bo'lgani
+     uchun zaxira hisob ham qoldirilgan (deploy oralig'ida ikkalasi kelishi
+     mumkin). */
+  const st = (i) => i.status || (i.handled ? "HANDLED" : "NEW");
+
   const counts = {
-    NEW:     items.filter(i => !i.handled).length,
-    HANDLED: items.filter(i =>  i.handled).length,
-    ALL:     items.length,
+    NEW:     items.filter(i => st(i) === "NEW").length,
+    HANDLED: items.filter(i => st(i) === "HANDLED").length,
+    SPAM:    items.filter(i => st(i) === "SPAM").length,
+    /* ⚠ «Barchasi» spamni SANAMAYDI: u ro'yxatda ham ko'rinmaydi va
+       raqam bilan qator soni bir-biriga to'g'ri kelmasa, ekran yolg'on
+       gapirgan bo'lardi. */
+    ALL:     items.filter(i => st(i) !== "SPAM").length,
   };
 
+  /* ⚠ Spam «Hammasi» ro'yxatida ham ko'rinmaydi: uni ko'rish uchun ATAYLAB
+     alohida bo'limga o'tish kerak. Satr esa hech qachon o'chirilmaydi. */
   const filtered = items.filter(i =>
-    filter === "ALL" ? true : filter === "NEW" ? !i.handled : i.handled
+    filter === "ALL" ? st(i) !== "SPAM" : st(i) === filter
   );
 
-  const handleMark = async (item) => {
+  /* Holatni o'zgartiradi. O'CHIRISH YO'Q — `ContactStatus` izohiga qarang. */
+  const changeStatus = async (item, next) => {
+    const ask = {
+      HANDLED: { title: t("req.markTitle"), msg: t("req.markMsg",  { name: item.fullName }),
+                 confirmText: t("req.markHandled"), type: "info" },
+      SPAM:    { title: t("req.spamTitle"), msg: t("req.spamMsg",  { name: item.fullName }),
+                 confirmText: t("req.markSpam"),    type: "warning" },
+      NEW:     { title: t("req.reopenTitle"), msg: t("req.reopenMsg", { name: item.fullName }),
+                 confirmText: t("req.reopen"),      type: "info" },
+    }[next];
+
     const ok = await confirm({
-      title: t("req.markTitle"),
+      title: ask.title,
       // Ariza egasining ISMI tarjima qilinmaydi — u foydalanuvchi ma'lumoti
-      message: t("req.markMsg", { name: item.fullName }),
-      type: "info",
-      confirmText: t("req.markHandled"),
+      message: ask.msg,
+      type: ask.type,
+      confirmText: ask.confirmText,
     });
     if (!ok) return;
     setSaving(item.id);
     try {
-      await contactApi.markHandled(item.id);
-      toast.success(t("req.marked"));
+      await contactApi.setStatus(item.id, next);
+      toast.success(t(next === "SPAM" ? "req.spammed" : next === "NEW" ? "req.reopened" : "req.marked"));
       // Faqat shu satrni yangilaymiz — butun ro'yxatni qayta so'ramaymiz,
       // aks holda operator qayerda edi — o'sha joyni yo'qotadi.
-      setItems(prev => prev.map(x => x.id === item.id ? { ...x, handled: true } : x));
+      setItems(prev => prev.map(x =>
+        x.id === item.id ? { ...x, status: next, handled: next === "HANDLED" } : x));
       setDetail(null);
     } catch (e) { toast.error(e.message); }
     finally { setSaving(null); }
   };
+
+  const handleMark = (item) => changeStatus(item, "HANDLED");
 
   return (
     <div>
@@ -83,6 +107,7 @@ export default function RequestsPage({ toast }) {
             {[
               { k:"NEW",     l: t("req.tabNew",     { n: counts.NEW })     },
               { k:"HANDLED", l: t("req.tabHandled", { n: counts.HANDLED }) },
+              { k:"SPAM",    l: t("req.tabSpam",    { n: counts.SPAM })    },
               { k:"ALL",     l: t("req.tabAll",     { n: counts.ALL })     },
             ].map(({ k, l }) => (
               <button key={k} className={`tab ${filter===k?"on":""}`} onClick={() => setFilter(k)}>{l}</button>
@@ -110,7 +135,7 @@ export default function RequestsPage({ toast }) {
               </thead>
               <tbody>
                 {filtered.length > 0 ? filtered.map(item => (
-                  <tr key={item.id} style={{ opacity: item.handled ? 0.55 : 1 }}>
+                  <tr key={item.id} style={{ opacity: st(item) === "NEW" ? 1 : 0.55 }}>
                     <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)", whiteSpace:"nowrap" }}>
                       {fmtDateTime(item.createdAt)}
                     </td>
@@ -144,20 +169,40 @@ export default function RequestsPage({ toast }) {
                       )}
                     </td>
                     <td>
-                      <Badge color={item.handled ? "green" : "yellow"}>
-                        {t(item.handled ? "req.handled" : "req.new")}
+                      <Badge color={st(item) === "HANDLED" ? "green" : st(item) === "SPAM" ? "red" : "yellow"}>
+                        {t(st(item) === "HANDLED" ? "req.handled"
+                          : st(item) === "SPAM"   ? "req.spam" : "req.new")}
                       </Badge>
                     </td>
                     <td>
-                      {!item.handled && (
-                        <button className="btn btn-sm btn-primary"
-                                disabled={saving === item.id}
-                                onClick={() => handleMark(item)}>
-                          {saving === item.id
-                            ? <><Spinner /> {t("common.saving")}</>
-                            : <><i className="fa-solid fa-check" aria-hidden="true" /> {t("req.markHandled")}</>}
-                        </button>
-                      )}
+                      <div style={{ display:"flex", gap:6, justifyContent:"flex-end" }}>
+                        {st(item) === "NEW" && (
+                          <>
+                            <button className="btn btn-sm btn-primary"
+                                    disabled={saving === item.id}
+                                    onClick={() => handleMark(item)}>
+                              {saving === item.id
+                                ? <><Spinner /> {t("common.saving")}</>
+                                : <><i className="fa-solid fa-check" aria-hidden="true" /> {t("req.markHandled")}</>}
+                            </button>
+                            {/* ⚠ «O'chirish» EMAS: satr qoladi, faqat ro'yxatdan
+                                yashiriladi va jurnalga kim belgilagani yoziladi. */}
+                            <button className="btn btn-sm btn-outline"
+                                    disabled={saving === item.id}
+                                    title={t("req.spamHint")}
+                                    onClick={() => changeStatus(item, "SPAM")}>
+                              <i className="fa-solid fa-ban" aria-hidden="true" /> {t("req.markSpam")}
+                            </button>
+                          </>
+                        )}
+                        {st(item) !== "NEW" && (
+                          <button className="btn btn-sm btn-outline"
+                                  disabled={saving === item.id}
+                                  onClick={() => changeStatus(item, "NEW")}>
+                            <i className="fa-solid fa-rotate-left" aria-hidden="true" /> {t("req.reopen")}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )) : (

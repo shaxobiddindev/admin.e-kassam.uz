@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import { useT } from "../lib/ek-i18n";
 import { twoFactorApi } from "../api";
 import { useConfirm } from "../context/ConfirmProvider";
@@ -29,6 +30,20 @@ export default function TwoFactorCard({ toast }) {
   const [code, setCode] = useState("");
   const [codes, setCodes] = useState(null);     // tiklash kodlari — bir marta
   const [busy, setBusy] = useState(false);
+  const qrRef = useRef(null);
+
+  /* QR — BRAUZERDA chiziladi, tashqi xizmatga so'rov yuborilmaydi.
+     ⚠ Bu muhim: QR ichida 2FA SIRI turadi va uni «qulay» QR
+     generatoriga yuborish sirni begona serverga berish demak. */
+  useEffect(() => {
+    if (!setup?.otpAuthUri || !qrRef.current) return;
+    QRCode.toCanvas(qrRef.current, setup.otpAuthUri, {
+      width: 190, margin: 1,
+      // Qorong'i rejimda ham o'qilsin: QR skanerlari kontrastga tayanadi,
+      // shuning uchun ranglar temaga qarab EMAS, doim qora/oq.
+      color: { dark: "#000000", light: "#ffffff" },
+    }).catch(() => {});
+  }, [setup]);
 
   const load = () => twoFactorApi.status()
     .then((r) => setStatus(r.data || null))
@@ -144,6 +159,18 @@ export default function TwoFactorCard({ toast }) {
           <div className="set-row" style={{ display: "block" }}>
             <div className="set-row__label">{t("twofa.secretTitle")}</div>
             <div className="set-row__hint" style={{ marginBottom: 10 }}>{t("twofa.secretHint")}</div>
+
+            {/* QR — asosiy yo'l: skanerlash bir harakat, kalitni qo'lda
+                terish esa 32 belgi. Pastdagi kalit MUQOBIL bo'lib qoladi:
+                skaner ishlamasa yoki kamera yo'q bo'lsa kerak bo'ladi. */}
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
+              <canvas ref={qrRef} width={190} height={190}
+                      aria-label={t("twofa.qrAlt")} role="img"
+                      style={{ background: "#fff", borderRadius: 10, padding: 8, flexShrink: 0 }} />
+              <p className="set-row__hint" style={{ flex: "1 1 200px", margin: 0 }}>
+                {t("twofa.qrHint")}
+              </p>
+            </div>
 
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
               <code className="ek-num" style={{

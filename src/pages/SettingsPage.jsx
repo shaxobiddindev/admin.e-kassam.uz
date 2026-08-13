@@ -5,6 +5,7 @@ import ThemeSelect from "../components/ek/ThemeSelect";
 import LangSelect from "../components/ek/LangSelect";
 import { useConfirm } from "../context/ConfirmProvider";
 import TwoFactorCard from "../components/TwoFactorCard";
+import RecoveryContactsCard from "../components/RecoveryContactsCard";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Sozlamalar — BARCHA sozlamalar uchun YAGONA joy.
@@ -128,9 +129,12 @@ export default function SettingsPage({ user, onLogout, toast }) {
         </Row>
       </Section>
 
-      {/* Ikki bosqichli kirish — hisob bo'limidan KEYIN: u ham shu
-          hisobning xavfsizligi haqida, lekin alohida kartochka bo'lishi
-          kerak (ichida ko'p qadamli oqim bor). */}
+      {/* ⚠ Tiklash aloqalari 2FA DAN OLDIN: 2FA yoqilgach telefon
+          yo'qolsa, yagona yo'l — tiklash kodlari va pochtadagi
+          ogohlantirishlar. Ya'ni avval manzilni qo'yish, keyin himoyani
+          yoqish kerak; ekran tartibi ham shu ketma-ketlikni aytadi. */}
+      <RecoveryContactsCard toast={toast} />
+
       <TwoFactorCard toast={toast} />
 
       <Section icon="fa-circle-info" title={t("settings.about")}>

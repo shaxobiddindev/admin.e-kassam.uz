@@ -117,6 +117,14 @@ export const shopApi = {
   // yo'q va hech qachon bo'lmagan. Holat `update` (PUT) orqali yuboriladi.
 };
 
+// ── Tiklash aloqalari: pochta va telefon (V27) ──────────────────
+/* ⚠ Pochta — parolni tiklash KALITI. Uni o'zgartirish jurnalga tushadi
+   va ESKI manzilga ogohlantirish yuboriladi (server tomonda). */
+export const adminProfileApi = {
+  get:    ()     => req("/auth/admin/profile"),
+  update: (data) => req("/auth/admin/profile", { method: "PUT", ...body(data) }),
+};
+
 // ── Ikki bosqichli kirish — TOTP (V26) ──────────────────────────
 /* ⚠ `confirm` javobidagi tiklash kodlari FAQAT SHU YERDA, bir marta
    keladi: bazada ularning xeshi turadi va qayta ko'rsatib bo'lmaydi. */

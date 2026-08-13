@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { shopApi, userApi, contactApi } from "../api";
+import { shopApi, userApi, contactApi, backupApi } from "../api";
 import { fmtDate, SHOP_STATUS, shopStatus, money } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import { SkeletonTable } from "../components/ek/Loading";
@@ -27,6 +27,7 @@ export default function DashboardPage({ toast }) {
   const [requests, setRequests] = useState([]);
   const [stats,    setStats]    = useState(null);
   const [users,   setUsers]   = useState([]);
+  const [backup,  setBackup]  = useState(null);
   const [loading, setLoading] = useState(true);
   // Tez javobda skeleton umuman chizilmaydi (180ms), chizilsa 400ms turadi.
   const busy = useLoading(loading);
@@ -39,13 +40,15 @@ export default function DashboardPage({ toast }) {
     // Xato esa JIMGINA yutilmaydi (A10): ilgari `.catch(() => ({data:[]}))`
     // tufayli foydalanuvchi bo'sh, "hammasi joyida" ko'rinishdagi panelni
     // ko'rardi va nimadir ishlamayotganini bilmasdi.
-    Promise.allSettled([shopApi.getAll(), userApi.getAll(), contactApi.getAll(), shopApi.stats()])
+    Promise.allSettled([shopApi.getAll(), userApi.getAll(), contactApi.getAll(),
+                        shopApi.stats(), backupApi.status()])
       .then((res) => {
-        const [s, u, c, st] = res;
+        const [s, u, c, st, bk] = res;
         if (s.status === "fulfilled") setShops(s.value?.data || []);
         if (u.status === "fulfilled") setUsers(u.value?.data || []);
         if (c.status === "fulfilled") setRequests(c.value?.data || []);
         if (st.status === "fulfilled") setStats(st.value?.data || null);
+        if (bk.status === "fulfilled") setBackup(bk.value?.data || null);
 
         const failed = res.filter(r => r.status === "rejected");
         if (failed.length) {
@@ -65,6 +68,20 @@ export default function DashboardPage({ toast }) {
 
   /* ── "E'tibor talab qiladi" — bo'sh satrlar ko'rsatilmaydi ─────────────── */
   const attention = [
+    /* ⚠ ZAXIRA — BIRINCHI QATOR va bu ataylab. Qolgan hamma satr pul
+       yoki mijoz haqida; bu esa BUTUN TIZIM haqida: zaxirasiz bir kun
+       ham do'konlarning butun savdo tarixini yo'qotish uchun yetarli.
+       «Hech qachon olinmagan» holati alohida matn bilan chiqadi —
+       ilgari bunday paytda panel shunchaki bo'sh qolib, zaxira yo'qligi
+       «hammasi joyida» ga o'xshab ko'rinardi. */
+    backup?.stale && {
+      id: "backup", icon: "fa-database", tone: "danger",
+      text: backup.exists
+        ? t("adm.dash.attBackupStale", { h: backup.hoursAgo })
+        : t("adm.dash.attBackupNever"),
+      count: backup.exists ? `${backup.hoursAgo} soat` : "—",
+      onClick: () => navigate("/settings"),
+    },
     /* Javobsiz ariza — BIRINCHI qator. 00-OVERVIEW.md ning asosiy mezoni
        "landing → demo so'rash konversiyasi": lid javobsiz qolsa, landingga
        qilingan butun ish shu nuqtada bekor bo'ladi. Bloklangan do'kondan

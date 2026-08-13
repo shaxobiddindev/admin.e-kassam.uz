@@ -117,6 +117,14 @@ export const shopApi = {
   // yo'q va hech qachon bo'lmagan. Holat `update` (PUT) orqali yuboriladi.
 };
 
+// ── Zaxira nusxa holati (V24) ───────────────────────────────────
+/* ⚠ Zaxirani ILOVA olmaydi — uni serverdagi `ops/backup.sh` oladi va
+   natijani `backup_runs` ga yozadi. Bu yerda faqat O'QISH: oxirgi
+   TEKSHIRILGAN (tiklab ko'rilgan) nusxa qachon olingani. */
+export const backupApi = {
+  status: () => req("/superadmin/backups"),
+};
+
 // ── Foydalanuvchilar ────────────────────────────────────────────
 export const userApi = {
   getAll:      ()               => req("/superadmin/users"),

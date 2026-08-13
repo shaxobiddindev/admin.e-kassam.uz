@@ -77,7 +77,7 @@ export default function RecoveryContactsCard({ toast }) {
             <div className="set-row__hint">{t("recovery.emailHint")}</div>
           </div>
           <div className="set-row__control">
-            <input className="form-input" type="email" style={{ minWidth: 220 }}
+            <input className="fi" type="email" style={{ minWidth: 220 }}
                    value={email} onChange={(e) => setEmail(e.target.value)}
                    placeholder="ega@example.com" autoComplete="email"
                    aria-label={t("recovery.email")} />
@@ -92,7 +92,7 @@ export default function RecoveryContactsCard({ toast }) {
             <div className="set-row__hint">{t("recovery.phoneHint")}</div>
           </div>
           <div className="set-row__control">
-            <input className="form-input ek-num" type="tel" style={{ minWidth: 220 }}
+            <input className="fi ek-num" type="tel" style={{ minWidth: 220 }}
                    value={phone} onChange={(e) => setPhone(e.target.value)}
                    placeholder="+998901234567" autoComplete="tel"
                    aria-label={t("recovery.phone")} />

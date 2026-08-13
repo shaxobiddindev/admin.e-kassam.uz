@@ -184,7 +184,7 @@ export default function TwoFactorCard({ toast }) {
 
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <input
-                className="form-input ek-num" style={{ maxWidth: 160 }}
+                className="fi ek-num" style={{ maxWidth: 160 }}
                 value={code} onChange={(e) => setCode(e.target.value)}
                 placeholder="123456" inputMode="numeric" autoComplete="one-time-code"
                 aria-label={t("twofa.codeLabel")}
@@ -232,7 +232,7 @@ export default function TwoFactorCard({ toast }) {
             <div className="set-row__hint" style={{ marginBottom: 10 }}>{t("twofa.disableHint")}</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <input
-                className="form-input ek-num" style={{ maxWidth: 160 }}
+                className="fi ek-num" style={{ maxWidth: 160 }}
                 value={code} onChange={(e) => setCode(e.target.value)}
                 placeholder="123456" autoComplete="one-time-code"
                 aria-label={t("twofa.codeLabel")}

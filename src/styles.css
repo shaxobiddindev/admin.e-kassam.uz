@@ -237,6 +237,10 @@ tbody tr:hover td { background: var(--bg-sunken); }
 .flb { display: block; font-size: 11px; font-weight: 800; color: var(--fg-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
 .fi  { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border-subtle); border-radius: 10px; font-size: 14px; font-family: var(--font); color: var(--fg-primary); background: var(--bg-sunken); outline: none; transition: .2s; }
 .fi:focus { border-color: var(--bg-brand); background: var(--bg-surface); box-shadow: var(--ring-brand); }
+/* Noto'g'ri format maydonning O'ZIDA ko'rinadi — saqlagandan keyin emas */
+.fi--error { border-color: var(--fg-danger); }
+.fi--error:focus { border-color: var(--fg-danger); box-shadow: 0 0 0 3px rgb(239 68 68 / .18); }
+.fi-error { font-size: 11.5px; color: var(--fg-danger); }
 select.fi { cursor: pointer; }
 textarea.fi { resize: vertical; min-height: 80px; }
 .fhint { font-size: 11px; color: var(--fg-tertiary); margin-top: 4px; }

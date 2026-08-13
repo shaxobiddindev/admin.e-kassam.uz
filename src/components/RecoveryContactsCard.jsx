@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useT } from "../lib/ek-i18n";
 import { adminProfileApi } from "../api";
+import { EmailField, PhoneField } from "./ek/EkFields";
+import { isEmail, isPhone } from "../lib/ek-input";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Tiklash aloqalari — pochta va telefon.
@@ -34,7 +36,14 @@ export default function RecoveryContactsCard({ toast }) {
 
   useEffect(() => { load(); }, []);
 
+  /* ⚠ Ikkalasi ham TIKLASH kaliti: noto'g'ri yozilgan manzil «parolni
+     unutdim» kunida bilinadi va o'shanda kech bo'ladi. Shuning uchun
+     saqlash tugmasi to'g'ri format bo'lmaguncha bosilmaydi. */
+  const emailErr = email.trim() !== "" && !isEmail(email) ? t("recovery.emailInvalid") : null;
+  const phoneErr = phone.trim() !== "" && !isPhone(phone) ? t("recovery.phoneInvalid") : null;
+
   const save = async () => {
+    if (emailErr || phoneErr) return;
     setBusy(true);
     try {
       const r = await adminProfileApi.update({ email: email.trim() || null, phone: phone.trim() || null });
@@ -76,11 +85,13 @@ export default function RecoveryContactsCard({ toast }) {
             <div className="set-row__label">{t("recovery.email")}</div>
             <div className="set-row__hint">{t("recovery.emailHint")}</div>
           </div>
-          <div className="set-row__control">
-            <input className="fi" type="email" style={{ minWidth: 220 }}
-                   value={email} onChange={(e) => setEmail(e.target.value)}
-                   placeholder="ega@example.com" autoComplete="email"
-                   aria-label={t("recovery.email")} />
+          <div className="set-row__control" style={{ display: "grid", gap: 4, justifyItems: "end" }}>
+            <EmailField className={`fi${emailErr ? " fi--error" : ""}`} style={{ minWidth: 220 }}
+                        value={email} onChange={(e) => setEmail(e.target.value)}
+                        placeholder="ega@example.com"
+                        aria-invalid={!!emailErr}
+                        aria-label={t("recovery.email")} />
+            {emailErr && <span className="fi-error">{emailErr}</span>}
           </div>
         </div>
 
@@ -91,11 +102,12 @@ export default function RecoveryContactsCard({ toast }) {
                 SMS keladi» degan noto'g'ri kutish paydo bo'lmasin. */}
             <div className="set-row__hint">{t("recovery.phoneHint")}</div>
           </div>
-          <div className="set-row__control">
-            <input className="fi ek-num" type="tel" style={{ minWidth: 220 }}
-                   value={phone} onChange={(e) => setPhone(e.target.value)}
-                   placeholder="+998901234567" autoComplete="tel"
-                   aria-label={t("recovery.phone")} />
+          <div className="set-row__control" style={{ display: "grid", gap: 4, justifyItems: "end" }}>
+            <PhoneField className={`fi ek-num${phoneErr ? " fi--error" : ""}`} style={{ minWidth: 220 }}
+                        value={phone} onChange={(e) => setPhone(e.target.value)}
+                        aria-invalid={!!phoneErr}
+                        aria-label={t("recovery.phone")} />
+            {phoneErr && <span className="fi-error">{phoneErr}</span>}
           </div>
         </div>
 
@@ -104,7 +116,8 @@ export default function RecoveryContactsCard({ toast }) {
             <div className="set-row__hint">{t("recovery.changeWarn")}</div>
           </div>
           <div className="set-row__control">
-            <button className="btn btn-primary btn-sm" onClick={save} disabled={busy || !dirty}>
+            <button className="btn btn-primary btn-sm" onClick={save}
+                    disabled={busy || !dirty || !!emailErr || !!phoneErr}>
               <i className="fa-solid fa-check" aria-hidden="true" /> {t("common.save")}
             </button>
           </div>

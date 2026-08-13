@@ -9,6 +9,7 @@ import Select from "../components/ek/Select";
 import { SkeletonList, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
+import { NameField, UsernameField } from "../components/ek/EkFields";
 
 export default function UsersPage({ toast }) {
   const { t } = useT();
@@ -296,7 +297,7 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
       </FG>
       <div className="g2">
         <FG label={`${t("common.username")} *`}>
-          <input className="fi ek-num" value={form.username} onChange={set("username")}
+          <UsernameField className="fi ek-num" value={form.username} onChange={set("username")}
             placeholder="ali_abdullayev" />
         </FG>
         <FG label={`${t("common.password")} *`}>
@@ -385,7 +386,7 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
       {tab === "info" ? (
         <>
           <FG label={`${t("common.fullName")} *`}>
-            <input className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
+            <NameField className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
           </FG>
           <FG label={t("common.role")} hint={isOwner ? t("adm.users.ownerRoleLocked") : ""}>
             <Select

@@ -12,6 +12,7 @@ import { useLoading } from "../lib/use-loading";
 import { SkeletonList } from "../components/ek/Loading";
 import ExportButtons from "../components/ExportButtons";
 import { isoDate } from "../utils/export";
+import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -363,11 +364,11 @@ function AddShopModal({ onClose, onSaved, toast }) {
         <input className="fi" value={form.name} onChange={set("name")} placeholder="Baraka Savdo" autoFocus />
       </FG>
       <FG label={`${t("adm.shops.fieldCode")} *`} hint={t("adm.shops.codeHint")}>
-        <input className="fi ek-num" value={form.code} onChange={set("code")} placeholder="baraka-shop" />
+        <CodeField className="fi ek-num" value={form.code} onChange={set("code")} placeholder="baraka-shop" />
       </FG>
       <div className="g2">
         <FG label={t("common.phone")}>
-          <input className="fi ek-num" value={form.phone} onChange={handlePhone} placeholder="+998 (__) ___-__-__" />
+          <PhoneField className="fi ek-num" value={form.phone} onChange={set("phone")} />
         </FG>
         <FG label={t("common.address")}>
           <input className="fi" value={form.address} onChange={set("address")} placeholder="Toshkent, Chilonzor" />
@@ -441,7 +442,7 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
       </FG>
       <div className="g2">
         <FG label={t("common.phone")}>
-        <input className="fi ek-num" value={form.phone} onChange={handlePhone} placeholder="+998 (__) ___-__-__" />
+        <PhoneField className="fi ek-num" value={form.phone} onChange={set("phone")} />
       </FG>
         <FG label={t("common.address")}>
           <input className="fi" value={form.address} onChange={set("address")} />
@@ -573,11 +574,11 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
             </div>
           )}
           <FG label={`${t("common.fullName")} *`}>
-            <input className="fi" value={form.fullName} onChange={set("fullName")} placeholder="Abdullayev Ali" autoFocus />
+            <NameField className="fi" value={form.fullName} onChange={set("fullName")} placeholder="Abdullayev Ali" autoFocus />
           </FG>
           <div className="g2">
             <FG label={`${t("common.username")} *`}>
-              <input className="fi ek-num" value={form.username} onChange={set("username")} placeholder="ali_abdullayev" />
+              <UsernameField className="fi ek-num" value={form.username} onChange={set("username")} placeholder="ali_abdullayev" />
             </FG>
             <FG label={`${t("common.password")} *`}>
               <input className="fi" type="password" value={form.password} onChange={set("password")} placeholder={t("adm.users.passwordMin")} />
@@ -597,7 +598,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
       {isEdit && (
         <div>
           <FG label={t("common.fullName")}>
-            <input className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
+            <NameField className="fi" value={form.fullName} onChange={set("fullName")} autoFocus />
           </FG>
           <FG label={t("common.username")} hint={t("adm.users.usernameLocked")}>
             <input className="fi ek-num" value={form.username} readOnly
@@ -713,12 +714,12 @@ function BillingModal({ shop, onClose, onSaved, toast }) {
               value: k, label: shopPlan(k).label, icon: SHOP_PLAN[k]?.icon }))} />
         </FG>
         <FG label={t("bill.months")}>
-          <input className="fi ek-num" type="number" min="1" max="36"
+          <NumField className="fi ek-num" kind="int" min={1} max={36}
             value={form.months} onChange={set("months")} />
         </FG>
       </div>
       <FG label={`${t("bill.amount")} *`}>
-        <input className="fi ek-num" type="number" min="0" inputMode="numeric"
+        <NumField className="fi ek-num" kind="money"
           value={form.amount} onChange={set("amount")} placeholder="240000" autoFocus />
       </FG>
       <div className="g2">

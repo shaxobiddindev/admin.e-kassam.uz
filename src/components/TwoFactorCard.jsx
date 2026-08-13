@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { useT } from "../lib/ek-i18n";
 import { twoFactorApi } from "../api";
 import { useConfirm } from "../context/ConfirmProvider";
+import { OtpField } from "./ek/EkFields";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Ikki bosqichli kirish (2FA) — superadmin hisobi uchun.
@@ -183,10 +184,10 @@ export default function TwoFactorCard({ toast }) {
             </div>
 
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <input
+              <OtpField
                 className="fi ek-num" style={{ maxWidth: 160 }}
                 value={code} onChange={(e) => setCode(e.target.value)}
-                placeholder="123456" inputMode="numeric" autoComplete="one-time-code"
+                placeholder="123456"
                 aria-label={t("twofa.codeLabel")}
               />
               <button className="btn btn-primary btn-sm" onClick={confirmCode}
@@ -231,10 +232,10 @@ export default function TwoFactorCard({ toast }) {
             <div className="set-row__label">{t("twofa.disableTitle")}</div>
             <div className="set-row__hint" style={{ marginBottom: 10 }}>{t("twofa.disableHint")}</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <input
+              <OtpField
                 className="fi ek-num" style={{ maxWidth: 160 }}
                 value={code} onChange={(e) => setCode(e.target.value)}
-                placeholder="123456" autoComplete="one-time-code"
+                placeholder="123456"
                 aria-label={t("twofa.codeLabel")}
               />
               <button className="btn btn-danger btn-sm" onClick={disable}

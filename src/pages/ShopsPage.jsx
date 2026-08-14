@@ -208,7 +208,23 @@ export default function ShopsPage({ toast }) {
                             <span style={{ fontSize:10, color:"var(--fg-tertiary)", marginTop:2 }}>{shop.parentShopName}</span>
                           </div>
                         ) : (
-                          <span className="badge badge-green" style={{ fontSize:9 }}>{t("adm.shops.typeMain")}</span>
+                          <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                            <span className="badge badge-green" style={{ fontSize:9 }}>{t("adm.shops.typeMain")}</span>
+                            {/* V31: o'zi ro'yxatdan o'tgan + so'ragan tarifi.
+                                Pullik so'ragan bo'lsa — bog'lanish kerak. */}
+                            {shop.selfRegistered && (
+                              <span className="badge badge-blue" style={{ fontSize:9 }}
+                                    title={t("adm.shops.selfRegisteredHint")}>
+                                {t("adm.shops.selfRegistered")}
+                              </span>
+                            )}
+                            {shop.planRequested && (
+                              <span className="badge badge-orange" style={{ fontSize:9 }}
+                                    title={t("adm.shops.planRequestedHint")}>
+                                {t("adm.shops.planRequested")}: {shop.planRequested}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td style={{ fontWeight:700 }}>

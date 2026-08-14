@@ -82,7 +82,10 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
    `display: flex` ni ham bosib turardi va telefonda tugma HECH QACHON
    chiqmasdi. Yon menyu esa o'sha kenglikda ekrandan chiqarilgan —
    natijada mobil qurilmada navigatsiyaga umuman kirib bo'lmasdi. */
-.ham-btn { display: none; }
+/* ⚠ Selektor ATAYLAB ikki sinfli (`.bic.ham-btn`): tugmada `.bic` ham bor,
+   uning `display: flex` i (pastroqda turadi) bir sinfli `.ham-btn` ni
+   yengib, burger KATTA ekranda ham ko'rinib qolgan edi. */
+.bic.ham-btn { display: none; }
 
 /* ════ SIDEBAR ═══════════════════════════════════════════════ */
 .sb {
@@ -331,7 +334,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
   .sb        { transform: translateX(-100%); }
   .sb.open   { transform: none; }
   .main      { margin-left: 0; }
-  .ham-btn   { display: flex; }
+  .bic.ham-btn { display: flex; }
   .stats { grid-template-columns:1fr 1fr; }
   .g2c { grid-template-columns:1fr; }
   .g3  { grid-template-columns:1fr 1fr; }

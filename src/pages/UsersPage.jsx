@@ -292,7 +292,7 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
         </div>
       )}
       <FG label={`${t("common.fullName")} *`}>
-        <input className="fi" value={form.fullName} onChange={set("fullName")}
+        <NameField className="fi" value={form.fullName} onChange={set("fullName")}
           placeholder="Abdullayev Ali" autoFocus />
       </FG>
       <div className="g2">

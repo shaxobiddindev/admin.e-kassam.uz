@@ -361,7 +361,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
         </button></>
     }>
       <FG label={`${t("adm.shops.fieldName")} *`}>
-        <input className="fi" value={form.name} onChange={set("name")} placeholder="Baraka Savdo" autoFocus />
+        <input className="fi" maxLength={120} value={form.name} onChange={set("name")} placeholder="Baraka Savdo" autoFocus />
       </FG>
       <FG label={`${t("adm.shops.fieldCode")} *`} hint={t("adm.shops.codeHint")}>
         <CodeField className="fi ek-num" value={form.code} onChange={set("code")} placeholder="baraka-shop" />
@@ -371,7 +371,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
           <PhoneField className="fi ek-num" value={form.phone} onChange={set("phone")} />
         </FG>
         <FG label={t("common.address")}>
-          <input className="fi" value={form.address} onChange={set("address")} placeholder="Toshkent, Chilonzor" />
+          <input className="fi" maxLength={200} value={form.address} onChange={set("address")} placeholder="Toshkent, Chilonzor" />
         </FG>
       </div>
       <FG label={t("adm.shops.fieldParent")} hint={t("adm.shops.parentHint")}>
@@ -433,7 +433,7 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
         </button></>
     }>
       <FG label={t("adm.shops.fieldName")}>
-        <input className="fi" value={form.name} onChange={set("name")} />
+        <input className="fi" maxLength={120} value={form.name} onChange={set("name")} />
       </FG>
       <FG label={t("adm.shops.fieldOwner")} hint={t("adm.shops.ownerHint")}>
         {/* Qattiq `#f1f5f9` qorong'i rejimda oq plastinka bo'lib chiqardi */}
@@ -445,7 +445,7 @@ function EditShopModal({ shop, onClose, onSaved, toast }) {
         <PhoneField className="fi ek-num" value={form.phone} onChange={set("phone")} />
       </FG>
         <FG label={t("common.address")}>
-          <input className="fi" value={form.address} onChange={set("address")} />
+          <input className="fi" maxLength={200} value={form.address} onChange={set("address")} />
         </FG>
       </div>
       <FG label={t("common.status")}>
@@ -731,12 +731,12 @@ function BillingModal({ shop, onClose, onSaved, toast }) {
               value: k, label: paymentProvider(k).label, icon: paymentProvider(k).icon }))} />
         </FG>
         <FG label={t("bill.txnId")} hint={t("bill.txnHint")}>
-          <input className="fi ek-num" value={form.providerTransactionId}
+          <input className="fi ek-num" maxLength={128} value={form.providerTransactionId}
             onChange={set("providerTransactionId")} />
         </FG>
       </div>
       <FG label={t("bill.note")}>
-        <input className="fi" value={form.note} onChange={set("note")} />
+        <input className="fi" maxLength={500} value={form.note} onChange={set("note")} />
       </FG>
 
       <div className="c-head" style={{ padding:"14px 0 6px" }}>

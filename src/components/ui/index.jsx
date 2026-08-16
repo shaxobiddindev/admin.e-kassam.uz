@@ -104,5 +104,8 @@ export function II({ label, value }) {
   );
 }
 
-// ── Confirm delete ────────────────────────────────────────────
-export const confirmOk = (msg) => window.confirm(msg || t("common.confirm"));
+/* ⚠ Bu yerda `confirmOk = (msg) => window.confirm(msg)` turardi — o'chirildi.
+   Tizimda tasdiq FAQAT modal orqali so'raladi: `useConfirm()`
+   (`context/ConfirmProvider.jsx`). Brauzerning o'z oynasi temaga
+   bo'ysunmaydi va sahifa nomi bilan begona sarlavha chiqaradi.
+   Hech qayerda ishlatilmagan edi — lekin turgan joyida yana ishlatilardi. */

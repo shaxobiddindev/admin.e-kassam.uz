@@ -17,10 +17,26 @@ function cachedUser() {
   const token = ls("ek_token");
   const type  = ls("ek_type");
   if (!token || type !== "admin") return null;
+  /* ⚠ RUXSATLAR SAQLANGAN NUSXADA YO'Q va bo'lmaydi ham (V50).
+
+     Rol va ism — ko'rinish uchun, ular eskirsa ekranda noto'g'ri ism
+     turadi, xolos. Ruxsatlar esa menyuni chizadi: `localStorage` dan
+     o'qilsa, brauzer konsolida bitta qatorni tahrirlab o'ziga
+     istalgan bo'limni ochib olish mumkin bo'lardi. Ko'rinish yolg'on
+     bo'lardi (so'rovlar baribir 403 beradi), lekin aynan shu yolg'on
+     panelni tushunib bo'lmaydigan qiladi.
+
+     Tarmoq uzilganda ruxsatlar `null` bo'ladi — bu "hali noma'lum"
+     degani va menyu quyidagi qoida bilan chiziladi: noma'lum bo'lsa
+     HAMMASI ko'rsatiladi. Sabab: internet uzilgani uchun odamning
+     bo'limlarini yashirish uni ishlay olmaydigan qilardi, ochiq
+     qoldirish esa hech narsani ochmaydi — server har so'rovni o'zi
+     tekshiradi. */
   return {
     username: ls("ek_username", "ek_user") || "Admin",
     fullName: ls("ek_fullName", "ek_name") || "Admin",
     role:     ls("ek_role") || "SUPER_ADMIN",
+    permissions: null,
   };
 }
 
@@ -56,9 +72,18 @@ export function useAuth() {
         // Server bergan qiymat ustun. Saqlangan nusxa ham yangilanadi —
         // keyingi ochilishda va tarmoq uzilganda to'g'ri ism ko'rinsin.
         const fresh = {
+          /* ⚠ `id` — "bu men o'zimmi?" tekshiruvi uchun (V50).
+             Solishtirish foydalanuvchi nomi bo'yicha qilinmaydi: nom
+             katta-kichik harfda boshqacha yozilishi mumkin va tekshiruv
+             jimgina o'tib ketardi. Serverda ham `id` bo'yicha. */
+          id:       data.id ?? null,
           username: data.username || cached.username,
           fullName: data.fullName || data.username || cached.fullName,
           role:     data.role     || cached.role,
+          /* Ruxsatlar (V50) — menyu shu ro'yxatdan quriladi.
+             Server bermasa (eski backend) `null` qoladi va menyu
+             to'liq ko'rinadi — yuqoridagi izohga qarang. */
+          permissions: Array.isArray(data.permissions) ? data.permissions : null,
         };
         localStorage.setItem("ek_username", fresh.username);
         localStorage.setItem("ek_fullName", fresh.fullName);

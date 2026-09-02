@@ -86,9 +86,13 @@ export default function DashboardPage({ toast }) {
        "landing → demo so'rash konversiyasi": lid javobsiz qolsa, landingga
        qilingan butun ish shu nuqtada bekor bo'ladi. Bloklangan do'kondan
        ham muhimroq, chunki u — yo'qotilgan pul. */
+    /* ⚠ `setPage("requests")` EDI — bunday funksiya bu faylda YO'Q
+       (u `navigate` ga o'tkazilganda shu qator unutilgan). Qatorni
+       bosgan odam hech qanday xabarsiz `ReferenceError` olardi va
+       sahifa umuman ochilmasdi. */
     newRequests && { id: "requests", icon: "fa-inbox", tone: "danger",
       text: t("adm.dash.attNewRequests"), count: newRequests,
-      onClick: () => setPage("requests") },
+      onClick: () => navigate("/requests") },
     /* Obunasi tugayotgan do'kon — ariza bilan bir qatorda: ikkalasi ham
        pul masalasi. Bloklangan do'kon esa ma'muriy holat. */
     (stats?.expiringSoon || 0) > 0 && { id: "expiring", icon: "fa-hourglass-half", tone: "warning",
@@ -120,8 +124,18 @@ export default function DashboardPage({ toast }) {
         <Kpi label={t("adm.dash.activeShops30d")}
              value={stats?.activeShops30d ?? activeShops}
              hint={t("adm.dash.activeHint")} />
-        <Kpi label={t("adm.dash.revenue30d")}
-             value={stats?.revenue30d ?? 0} format={money} />
+        {/* ⚠ «30 kunlik tushum» → «obuna tushumi» (V50).
+            Ilgari bu yerda BARCHA DO'KONLARNING aylanmasi turardi.
+            U `ShopPrivacyPolicy` bo'yicha yopildi: do'kon o'z
+            aylanmasini bizga ishonib topshirmagan, u kassa
+            dasturidan foydalanadi.
+
+            ⚠ Ko'rsatkich YO'QOLMADI, MANBASI ALMASHDI: endi bu
+            do'konlar BIZGA to'lagan obuna puli. Aslida bu to'g'riroq
+            ham — do'konlarning aylanmasi bizning daromadimiz emas va
+            u o'sganda bizga bir tiyin qo'shilmasdi. */}
+        <Kpi label={t("adm.dash.subscriptionIncome30d")}
+             value={stats?.subscriptionIncome30d ?? 0} format={money} />
         <Kpi label={t("adm.dash.newRequests")} value={newRequests} />
         <Kpi label={t("adm.dash.totalShops")}  value={stats?.totalShops ?? shops.length} />
       </div>

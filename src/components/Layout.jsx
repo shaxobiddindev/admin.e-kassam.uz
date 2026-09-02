@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LOGO_URL, LOGO_DARK_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
 import { useConfirm } from "../context/ConfirmProvider";
 import { useT } from "../lib/ek-i18n";
-import { NAV, navItemByPath } from "../routes";
+import { visibleNav, navItemByPath } from "../routes";
 
 function Sidebar({ user, onLogout, open, onClose, isCollapsed, onToggleCollapse }) {
   const { t } = useT();
@@ -31,7 +31,11 @@ function Sidebar({ user, onLogout, open, onClose, isCollapsed, onToggleCollapse 
       </button>
 
       <nav className="sb-nav">
-        {NAV.map((group) => (
+        {/* ⚠ `NAV` EMAS, `visibleNav(...)`: ruxsati yo'q bo'lim
+            umuman chizilmaydi (V50). Bo'sh guruh ham tushib qoladi —
+            aks holda ekranda sarlavhasi bor, ichi bo'sh bo'lim
+            qolardi. */}
+        {visibleNav(user?.permissions).map((group) => (
           <div key={group.sec}>
             <div className="sb-sec">{t(group.sec)}</div>
             {group.items.map((item) => {

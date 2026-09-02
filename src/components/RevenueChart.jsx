@@ -28,18 +28,18 @@ export default function RevenueChart({ data = [], toast }) {
   const { t } = useT();
   const [view, setView] = useState("chart");
 
-  const hasAny = data.some((d) => Number(d.revenue) > 0);
+  const hasAny = data.some((d) => Number(d.amount) > 0);
   const today  = data.length ? data[data.length - 1].day : null;
 
-  const headers = [t("chart.day"), t("chart.revenue"), t("chart.salesCount")];
-  const rows    = data.map((d) => [d.day, d.revenue, d.sales]);
+  const headers = [t("chart.day"), t("chart.income"), t("chart.paymentCount")];
+  const rows    = data.map((d) => [d.day, d.amount, d.payments]);
 
   return (
     <div className="card">
       <div className="c-head">
         <span className="c-title">
           <i className="fa-solid fa-chart-column" aria-hidden="true" />
-          {t("chart.revenue14d")}
+          {t("chart.income14d")}
         </span>
 
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -73,8 +73,8 @@ export default function RevenueChart({ data = [], toast }) {
               <thead>
                 <tr>
                   <th>{t("chart.day")}</th>
-                  <th className="num">{t("chart.revenue")}</th>
-                  <th className="num">{t("chart.salesCount")}</th>
+                  <th className="num">{t("chart.income")}</th>
+                  <th className="num">{t("chart.paymentCount")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -88,8 +88,8 @@ export default function RevenueChart({ data = [], toast }) {
                         </span>
                       )}
                     </td>
-                    <td className="ek-num" style={{ textAlign: "right" }}>{money(d.revenue)}</td>
-                    <td className="ek-num" style={{ textAlign: "right" }}>{groupDigits(d.sales)}</td>
+                    <td className="ek-num" style={{ textAlign: "right" }}>{money(d.amount)}</td>
+                    <td className="ek-num" style={{ textAlign: "right" }}>{groupDigits(d.payments)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,109 +1,69 @@
 import { useEffect, useState } from "react";
 import { customerApi } from "../api";
-import { fmtDate, money } from "../utils";
 import { useT } from "../lib/ek-i18n";
-import { Empty, Search, Avatar } from "../components/ui";
+import { Empty, Search } from "../components/ui";
 import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
-import VirtualTable from "../components/VirtualTable";
 import ExportButtons from "../components/ExportButtons";
-import { isoDate } from "../utils/export";
+import { groupDigits } from "../lib/ek-format";
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Mijozlar — FAQAT O'QISH.
+   MIJOZLAR — DO'KON BO'YICHA FAQAT SON (V50)
 
-   Tahrirlash olib tashlandi: front `PUT /superadmin/customers/{id}` ni
-   chaqirardi, backendda esa bunday endpoint yo'q edi — "Saqlash" har doim
-   405 qaytarardi. Endpoint qo'shish o'rniga amal olib tashlandi, chunki
-   mijoz — DO'KONNING ma'lumoti va uni do'kon xodimi kassir ilovasida
-   tahrirlaydi (o'sha yo'l tenant bilan chegaralangan).
+   ⚠ BU EKRAN ATAYLAB KAMAYTIRILDI. Ilgari bu yerda barcha do'konlar
+   bo'ylab to'liq mijozlar ro'yxati turardi: ism, telefon raqami va
+   qancha xarid qilgani; ustiga qidiruv ham — telefon bo'yicha, butun
+   tizim bo'ylab. Ya'ni panelga kirgan odam istalgan telefon raqamini
+   kiritib, uning qaysi do'konlarda qancha pul sarflaganini ko'ra olardi.
 
-   Buning o'rniga ekranga nazorat uchun kerak narsa qo'shildi: mijoz QAYSI
-   DO'KONGA tegishli va qancha xarid qilgan. Ilgari barcha do'konlarning
-   mijozlari aralash chiqardi va bir xil ismlarni ajratib bo'lmasdi.
+   ⚠ Bu shunchaki ortiqcha imkoniyat emasdi. Mijoz o'z ismini va
+   raqamini BIZGA emas, DO'KONGA bergan; do'kon esa mijozlar bazasini
+   bizga emas, o'z kassasiga ishonib topshirgan. Ikkala tomon ham bunga
+   rozilik bermagan.
+
+   ⚠ NEGA MASKALASH EMAS. «Ismni yulduzcha bilan yopamiz» varianti rad
+   etildi: maskalangan ro'yxat baribir «bu do'konda falon odam falon pul
+   sarflagan» degan ma'lumotni saqlaydi va uni boshqa manba bilan
+   solishtirib ochish qiyin emas. Ma'lumot javobda BO'LMASA, uni ochib
+   ham bo'lmaydi — server endi uni umuman qaytarmaydi.
+
+   Qoladigan yagona narsa — SON. U obuna tarifini tekshirish uchun kerak
+   («bizda 3000 mijoz bor» degan gapni tekshirish mumkin bo'lsin) va hech
+   kimni tanitmaydi.
+
+   ⚠ Do'konga qarashli savol (nizo, shikoyat) do'konning O'ZIDA hal
+   qilinadi: egasi o'z tokeni bilan mijozni ko'radi. Bizning panelimizda
+   bunday yo'l bo'lmasligi kerak — bo'lsa, u ertami-kechmi ishlatiladi.
    ══════════════════════════════════════════════════════════════════════════ */
 
 export default function CustomersPage({ toast }) {
   const { t } = useT();
-  const [customers, setCustomers] = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  // Tez javobda skeleton umuman chizilmaydi; chizilsa kamida 400ms turadi.
+  const [rows,    setRows]    = useState([]);
+  const [loading, setLoading] = useState(true);
   const busy = useLoading(loading);
-  const [search,    setSearch]    = useState("");
+  const [search,  setSearch]  = useState("");
 
-  const load = (q = "") => {
-    setLoading(true);
-    customerApi.getAll(q ? `search=${encodeURIComponent(q)}` : "")
-      .then(r => setCustomers(r.data || []))
-      .catch(e => toast.error(t("adm.customers.loadFailed", { msg: e.message })))
-      .finally(() => setLoading(false));
-  };
-
-  // Qidiruv SERVERDA bajariladi (ism va telefon bo'yicha). Ilgari `load(q)`
-  // server parametrini qo'llardi, lekin uni hech kim chaqirmasdi va filtr
-  // faqat brauzerda ishlardi — 10 000 mijozda sahifa cho'kardi.
-  // 300ms kechikish: har harfda so'rov yuborilmasin.
   useEffect(() => {
-    const id = setTimeout(() => load(search.trim()), search ? 300 : 0);
-    return () => clearTimeout(id);
-  }, [search]);
+    setLoading(true);
+    customerApi.countsByShop()
+      .then((r) => setRows(r.data || []))
+      .catch((e) => toast.error(t("adm.customers.loadFailed", { msg: e.message })))
+      .finally(() => setLoading(false));
+  }, []);
 
-  /* Eksport EKRANDAGI ro'yxatni oladi: qidiruv qo'llanilgan bo'lsa, faylga
-     ham o'sha natija tushadi. Summa RAQAM, sana esa ISO shaklida yoziladi —
-     aks holda Excel'da ustunni yig'ib ham, saralab ham bo'lmasdi. */
-  const exportHeaders = [
-    t("adm.customers.colCustomer"), t("common.phone"),
-    t("adm.shops.colShop"), t("adm.shops.colCode"),
-    t("cust.totalSpent"), t("adm.customers.colRegistered"),
-  ];
-  const exportRows = customers.map(c => [
-    c.fullName, c.phone || "", c.shopName || "", c.shopCode || "",
-    c.totalSpent || 0, isoDate(c.createdAt),
-  ]);
+  /* ⚠ Qidiruv BRAUZERDA va DO'KON bo'yicha. Ilgari u serverda, mijoz
+     ismi va telefoni bo'yicha ishlardi — aynan o'sha yo'l yopildi.
+     Do'konlar soni yuzlab, mijozlarniki esa minglab bo'lgani uchun
+     bu yerda serverga chiqishning hojati yo'q. */
+  const filtered = rows.filter((r) => {
+    const q = search.trim().toLowerCase();
+    return !q || r.shopName?.toLowerCase().includes(q) || r.shopCode?.toLowerCase().includes(q);
+  });
 
-  const head = (
-    <thead>
-      <tr>
-        <th>{t("adm.customers.colCustomer")}</th>
-        <th>{t("common.phone")}</th>
-        <th>{t("adm.shops.colShop")}</th>
-        <th className="num">{t("cust.totalSpent")}</th>
-        <th className="num">{t("adm.customers.colRegistered")}</th>
-      </tr>
-    </thead>
-  );
+  const total = filtered.reduce((sum, r) => sum + (r.customerCount || 0), 0);
 
-  const row = (c) => (
-    <tr key={c.id}>
-      <td>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <Avatar name={c.fullName} size={30} radius={8} />
-          <span style={{ fontWeight:700 }}>{c.fullName}</span>
-        </div>
-      </td>
-      <td className="ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
-        {c.phone || "—"}
-      </td>
-      <td style={{ fontSize:12 }}>
-        {c.shopName ? (
-          <div style={{ display:"flex", flexDirection:"column" }}>
-            <span style={{ fontWeight:600 }}>{c.shopName}</span>
-            <span className="ek-num" style={{ fontSize:10, color:"var(--fg-secondary)" }}>
-              {c.shopCode}
-            </span>
-          </div>
-        ) : (
-          <span style={{ color:"var(--fg-secondary)" }}>—</span>
-        )}
-      </td>
-      <td className="num ek-num" style={{ fontWeight:700 }}>
-        {money(c.totalSpent || 0)}
-      </td>
-      <td className="num ek-num" style={{ fontSize:12, color:"var(--fg-secondary)" }}>
-        {fmtDate(c.createdAt)}
-      </td>
-    </tr>
-  );
+  const exportHeaders = [t("adm.shops.colShop"), t("adm.shops.colCode"), t("adm.customers.colCount")];
+  const exportRows = filtered.map((r) => [r.shopName || "", r.shopCode || "", r.customerCount || 0]);
 
   return (
     <div>
@@ -115,27 +75,56 @@ export default function CustomersPage({ toast }) {
           </span>
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
             <Search value={search} onChange={setSearch}
-              placeholder={t("adm.customers.searchPlaceholder")} style={{ width:240 }} />
+                    placeholder={t("adm.customers.searchShop")} style={{ width:240 }} />
             <ExportButtons name="mijozlar" headers={exportHeaders} rows={exportRows} toast={toast} />
           </div>
         </div>
-        {busy ? (
-          <div className="tw">
-            <SkeletonTable rows={7} cols={["wide", "text", "text", "num", "num"]} />
-          </div>
-        ) : (
-          /* Mijozlar ro'yxati serverdan BUTUNLAY keladi — aynan shu jadval
-             minglab qatorga yetishi mumkin. 50 qatordan oshsa
-             `VirtualTable` faqat ko'rinadigan qismini chizadi. */
-          <VirtualTable
-            rows={customers}
-            head={head}
-            renderRow={row}
-            empty={<tr><td colSpan={5}>
-              <Empty icon="fa-address-book" title={t("adm.customers.notFound")} />
-            </td></tr>}
-          />
-        )}
+
+        {/* ⚠ NEGA BU YERDA ISM YO'Q — bir qatorda tushuntiriladi.
+            Usiz ekran «buzilgan» yoki «to'liq yuklanmagan» bo'lib
+            ko'rinardi va kimdir eski ro'yxatni qaytarishni so'rardi. */}
+        <div style={{ margin:"0 14px 10px", fontSize:12, color:"var(--fg-secondary)" }}>
+          <i className="fa-solid fa-shield-halved" aria-hidden="true" /> {t("adm.customers.privacyNote")}
+        </div>
+
+        <div className="tw">
+          {busy ? <SkeletonTable rows={7} cols={["wide", "text", "num"]} /> : (
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("adm.shops.colShop")}</th>
+                  <th>{t("adm.shops.colCode")}</th>
+                  <th className="num">{t("adm.customers.colCount")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length ? (
+                  <>
+                    {filtered.map((r) => (
+                      <tr key={r.shopId}>
+                        <td style={{ fontWeight:700 }}>{r.shopName}</td>
+                        <td className="ek-num" style={{ fontSize:11, color:"var(--fg-tertiary)" }}>
+                          {r.shopCode}
+                        </td>
+                        <td className="num ek-num" style={{ fontWeight:700 }}>
+                          {groupDigits(r.customerCount || 0)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan={2} style={{ fontWeight:700 }}>{t("common.total")}</td>
+                      <td className="num ek-num" style={{ fontWeight:700 }}>{groupDigits(total)}</td>
+                    </tr>
+                  </>
+                ) : (
+                  <tr><td colSpan={3}>
+                    <Empty icon="fa-address-book" title={t("adm.customers.notFound")} />
+                  </td></tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

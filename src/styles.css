@@ -153,7 +153,13 @@ h1, h2, h3, .page-title, .c-title, .mt { font-family: var(--font-display); lette
 
 /* User */
 .sb-foot    { padding: 8px 10px; border-top: 1px solid var(--sb-border); display: grid; gap: 4px; }
-.sb-user    { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; cursor: pointer; transition: .15s; }
+/* ⚠ `text-decoration: none` va `color: inherit` SHART. Kartochka
+   Sozlamalarga havola (`NavLink`) bo'lgach, brauzerning `<a>` uchun
+   standart tag chizig'i ism va rol ostida paydo bo'lgan edi — u yerda
+   havola ekani rangdan va kursordan bilinadi, chiziq esa faqat
+   ifloslantiradi (foydalanuvchi shikoyati). */
+.sb-user    { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; cursor: pointer; transition: .15s;
+              text-decoration: none; color: inherit; }
 .sb-user:hover { background: var(--sb-hover); }
 .sb-u-name  { font-size: 13px; font-weight: 600; color: var(--fg-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-u-role  { font-size: 10.5px; color: var(--sb-dim); margin-top: 1px; }

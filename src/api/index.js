@@ -117,6 +117,61 @@ export const shopApi = {
   // yo'q va hech qachon bo'lmagan. Holat `update` (PUT) orqali yuboriladi.
 };
 
+// ── Xizmat yo'nalishlari va interfeys modullari (V49) ───────────
+/* Do'konda QAYSI BO'LIMLAR bo'lishi shu yerdan boshqariladi: yo'nalish
+   standart to'plamni beradi, istisno esa uni bitta modul darajasida
+   to'g'irlaydi.
+
+   ⚠ Bu ROL EMAS. Rol — "shu odam qila oladimi", modul — "bu do'konda
+   bunday ish umuman bormi". Modul yopilsa do'kon egasi ham kira olmaydi:
+   server 403 qaytaradi (`ShopFeatureGuard`), ya'ni bu yerdagi ekran
+   haqiqiy to'siqning ko'rinishi, o'zi emas. */
+export const featureApi = {
+  /* Mavjud yo'nalishlar va ular olib keladigan modullar.
+
+     ⚠ Manzil `/superadmin/shops/...` OSTIDA va bu ataylab: backendda
+     u `SuperAdminController` ichida yashaydi, ya'ni `/superadmin/**`
+     xavfsizlik qoidasi bilan avtomatik himoyalanadi. Ro'yxatning
+     o'zi do'konga bog'liq emas — statik katalog. */
+  directions: ()  => req("/superadmin/shops/service-directions"),
+  /** Do'konning modul holati — har biri uchun "nega shunday" bilan. */
+  get:      (id)  => req(`/superadmin/shops/${id}/features`),
+  /** Yo'nalishlarni belgilash. Bo'sh ro'yxat — "sozlanmagan" holatiga qaytish. */
+  setDirections: (id, directions) =>
+    req(`/superadmin/shops/${id}/directions`, { method: "PUT", ...body({ directions }) }),
+  /* Bitta modulga qo'lda qaror.
+     ⚠ `enabled: null` — istisnoni OLIB TASHLASH, ya'ni yo'nalish
+     qoidasiga qaytish. `false` bilan adashtirmang: `false` majburan
+     yopish degani. */
+  override: (id, feature, enabled, note) =>
+    req(`/superadmin/shops/${id}/features/${feature}`, { method: "PATCH", ...body({ enabled, note }) }),
+};
+
+// ── Admin hisoblari va ruxsatlar (V50) ──────────────────────────
+/* ⚠ FAQAT BOSH ADMIN. Yo'lning o'zi serverda `SUPER_ADMIN` ga qamalgan
+   va har bir amal `ADMIN_MANAGE` talab qiladi — o'sha ruxsat esa hech
+   kimga BERILMAYDI. Ya'ni bu bo'limni ko'rsatish yoki yashirish
+   qulaylik masalasi; haqiqiy to'siq serverda.
+
+   ⚠ `changePass` parolni TANADA yuboradi, `?password=` da emas: manzil
+   qatori server logiga, proksi logiga va brauzer tarixiga tushadi. */
+export const adminApi = {
+  getAll:      ()          => req("/superadmin/admins"),
+  getById:     (id)        => req(`/superadmin/admins/${id}`),
+  /** Tizimdagi barcha ruxsatlar + qaysilarini berish mumkinligi. */
+  permissions: ()          => req("/superadmin/admins/permissions"),
+  create:      (data)      => req("/superadmin/admins", { method: "POST", ...body(data) }),
+  update:      (id, data)  => req(`/superadmin/admins/${id}`, { method: "PUT", ...body(data) }),
+  setEnabled:  (id, value) => req(`/superadmin/admins/${id}/enabled?value=${value}`, { method: "PATCH" }),
+  changePass:  (id, password) =>
+    req(`/superadmin/admins/${id}/password`, { method: "PATCH", ...body({ password }) }),
+  delete:      (id)        => req(`/superadmin/admins/${id}`, { method: "DELETE" }),
+  /* Bitta ruxsat bo'yicha qaror.
+     `allowed: null` — qarorni olib tashlash (rol tayanchiga qaytish). */
+  setPermission: (id, permission, allowed) =>
+    req(`/superadmin/admins/${id}/permissions`, { method: "PATCH", ...body({ permission, allowed }) }),
+};
+
 // ── Tiklash aloqalari: pochta va telefon (V27) ──────────────────
 /* ⚠ Pochta — parolni tiklash KALITI. Uni o'zgartirish jurnalga tushadi
    va ESKI manzilga ogohlantirish yuboriladi (server tomonda). */
@@ -175,11 +230,28 @@ export const auditApi = {
   search: (qs = "") => req(`/superadmin/audit${qs ? "?" + qs : ""}`),
 };
 
-// ── Mijozlar — FAQAT O'QISH ─────────────────────────────────────
-// `update` va `delete` OLIB TASHLANDI: backendda bunday endpointlar yo'q
-// (har doim 405 qaytarardi). Mijoz — do'konning ma'lumoti, uni do'kon
-// xodimi kassir ilovasida tahrirlaydi.
+/* ══════════════════════════════════════════════════════════════════════
+   MIJOZLAR — ADMINGA FAQAT SON (V50)
+
+   ⚠ BU BO'LIM ATAYLAB KAMAYTIRILDI. Ilgari bu yerda barcha do'konlar
+   bo'ylab to'liq ro'yxat bor edi: ism, telefon raqami, qancha xarid
+   qilgani — ustiga telefon bo'yicha butun tizim bo'ylab qidiruv ham.
+   Ya'ni panelda istalgan odamning raqamini kiritib, uning qaysi
+   do'konlarda qancha pul sarflaganini ko'rish mumkin edi.
+
+   Mijoz o'z ismini va raqamini BIZGA emas, do'konga bergan; do'kon esa
+   mijozlar bazasini o'z kassasiga ishonib topshirgan. Ikkala tomon ham
+   bunga rozilik bermagan.
+
+   ⚠ `getById` VA QIDIRUV OLIB TASHLANDI, maskalash bilan almashtirilmadi:
+   maskalangan ro'yxat baribir "bu do'konda falon odam falon pul
+   sarflagan" degan ma'lumotni saqlaydi. Ma'lumot javobda BO'LMASA, uni
+   ochib ham bo'lmaydi.
+
+   Qoladigani — do'kon bo'yicha SON. U obuna tarifini tekshirish uchun
+   kerak va hech kimni tanitmaydi.
+   ══════════════════════════════════════════════════════════════════════ */
 export const customerApi = {
-  getAll:  (params = "") => req(`/superadmin/customers${params ? "?" + params : ""}`),
-  getById: (id)          => req(`/superadmin/customers/${id}`),
+  /** Do'kon bo'yicha mijozlar soni. Shaxsiy ma'lumot qaytmaydi. */
+  countsByShop: () => req("/superadmin/customers"),
 };

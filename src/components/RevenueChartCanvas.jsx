@@ -41,10 +41,10 @@ function ChartTooltip({ active, payload, label, t }) {
       <div style={{ fontWeight: 800, fontSize: 12, marginBottom: 6 }}>{label}</div>
       {/* To'liq summa — qisqartirilmagan (07-ADMIN.md) */}
       <div className="ek-num" style={{ fontSize: 13, fontWeight: 700 }}>
-        {money(row.revenue, { withUnit: true })}
+        {money(row.amount, { withUnit: true })}
       </div>
       <div style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
-        {t("chart.salesCount")}: <span className="ek-num">{groupDigits(row.sales)}</span>
+        {t("chart.paymentCount")}: <span className="ek-num">{groupDigits(row.payments)}</span>
       </div>
     </div>
   );
@@ -66,7 +66,7 @@ export default function RevenueChartCanvas({ data, today, shortDay }) {
                className="ek-num" />
         <Tooltip content={(props) => <ChartTooltip {...props} t={t} />}
                  cursor={{ fill: "var(--bg-sunken)" }} />
-        <Bar dataKey="revenue" radius={[4, 4, 0, 0]}
+        <Bar dataKey="amount" radius={[4, 4, 0, 0]}
              isAnimationActive={!REDUCED()} animationDuration={420}>
           {rows.map((row) => (
             /* Bugungi ustun ajratilgan (07-ADMIN.md). Rang YOLG'IZ signal

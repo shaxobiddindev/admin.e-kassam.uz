@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { shopApi, userApi } from "../api";
+import { shopApi, userApi, featureApi } from "../api";
 import { fmtDate, fmtDateTime, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, SHOP_PLAN,
          shopStatus, shopPlan, roleLabel, money, paymentProvider } from "../utils";
 import { useT } from "../lib/ek-i18n";
@@ -11,6 +11,7 @@ import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import { SkeletonList } from "../components/ek/Loading";
 import ExportButtons from "../components/ExportButtons";
+import ShopFeaturesModal from "../components/ShopFeaturesModal";
 import { isoDate } from "../utils/export";
 import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
 
@@ -113,18 +114,23 @@ export default function ShopsPage({ toast }) {
   /* Eksport EKRANDAGI ro'yxatni oladi (`filtered`): tab va qidiruvdan keyin
      nima ko'rinayotgan bo'lsa, faylga ham o'sha tushadi. Summa va sana
      xom holida yoziladi — Excel'da yig'ish va saralash uchun. */
+  /* ⚠ TUSHUM USTUNI EKSPORTDAN HAM CHIQARILDI (V50): u endi serverdan
+     kelmaydi va faylga har qatorda «0» yozardi. O'rniga do'konning
+     YO'NALISHI qo'shildi — u endi do'kon kartochkasining bir qismi va
+     ro'yxatni ko'rib chiqishda «bu do'kon sozlanganmi?» degan savolga
+     javob beradi. */
   const exportHeaders = [
     t("adm.shops.colShop"), t("adm.shops.colCode"), t("adm.shops.colType"),
     t("adm.shops.colOwner"), t("common.phone"), t("common.address"),
     t("common.status"), t("adm.shops.colPlan"),
-    t("adm.shops.colLastSale"), t("adm.shops.colRevenue30d"), t("common.createdAt"),
+    t("adm.shops.colLastSale"), t("adm.shops.colDirections"), t("common.createdAt"),
   ];
   const exportRows = filtered.map((s) => [
     s.name, s.code, s.parentShopName || "", s.ownerName || "",
     s.phone || "", s.address || "",
     shopStatus(s.status).label, s.plan || "",
     isoDate(stats[s.id]?.lastSaleAt),
-    stats[s.id]?.revenue30d ?? 0,
+    (s.directions || []).map((d) => t(`adm.dir.${d}`)).join(", "),
     isoDate(s.createdAt),
   ]);
 
@@ -181,7 +187,10 @@ export default function ShopsPage({ toast }) {
                   {/* Tartib TANA bilan bir xil bo'lishi shart: yangi ustunlar
                       holatdan keyin qo'shildi, "Yaratilgan" esa ulardan keyin. */}
                   <th>{t("adm.shops.colLastSale")}</th>
-                  <th className="num">{t("adm.shops.colRevenue30d")}</th>
+                  {/* Yo'nalish (V49) — «bu do'kon sozlanganmi?» degan
+                      savolga ro'yxatning o'zidan javob. Tushum ustuni
+                      shu yerda edi; sabab pastdagi izohda. */}
+                  <th>{t("adm.shops.colDirections")}</th>
                   <th>{t("common.createdAt")}</th>
                   <th />
                 </tr>
@@ -258,9 +267,32 @@ export default function ShopsPage({ toast }) {
                           ? fmtDate(stats[shop.id].lastSaleAt)
                           : <span style={{ fontStyle:"italic" }}>{t("adm.shops.neverSold")}</span>}
                       </td>
-                      <td className="num ek-num" style={{ fontSize:12, fontWeight:700 }}>
-                        {money(stats[shop.id]?.revenue30d || 0)}
+                      {/* Yo'nalishlar. Bo'sh — hali tanlanmagan va bunday
+                          do'konda HAMMA modul ochiq (ko'chirish qoidasi),
+                          shuning uchun bu holat «—» emas, alohida matn
+                          bilan ko'rsatiladi. */}
+                      <td style={{ fontSize:11, maxWidth:150 }}>
+                        {shop.directions?.length ? (
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:3 }}>
+                            {shop.directions.map((d) => (
+                              <Badge key={d} color="blue">{t(`adm.dir.${d}`)}</Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color:"var(--fg-warning)", fontStyle:"italic" }}>
+                            {t("adm.shops.noDirections")}
+                          </span>
+                        )}
                       </td>
+                      {/* ⚠ «30 kunlik tushum» USTUNI OLIB TASHLANDI (V50).
+                          Do'konning aylanmasi — uning tijorat siri, u
+                          kassa dasturidan foydalanadi, xolos. Server
+                          endi bu raqamni umuman qaytarmaydi
+                          (`ShopPrivacyPolicy`), shuning uchun ustunni
+                          qoldirish har qatorda «0 so'm» chizardi.
+                          «Oxirgi sotuv» qoldi: u pul emas va aynan
+                          «bu do'kon tashlab ketilganmi?» degan savolga
+                          javob beradi. */}
                       <td style={{ fontSize:12, color:"var(--fg-tertiary)" }}>{fmtDate(shop.createdAt)}</td>
                       <td>
                         {isDeleted ? (
@@ -279,6 +311,15 @@ export default function ShopsPage({ toast }) {
                                 <i className="fa-solid fa-credit-card" />
                               </button>
                             )}
+                            {/* Modullar (V49) — do'konning INTERFEYSI.
+                                ⚠ Filialda ham alohida turadi: yo'nalish
+                                bosh do'kondan meros bo'lsa-da, istisno
+                                filialga alohida qo'yilishi mumkin
+                                (masalan faqat markaziy ombordan berish). */}
+                            <button className="bic b-blue" title={t("adm.features.action")}
+                              onClick={() => setModal({ type:"features", shop })}>
+                              <i className="fa-solid fa-toggle-on" />
+                            </button>
                             <button className="bic b-blue" title={t("common.edit")}
                               onClick={() => setModal({ type:"edit", shop })}>
                               <i className="fa-solid fa-pen" />
@@ -322,6 +363,10 @@ export default function ShopsPage({ toast }) {
       {modal?.type === "users" && (
         <ShopUsersModal shop={modal.shop} onClose={() => setModal(null)} onReload={load} toast={toast} />
       )}
+      {modal?.type === "features" && (
+        <ShopFeaturesModal shop={modal.shop} onClose={() => setModal(null)}
+          onSaved={load} toast={toast} />
+      )}
     </div>
   );
 }
@@ -330,13 +375,27 @@ export default function ShopsPage({ toast }) {
 function AddShopModal({ onClose, onSaved, toast }) {
   const { t } = useT();
   const [shops, setShops] = useState([]);
+  // Xizmat yo'nalishlari (V49) — do'konning interfeysi shundan chiqadi.
+  const [dirCatalog, setDirCatalog] = useState([]);
+  const [dirs, setDirs] = useState(new Set());
   const [form, setForm] = useState({ name:"", code:"", phone:"+998 ", address:"", parentShopId: "" });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   useEffect(() => {
     shopApi.getAll().then(res => setShops(res.data || [])).catch(() => {});
+    /* ⚠ Yo'nalishlar ro'yxati YIQILSA forma baribir ochiladi: yo'nalish
+       majburiy emas va usiz yaratilgan do'konda hamma modul ochiq
+       qoladi. Ya'ni bu so'rovning yiqilishi do'kon ochishga to'sqinlik
+       qilmasligi kerak. */
+    featureApi.directions().then(res => setDirCatalog(res.data || [])).catch(() => {});
   }, []);
+
+  const toggleDir = (key) => setDirs((prev) => {
+    const next = new Set(prev);
+    next.has(key) ? next.delete(key) : next.add(key);
+    return next;
+  });
 
   const handlePhone = (e) => {
     let val = e.target.value.replace(/\D/g, "");
@@ -359,7 +418,12 @@ function AddShopModal({ onClose, onSaved, toast }) {
       const payload = { 
         ...form, 
         phone: form.phone.replace(/[^+\d]/g, ""),
-        parentShopId: form.parentShopId || null
+        parentShopId: form.parentShopId || null,
+        /* ⚠ Bo'sh ro'yxat ham yuboriladi va bu «hali tanlanmagan»
+           degani: server bunday do'konda hamma modulni ochiq
+           qoldiradi. Majburiy qilinmadi — o'z-o'zidan ro'yxatdan
+           o'tgan do'konda ham yo'nalish bo'lmaydi. */
+        directions: [...dirs],
       };
       await shopApi.create(payload); 
       toast.success(t("adm.shops.created")); 
@@ -402,6 +466,37 @@ function AddShopModal({ onClose, onSaved, toast }) {
           ]}
         />
       </FG>
+
+      {/* ── Xizmat yo'nalishlari (V49) ──────────────────────────────────
+          ⚠ FILIALDA SO'RALMAYDI: filial yo'nalishni bosh do'kondan
+          MEROS oladi va server bu yerdan kelgan qiymatni e'tiborsiz
+          qoldiradi. Dorixonaning filiali ham dorixona; boshqacha
+          bo'lsa, bitta katalogga ulangan ikki xil interfeysli do'kon
+          paydo bo'lardi. */}
+      {!form.parentShopId && dirCatalog.length > 0 && (
+        <FG label={t("adm.shops.fieldDirections")} hint={t("adm.shops.directionsHint")}>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {dirCatalog.map((c) => {
+              const on = dirs.has(c.direction);
+              return (
+                <button type="button" key={c.direction}
+                  className={`btn btn-sm ${on ? "btn-primary" : "btn-outline"}`}
+                  onClick={() => toggleDir(c.direction)}
+                  title={c.features.map((f) => t(`adm.feat.${f}`)).join(", ")}>
+                  {on && <i className="fa-solid fa-check" />} {t(`adm.dir.${c.direction}`)}
+                </button>
+              );
+            })}
+          </div>
+          {/* ⚠ Tanlanmagan holat NOSOZLIK EMAS — buni aytib qo'yish
+              kerak, aks holda forma «to'ldirilmagan» bo'lib ko'rinadi. */}
+          {dirs.size === 0 && (
+            <div style={{ fontSize:11, color:"var(--fg-secondary)", marginTop:6 }}>
+              <i className="fa-solid fa-circle-info" aria-hidden="true" /> {t("adm.shops.noDirectionsHint")}
+            </div>
+          )}
+        </FG>
+      )}
     </Modal>
   );
 }

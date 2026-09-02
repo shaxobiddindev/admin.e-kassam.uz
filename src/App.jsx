@@ -15,6 +15,7 @@ import UsersPage     from "./pages/UsersPage";
 import CustomersPage from "./pages/CustomersPage";
 import RequestsPage  from "./pages/RequestsPage";
 import AuditPage     from "./pages/AuditPage";
+import AdminsPage    from "./pages/AdminsPage";
 import SettingsPage  from "./pages/SettingsPage";
 import NotFound      from "./pages/NotFound";
 
@@ -93,6 +94,9 @@ export default function App() {
             <Route path="/users"     element={<UsersPage     toast={toast} />} />
             <Route path="/customers" element={<CustomersPage toast={toast} />} />
             <Route path="/audit"     element={<AuditPage     toast={toast} />} />
+            {/* Adminlar (V50) — sahifaga `user` uzatiladi: unda o'ziga
+                nisbatan xavfli amallarni chizmaslik uchun `id` kerak. */}
+            <Route path="/admins"    element={<AdminsPage    toast={toast} user={user} />} />
             <Route path="/settings"  element={<SettingsPage  toast={toast} user={user} onLogout={logout} />} />
             {/* Noma'lum manzil — Dashboard'ga JIMGINA qaytarilmaydi:
                 foydalanuvchi so'ragan sahifada ekanman deb o'ylardi. */}

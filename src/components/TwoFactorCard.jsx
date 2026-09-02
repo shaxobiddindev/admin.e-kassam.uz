@@ -29,6 +29,11 @@ export default function TwoFactorCard({ toast }) {
   const [status, setStatus] = useState(null);   // { enabled, recoveryCodesLeft, emailSet }
   const [setup, setSetup] = useState(null);     // { secret, otpAuthUri }
   const [code, setCode] = useState("");
+  /* ⚠ ALOHIDA HOLAT. «Yangilash» va «O'chirish» maydonlari bir vaqtda
+     ekranda turadi; bitta holatni bo'lishsa, kodni birinchisiga yozgan
+     odam ikkinchisining tugmasini ham YOQIB qo'yardi — ya'ni bitta
+     noto'g'ri bosish himoyani butunlay yechishga olib borardi. */
+  const [regenCode, setRegenCode] = useState("");
   const [codes, setCodes] = useState(null);     // tiklash kodlari — bir marta
   const [busy, setBusy] = useState(false);
   const qrRef = useRef(null);
@@ -91,6 +96,29 @@ export default function TwoFactorCard({ toast }) {
       setCode("");
       await load();
       toast?.success?.(r.message || t("twofa.disabled"));
+    } catch (e) { toast?.error?.(e.message); } finally { setBusy(false); }
+  };
+
+  /* ⚠ ESKI KODLAR QAYTARIB BO'LMAYDIGAN TARZDA O'LADI — shuning uchun
+     tasdiq so'raladi. Bu 2FA ni O'CHIRMAYDI: sir o'z joyida qoladi va
+     telefondagi ilova o'zgarishsiz ishlaydi, faqat qog'ozdagi ro'yxat
+     almashadi. */
+  const regenerate = async () => {
+    const ok = await confirm({
+      title: t("twofa.regenTitle"),
+      message: t("twofa.regenWarn"),
+      type: "warning",
+      confirmText: t("twofa.regen"),
+      cancelText: t("common.cancel"),
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const r = await twoFactorApi.regenerateCodes(regenCode.trim());
+      setCodes(r.data || []);
+      setRegenCode("");
+      await load();
+      toast?.success?.(r.message || t("twofa.regenDone"));
     } catch (e) { toast?.error?.(e.message); } finally { setBusy(false); }
   };
 
@@ -221,6 +249,30 @@ export default function TwoFactorCard({ toast }) {
               </button>
               <button className="btn btn-primary btn-sm" onClick={() => setCodes(null)}>
                 <i className="fa-solid fa-check" aria-hidden="true" /> {t("twofa.codesSaved")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Kodlarni yangilash ──
+            ⚠ «O'chirish» dan OLDIN turadi va bu ataylab: kodlar chiqib
+            ketganda odam ko'pincha 2FA ni butunlay o'chirib qo'yardi,
+            chunki boshqa yo'l ko'rinmasdi. To'g'ri javob esa shu yerda
+            va u himoyani yechmaydi. */}
+        {on && !codes && (
+          <div className="set-row" style={{ display: "block" }}>
+            <div className="set-row__label">{t("twofa.regenTitle")}</div>
+            <div className="set-row__hint" style={{ marginBottom: 10 }}>{t("twofa.regenHint")}</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <OtpField
+                className="fi ek-num" style={{ maxWidth: 160 }}
+                value={regenCode} onChange={(e) => setRegenCode(e.target.value)}
+                placeholder="123456"
+                aria-label={t("twofa.codeLabel")}
+              />
+              <button className="btn btn-outline btn-sm" onClick={regenerate}
+                      disabled={busy || regenCode.trim().length < 6}>
+                <i className="fa-solid fa-rotate" aria-hidden="true" /> {t("twofa.regen")}
               </button>
             </div>
           </div>

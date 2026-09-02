@@ -188,6 +188,10 @@ export const twoFactorApi = {
   setup:   ()      => req("/auth/admin/2fa/setup",   { method: "POST" }),
   confirm: (code)  => req("/auth/admin/2fa/confirm", { method: "POST", ...body({ code }) }),
   disable: (code)  => req("/auth/admin/2fa/disable", { method: "POST", ...body({ code }) }),
+  /* Kodlar begonaga tushgan bo'lsa — hammasini bekor qilib, yangisini
+     olish. 2FA o'chirilmaydi: sir va telefondagi ilova o'z joyida qoladi. */
+  regenerateCodes: (code) =>
+    req("/auth/admin/2fa/recovery-codes", { method: "POST", ...body({ code }) }),
 };
 
 // ── Zaxira nusxa holati (V24) ───────────────────────────────────

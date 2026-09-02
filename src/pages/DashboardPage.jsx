@@ -64,7 +64,23 @@ export default function DashboardPage({ toast }) {
   const activeUsers  = users.filter(u => u.enabled).length;
   const blockedUsers = users.filter(u => !u.enabled).length;
   const ownerless    = shops.filter(s => !s.ownerName).length;
-  const newRequests  = requests.filter(r => !r.handled).length;
+  /* ══ YANGI ARIZALAR — HOLAT BO'YICHA, `handled` BO'YICHA EMAS ══════════
+     ⚠ TOPILGAN NOSOZLIK (2026-09-02). Bu yerda `!r.handled` turardi.
+     `handled` — ESKI bayroq va u faqat `HANDLED` holatida `true` bo'ladi,
+     ya'ni SPAM deb belgilangan ariza ham «yangi» bo'lib sanalardi.
+
+     Natijada bosh sahifa «3 ta yangi ariza» deb turardi, «Arizalar»
+     bo'limida esa hech narsa yo'q edi — u SPAM ni ro'yxatdan chiqaradi.
+     Ikki ekran bir xil ma'lumotni ikki xil sanardi va qaysi biri
+     to'g'ri ekanini bilib bo'lmasdi.
+
+     ⚠ Server allaqachon TO'G'RI sanaydi (`countByStatus(NEW)`), shuning
+     uchun birinchi navbatda o'shanikini olamiz. Mahalliy hisob faqat
+     statistika kelmagan holat uchun — u ham endi holat bo'yicha va
+     `RequestsPage` dagi qoida bilan bir xil. */
+  const requestStatus = (r) => r.status || (r.handled ? "HANDLED" : "NEW");
+  const newRequests  = stats?.newRequests
+    ?? requests.filter(r => requestStatus(r) === "NEW").length;
 
   /* ── "E'tibor talab qiladi" — bo'sh satrlar ko'rsatilmaydi ─────────────── */
   const attention = [

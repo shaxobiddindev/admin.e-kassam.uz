@@ -249,20 +249,54 @@ textarea.fi { resize: vertical; min-height: 80px; }
 .fhint { font-size: 11px; color: var(--fg-tertiary); margin-top: 4px; }
 
 /* ════ SEARCH ════════════════════════════════════════════════ */
-.srch        { display: flex; align-items: center; gap: 8px; background: var(--bg-sunken); border: 1.5px solid var(--border-subtle); border-radius: 10px; padding: 8px 12px; transition: .2s; }
-.srch:focus-within { border-color: var(--bg-brand); background: var(--bg-surface); box-shadow: var(--ring-brand); }
-.srch input  { border: none; background: none; outline: none; font-size: 13px; font-family: var(--font); color: var(--fg-primary); flex: 1; min-width: 0; }
-.srch i      { color: var(--fg-tertiary); font-size: 14px; flex-shrink: 0; }
+/* ⚠ `.srch` EMAS, `.search-bar` — sabab `components/ui/index.jsx` da:
+   umumiy dizayn fayli fokus halqasini idish ichidagi maydondan aynan shu
+   nom bo'yicha olib tashlaydi. */
+.search-bar        { display: flex; align-items: center; gap: 8px; background: var(--bg-sunken); border: 1.5px solid var(--border-subtle); border-radius: 10px; padding: 8px 12px; transition: .2s; }
+.search-bar:focus-within { border-color: var(--bg-brand); background: var(--bg-surface); box-shadow: var(--ring-brand); }
+.search-bar input  { border: none; background: none; outline: none; font-size: 13px; font-family: var(--font); color: var(--fg-primary); flex: 1; min-width: 0; }
+.search-bar i      { color: var(--fg-tertiary); font-size: 14px; flex-shrink: 0; }
 
 /* ════ MODAL ═════════════════════════════════════════════════ */
-.ov   { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px; animation: fadeIn .18s ease; }
-.mb   { background: var(--bg-surface); border-radius: 18px; width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; box-shadow: var(--s3); animation: slideUp .28s ease; }
+/* ══════════════════════════════════════════════════════════════════════════
+   OYNA BALANDLIGI — SARLAVHA HECH QACHON SURILMAYDI
+
+   ⚠ IKKI XATO BIR JOYDA EDI.
+
+   1. Quti O'ZI aylanardi (`.mb { overflow-y: auto }`), ya'ni uzun oynada
+      sarlavha ham ichkariga surilib ketardi: pastga aylantirilganda
+      oynaning NOMI va ✕ tugmasi ko'rinmay qolardi. Ruxsatlar oynasida
+      buni ko'rish oson — u 25 qatordan iborat.
+
+   2. Qoplama aylanmasdi (`overflow` yo'q + `align-items: center`). Quti
+      qoplamadan baland bo'lsa, flex uni ikki tomonga teng chiqaradi va
+      TEPASIGA UMUMAN YETIB BO'LMAYDI — bu flex markazlashning eski
+      tuzog'i. `margin: auto` uni hal qiladi: joy bo'lsa markazlaydi,
+      bo'lmasa tepadan kesmaydi.
+
+   ⚠ YECHIM. Quti — ustunli flex va u hech qachon aylanmaydi
+   (`overflow: hidden`). Sarlavha (`.mh`) va tugmalar qatori (`.mf`)
+   joyida qotadi, faqat `.mbody` aylanadi.
+
+   ⚠ `min-height: 0` SHART: usiz flex elementi o'z mazmunidan
+   kichrayolmaydi va `overflow-y: auto` umuman ishlamaydi.
+
+   ⚠ `env(safe-area-inset-*)` — telefonda oynaning tepasi tizim holat
+   qatori ostida qolmasligi uchun (app'dagi bilan bir xil qoida).
+   ══════════════════════════════════════════════════════════════════════════ */
+.ov   { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: center; justify-content: center; z-index: 500;
+        padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+        overflow-y: auto; animation: fadeIn .18s ease; }
+.ov > * { margin: auto; }
+.mb   { background: var(--bg-surface); border-radius: 18px; width: 100%; max-width: 480px; max-height: 92vh; box-shadow: var(--s3); animation: slideUp .28s ease;
+        display: flex; flex-direction: column; overflow: hidden; }
 .mb.md { max-width: 600px; }
 .mb.lg { max-width: 780px; }
-.mh   { padding: 20px 22px 0; display: flex; align-items: center; justify-content: space-between; }
+.mh   { padding: 20px 22px 0; display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; }
 .mt   { font-size: 16px; font-weight: 900; }
-.mbody { padding: 18px 22px; }
-.mf   { padding: 0 22px 20px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+/* ⚠ Faqat SHU qism aylanadi. `min-height: 0` — yuqoridagi izohga qarang. */
+.mbody { padding: 18px 22px; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+.mf   { padding: 0 22px 20px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; flex: 0 0 auto; }
 
 /* ════ TOAST ═════════════════════════════════════════════════ */
 .tc  { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
@@ -405,7 +439,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
     --border-subtle: #BBBBBB;
   }
   .sb, .sb-toggle, .topbar, .ek-overlay, .tc,
-  .btn, .bic, .tabs, .ek-export, .srch { display: none !important; }
+  .btn, .bic, .tabs, .ek-export, .search-bar { display: none !important; }
 
   .app, .main { display: block; margin: 0; }
   .page { padding: 0; }
@@ -440,7 +474,12 @@ textarea.fi { resize: vertical; min-height: 80px; }
 
 /* Sana maydoni: kalendar tugmasi maydon ichida, brauzerning o'z
    ko'rinishi esa yashirin (`dateInput()` izohiga qarang). */
-.ek-date { position: relative; display: inline-flex; align-items: center; width: 100%; }
+/* `flex-wrap` — xato yozuvi maydonning OSTIDA, yonida emas: yonida
+   turganda u maydonni siqib, sanani ko'rsatmay qo'yardi. */
+.ek-date { position: relative; display: inline-flex; align-items: center; flex-wrap: wrap; width: 100%; }
+.ek-date.is-invalid > input.form-input { border-color: var(--border-danger); }
+.ek-date__err { flex-basis: 100%; display: flex; align-items: center; gap: 5px;
+                margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--fg-danger); }
 .ek-date > input.form-input { padding-right: 36px; }
 .ek-date__pick {
   position: absolute; right: 4px; width: 30px; height: 30px;

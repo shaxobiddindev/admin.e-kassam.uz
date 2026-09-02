@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useT } from "../lib/ek-i18n";
 import { adminProfileApi } from "../api";
 import { EmailField, PhoneField } from "./ek/EkFields";
-import { isEmail, isPhone } from "../lib/ek-input";
+import { isEmail, isPhone, phoneInput } from "../lib/ek-input";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Tiklash aloqalari — pochta va telefon.
@@ -30,7 +30,10 @@ export default function RecoveryContactsCard({ toast }) {
     .then((r) => {
       setData(r.data || {});
       setEmail(r.data?.email || "");
-      setPhone(r.data?.phone || "");
+      /* ⚠ Niqob shakliga keltiriladi: eski hisobda raqam «+998 90 …»
+         bo'lishi mumkin va maydonga tegilmagan holda «o'zgardi» bo'lib
+         ko'rinardi — «Saqlash» tugmasi sababsiz yonib turardi. */
+      setPhone(phoneInput(r.data?.phone || "").raw);
     })
     .catch((e) => toast?.error?.(e.message));
 
@@ -54,7 +57,11 @@ export default function RecoveryContactsCard({ toast }) {
     } finally { setBusy(false); }
   };
 
-  const dirty = data && ((data.email || "") !== email.trim() || (data.phone || "") !== phone.trim());
+  /* ⚠ Telefon IKKALA tomonda ham bir shaklga keltirilib solishtiriladi:
+     bazadagi yozuv va maydondagi qiymat turli ko'rinishda bo'lsa ham,
+     bu O'ZGARISH emas. */
+  const dirty = data && ((data.email || "") !== email.trim()
+                         || phoneInput(data.phone || "").raw !== phone.trim());
   const noEmail = data && !data.email;
 
   return (

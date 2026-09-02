@@ -24,7 +24,23 @@ import { useT } from "../lib/ek-i18n";
    to'liq ekani serverda sinov bilan qulflangan
    (`ServiceDirectionTest.everyFeatureIsReachable`), shuning uchun
    alohida «hamma modullar» so'rovi kerak emas.
+
+   ⚠⚠ UNIVERSAL — YAKKA TANLOV. U tanlanganda qolganlari o'chiriladi va
+   bosilmaydigan holga keladi.
+
+   Sabab: «cheklovsiz» bilan «dorixona» ni birga tanlash MA'NOSIZ. Natija
+   baribir cheklovsiz bo'lardi (modullar yig'indisi olinadi), lekin
+   ekranda ikkita belgi turib, admin «demak dorixona cheklovlari ham
+   ishlayapti» deb o'ylardi. Ya'ni zarar natijada emas — TUSHUNISHDA.
+
+   ⚠ Server ham shunday normallashtiradi: `UNIVERSAL` bo'lsa faqat o'zi
+   saqlanadi. Ikki tomonda ham qilingani ataylab — panel qoidasi
+   ko'rinish uchun, server qoidasi esa to'g'ridan-to'g'ri API ga
+   yozilgan qiymat uchun.
    ══════════════════════════════════════════════════════════════════════════ */
+
+/** ⚠ Kalit backenddagi `ServiceDirection.UNIVERSAL` bilan bir xil. */
+const UNIVERSAL = "UNIVERSAL";
 
 export default function DirectionPicker({ catalog, selected, onToggle }) {
   const { t } = useT();
@@ -32,11 +48,18 @@ export default function DirectionPicker({ catalog, selected, onToggle }) {
   // Barcha yo'nalishlar bergan modullar — yuqoridagi izohga qarang.
   const allFeatures = [...new Set(catalog.flatMap((c) => c.features))];
 
+  const universalOn = selected.has(UNIVERSAL);
+
   return (
     <div style={{ display: "grid", gap: 8 }}>
       {catalog.map((c) => {
         const on = selected.has(c.direction);
         const missing = allFeatures.filter((f) => !c.features.includes(f));
+
+        /* Universal yoqilganda qolganlari BOSILMAYDI. Universalning
+           o'zi bosiladi — aks holda uni bekor qilib bo'lmasdi va
+           admin tanlovda qamalib qolardi. */
+        const locked = universalOn && c.direction !== UNIVERSAL;
 
         return (
           <button
@@ -44,9 +67,16 @@ export default function DirectionPicker({ catalog, selected, onToggle }) {
             key={c.direction}
             onClick={() => onToggle(c.direction)}
             aria-pressed={on}
+            disabled={locked}
+            title={locked ? t("adm.dir.lockedByUniversal") : undefined}
             style={{
+              opacity: locked ? 0.45 : 1,
+              /* ⚠ Kursor `not-allowed`: `disabled` yolg'iz sababni
+                 aytmaydi, `title` esa faqat sichqoncha bilan ko'rinadi.
+                 Pastda matn bilan ham tushuntiriladi. */
+              cursor: locked ? "not-allowed" : "pointer",
               display: "flex", gap: 10, alignItems: "flex-start",
-              textAlign: "start", width: "100%", cursor: "pointer",
+              textAlign: "start", width: "100%",
               padding: "10px 12px",
               borderRadius: "var(--r-lg, 10px)",
               border: `1.5px solid ${on ? "var(--border-brand, var(--fg-brand))" : "var(--border-subtle)"}`,
@@ -77,7 +107,15 @@ export default function DirectionPicker({ catalog, selected, onToggle }) {
               {/* ⚠ Cheklovsiz yo'nalishda «yo'q» qatori CHIZILMAYDI —
                   bo'sh ro'yxat «hech narsa yo'q» degan noto'g'ri
                   taassurot berardi. O'rniga tasdiqlovchi matn. */}
-              {missing.length === 0 ? (
+              {locked ? (
+                /* ⚠ Sabab MATN bilan: xiralashgan kartochka «nega
+                   bosilmayapti?» degan savol tug'diradi va uni faqat
+                   sichqoncha ostidagi izohga qoldirish sensorli
+                   ekranda umuman javobsiz qoldirardi. */
+                <span style={{ display: "block", fontSize: 11, marginTop: 4, color: "var(--fg-tertiary)" }}>
+                  <i className="fa-solid fa-lock" aria-hidden="true" /> {t("adm.dir.lockedByUniversal")}
+                </span>
+              ) : missing.length === 0 ? (
                 <span style={{ display: "block", fontSize: 11, marginTop: 4, color: "var(--fg-success, var(--fg-secondary))" }}>
                   <i className="fa-solid fa-circle-check" aria-hidden="true" /> {t("adm.dir.noLimits")}
                 </span>

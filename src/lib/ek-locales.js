@@ -33,6 +33,7 @@ const uz = {
   "common.create": "Yaratish",
   "common.creating": "Yaratilmoqda…",
   "common.close": "Yopish",
+  "validation.dateInvalid": "Bunday sana yo'q",
   "common.back": "Orqaga",
   "common.next": "Keyingi",
   "common.search": "Qidirish",
@@ -430,6 +431,7 @@ const uz = {
   /* ── Enumlar: sotuv holati ──────────────────────────────────────────── */
   "enum.sale.CREATED": "Yangi",
   "enum.sale.PAID": "To'langan",
+  "enum.sale.CREDIT": "Nasiya",
   "enum.sale.CANCELLED": "Bekor qilingan",
 
   /* ── Enumlar: do'kon holati ─────────────────────────────────────────── */
@@ -1715,6 +1717,7 @@ const ru = {
   "common.create": "Создать",
   "common.creating": "Создание…",
   "common.close": "Закрыть",
+  "validation.dateInvalid": "Такой даты не существует",
   "common.back": "Назад",
   "common.next": "Далее",
   "common.search": "Поиск",
@@ -2100,6 +2103,7 @@ const ru = {
 
   "enum.sale.CREATED": "Новая",
   "enum.sale.PAID": "Оплачена",
+  "enum.sale.CREDIT": "В долг",
   "enum.sale.CANCELLED": "Отменена",
 
   "enum.shopStatus.ACTIVE": "Активен",
@@ -3347,6 +3351,7 @@ const en = {
   "common.create": "Create",
   "common.creating": "Creating…",
   "common.close": "Close",
+  "validation.dateInvalid": "No such date",
   "common.back": "Back",
   "common.next": "Next",
   "common.search": "Search",
@@ -3732,6 +3737,7 @@ const en = {
 
   "enum.sale.CREATED": "New",
   "enum.sale.PAID": "Paid",
+  "enum.sale.CREDIT": "On credit",
   "enum.sale.CANCELLED": "Cancelled",
 
   "enum.shopStatus.ACTIVE": "Active",

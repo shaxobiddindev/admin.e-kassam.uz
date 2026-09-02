@@ -15,6 +15,7 @@ import ShopFeaturesModal from "../components/ShopFeaturesModal";
 import DirectionPicker from "../components/DirectionPicker";
 import { isoDate } from "../utils/export";
 import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
+import { phoneInput } from "../lib/ek-input";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -379,7 +380,12 @@ function AddShopModal({ onClose, onSaved, toast }) {
   // Xizmat yo'nalishlari (V49) — do'konning interfeysi shundan chiqadi.
   const [dirCatalog, setDirCatalog] = useState([]);
   const [dirs, setDirs] = useState(new Set());
-  const [form, setForm] = useState({ name:"", code:"", phone:"+998 ", address:"", parentShopId: "" });
+  /* ⚠ Telefon BO'SH boshlanadi. Ilgari u «+998 » edi va maydonga
+     tegilmasa o'sha ko'rinishda serverga ketardi: `@Pattern` esa uni
+     raqam deb hisoblamay, do'kon yaratishni 400 xatosi bilan to'xtatardi
+     («telefon noto'g'ri») — holbuki telefon MAJBURIY EMAS.
+     Kod endi maydon YONIDA turadi (`PhoneField`), qiymat ichida emas. */
+  const [form, setForm] = useState({ name:"", code:"", phone:"", address:"", parentShopId: "" });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
@@ -398,27 +404,16 @@ function AddShopModal({ onClose, onSaved, toast }) {
     return next;
   });
 
-  const handlePhone = (e) => {
-    let val = e.target.value.replace(/\D/g, "");
-    if (val.startsWith("998")) val = val.substring(3);
-    val = val.substring(0, 9);
-    
-    let fm = "+998";
-    if (val.length > 0) fm += " (" + val.substring(0, 2);
-    if (val.length > 2) fm += ") " + val.substring(2, 5);
-    if (val.length > 5) fm += "-" + val.substring(5, 7);
-    if (val.length > 7) fm += "-" + val.substring(7, 9);
-    if (val.length === 0) fm += " ";
-    setForm(p => ({ ...p, phone: fm }));
-  };
-
   const save = async () => {
     if (!form.name.trim() || !form.code.trim()) { toast.error(t("adm.shops.nameCodeRequired")); return; }
     setSaving(true);
     try { 
       const payload = { 
         ...form, 
-        phone: form.phone.replace(/[^+\d]/g, ""),
+        /* `PhoneField` qiymatni tayyor holda beradi («+998901234567»
+           yoki bo'sh) — bu yerda qayta tozalash kerak emas. Bo'sh
+           maydon `null` bo'lib ketadi: ixtiyoriy maydon shunday. */
+        phone: form.phone || null,
         parentShopId: form.parentShopId || null,
         /* ⚠ Bo'sh ro'yxat ham yuboriladi va bu «hali tanlanmagan»
            degani: server bunday do'konda hamma modulni ochiq
@@ -495,28 +490,22 @@ function AddShopModal({ onClose, onSaved, toast }) {
 
 function EditShopModal({ shop, onClose, onSaved, toast }) {
   const { t } = useT();
-  const [form, setForm] = useState({ name: shop.name||"", phone: shop.phone||"+998 ", address: shop.address||"", status: shop.status||"ACTIVE" });
+  /* ⚠ Bazadan kelgan raqam NIQOB SHAKLIGA keltiriladi. Eski yozuvlarda
+     u «+998 90 123-45-67» bo'lishi mumkin; tegilmagan holda o'sha
+     ko'rinishda qaytib ketsa, endi server uni rad etardi. */
+  const [form, setForm] = useState({
+    name: shop.name || "",
+    phone: phoneInput(shop.phone || "").raw,
+    address: shop.address || "",
+    status: shop.status || "ACTIVE",
+  });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-
-  const handlePhone = (e) => {
-    let val = e.target.value.replace(/\D/g, "");
-    if (val.startsWith("998")) val = val.substring(3);
-    val = val.substring(0, 9);
-    
-    let fm = "+998";
-    if (val.length > 0) fm += " (" + val.substring(0, 2);
-    if (val.length > 2) fm += ") " + val.substring(2, 5);
-    if (val.length > 5) fm += "-" + val.substring(5, 7);
-    if (val.length > 7) fm += "-" + val.substring(7, 9);
-    if (val.length === 0) fm += " ";
-    setForm(p => ({ ...p, phone: fm }));
-  };
 
   const save = async () => {
     setSaving(true);
     try { 
-      const payload = { ...form, phone: form.phone.replace(/[^+\d]/g, "") };
+      const payload = { ...form, phone: form.phone || null };
       await shopApi.update(shop.id, payload); 
       toast.success(t("common.saved")); 
       onSaved(); 

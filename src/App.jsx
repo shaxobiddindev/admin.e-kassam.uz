@@ -86,7 +86,9 @@ export default function App() {
     <ConfirmProvider>
       <BrowserRouter>
         <Toast toasts={toasts} onDismiss={dismiss} />
-        <Layout user={user} onLogout={logout}>
+        {/* ⚠ `onLogout` uzatilmaydi: chiqish Sozlamalar sahifasida va u
+            propni to'g'ridan-to'g'ri oladi (pastda). */}
+        <Layout user={user}>
           <Routes>
             <Route path="/"          element={<DashboardPage toast={toast} />} />
             <Route path="/requests"  element={<RequestsPage  toast={toast} />} />

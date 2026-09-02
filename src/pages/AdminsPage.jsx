@@ -9,6 +9,7 @@ import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import { useConfirm } from "../context/ConfirmProvider";
 import { NameField, UsernameField, PhoneField, EmailField } from "../components/ek/EkFields";
+import { phoneInput } from "../lib/ek-input";
 
 /* ══════════════════════════════════════════════════════════════════════════
    ADMIN HISOBLARI — faqat bosh admin (V50)
@@ -262,7 +263,11 @@ function AdminFormModal({ admin, onClose, onSaved, toast }) {
     password: "",
     role:     admin?.role     || "SUPPORT_ADMIN",
     email:    admin?.email    || "",
-    phone:    admin?.phone    || "",
+    /* ⚠ Niqob shakliga keltiriladi. Eski hisoblarda raqam bo'sh
+       qoidada saqlangan («+998 90 …», hatto boshqa mamlakat kodi bilan)
+       va maydonga tegilmasa o'sha ko'rinishda qaytib ketardi — server
+       endi uni rad etadi. */
+    phone:    phoneInput(admin?.phone || "").raw,
   });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -323,13 +328,35 @@ function AdminFormModal({ admin, onClose, onSaved, toast }) {
         </>
       )}
 
+      {/* ══ ROL — BOSH ADMIN RO'YXATDA YO'Q ═══════════════════════════
+          ⚠ SABAB TENGLIKDA. Ikki bosh admin bir-biriga nisbatan hech
+          qanday himoyaga ega emas: har biri ikkinchisini bloklashi,
+          o'chirishi va parolini almashtirishi mumkin. Nizo chiqsa kim
+          tezroq bosgani yutadi. «O'zini o'chira olmaydi» qoidasi bu
+          yerda yordam bermaydi — u faqat O'ZIGA nisbatan ishlaydi.
+
+          ⚠ Vakolat berish yo'li yopilmagan: «Tizim admini» yaratib,
+          unga kerakli ruxsatlarni bittalab ochish mumkin. Farqi
+          shundaki, u boshqa adminlarga tegmaydi.
+
+          ⚠ Server ham to'sadi (`assertNotSuperAdminRole`) — bu yerdagi
+          filtr faqat ko'rinish uchun. */}
       <FG label={t("adm.admins.fieldRole")} hint={t("adm.admins.roleHint")}>
-        <Select block variant="field" ariaLabel={t("adm.admins.fieldRole")}
-                value={form.role}
-                onChange={(v) => set("role")({ target: { value: v } })}
-                options={Object.keys(ADMIN_ROLE_LABELS).map((k) => ({
-                  value: k, label: adminRole(k).label, icon: "fa-user-shield",
-                }))} />
+        {editing && admin.role === "SUPER_ADMIN" ? (
+          /* Mavjud bosh adminni tahrirlash mumkin, faqat roli
+             o'zgarmaydi — shuning uchun tanlagich o'rniga matn. */
+          <input className="fi" readOnly value={adminRole(admin.role).label}
+                 style={{ background:"var(--bg-sunken)", color:"var(--fg-secondary)", cursor:"not-allowed" }} />
+        ) : (
+          <Select block variant="field" ariaLabel={t("adm.admins.fieldRole")}
+                  value={form.role}
+                  onChange={(v) => set("role")({ target: { value: v } })}
+                  options={Object.keys(ADMIN_ROLE_LABELS)
+                    .filter((k) => k !== "SUPER_ADMIN")
+                    .map((k) => ({
+                      value: k, label: adminRole(k).label, icon: "fa-user-shield",
+                    }))} />
+        )}
       </FG>
 
       <div className="g2">

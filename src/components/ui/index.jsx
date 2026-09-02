@@ -74,7 +74,16 @@ export function StatCard({ label, value, icon, bg, color, change, up = true }) {
 // ── Search Bar ────────────────────────────────────────────────
 export function Search({ value, onChange, placeholder, style }) {
   return (
-    <div className="srch" style={style}>
+    /* ⚠ Sinf nomi `srch` EMAS, `search-bar` (2026-09-02). Umumiy dizayn
+       fayli (`ekassam-tokens.css`, packages/ui dan sinxronlanadi) fokus
+       halqasini idish ichidagi maydondan AYNAN shu nom bo'yicha olib
+       tashlaydi. Admin panel boshqa nom ishlatgani uchun istisno unga
+       tegmasdi va qidiruv maydonining ichida ikkinchi ramka chizilardi —
+       «input ichida yana input». Nomni moslashtirish admin uchun
+       alohida istisno yozishdan to'g'riroq: umumiy fayl har sinxronda
+       qaytadan keladi va undagi ro'yxatga qo'shilgan har bir nom
+       ertami-kechmi eskiradi. */
+    <div className="search-bar" style={style}>
       <i className="fa-solid fa-magnifying-glass" />
       <input
         value={value}

@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { LOGO_URL, LOGO_DARK_URL, MARK_URL, initials, ADMIN_ROLE_LABELS } from "../utils";
-import { useConfirm } from "../context/ConfirmProvider";
 import { useT } from "../lib/ek-i18n";
 import { visibleNav, navItemByPath } from "../routes";
 
-function Sidebar({ user, onLogout, open, onClose, isCollapsed, onToggleCollapse }) {
+/* ⚠ `onLogout` OLIB TASHLANDI: chiqish endi Sozlamalar sahifasida.
+   Ishlatilmaydigan propni qoldirish «bu yerda ham chiqish bor» degan
+   noto'g'ri taassurot berardi. */
+function Sidebar({ user, open, onClose, isCollapsed, onToggleCollapse }) {
   const { t } = useT();
   const roleInfo = ADMIN_ROLE_LABELS[user?.role];
   const roleLabel = roleInfo?.label || t("enum.adminRole.SUPER_ADMIN");
@@ -67,9 +69,21 @@ function Sidebar({ user, onLogout, open, onClose, isCollapsed, onToggleCollapse 
       {/* Footer — tema tanlagichi bu yerdan OLIB TASHLANDI: barcha sozlamalar
           endi «Sozlamalar» sahifasida turadi (bitta joy, bitta qidiruv). */}
       <div className="sb-foot">
-        <div className="sb-user" onClick={onLogout} title={isCollapsed ? t("layout.logout") : ""}
-             role="button" tabIndex={0}
-             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onLogout(); } }}>
+        {/* ══ HISOB KARTASI — SOZLAMALARGA, CHIQISHGA EMAS ═══════════════
+            ⚠ Ilgari bu karta bosilganda DARHOL tizimdan chiqarardi.
+            Kutilmagan va xavfli: karta ism va rolni ko'rsatadi, ya'ni
+            «bu mening hisobim, bosib ko'ray» degan taklif beradi —
+            odam profilni kutadi, chiqishni emas. Tasodifan bosilsa
+            butun ish uziladi va qaytadan kirish kerak bo'ladi.
+
+            Endi u Sozlamalarga olib boradi (app'dagi bilan bir xil), va
+            «Chiqish» tugmasi o'sha yerda — tasdiq so'rovi bilan.
+
+            ⚠ `NavLink`, `div role="button"` emas: manzili bor, o'ng
+            tugma bilan yangi oynada ochiladi va klaviatura bilan
+            ishlashi uchun qo'lda `onKeyDown` yozish kerak emas. */}
+        <NavLink to="/settings" className="sb-user"
+                 title={isCollapsed ? t("nav.settings") : ""}>
           <div className="av" style={{ width: isCollapsed ? 28 : 34, height: isCollapsed ? 28 : 34, borderRadius:9, fontSize:13 }}>
             {initials(user?.fullName || user?.username)}
           </div>
@@ -77,18 +91,21 @@ function Sidebar({ user, onLogout, open, onClose, isCollapsed, onToggleCollapse 
             <div className="sb-u-name">{user?.fullName || user?.username}</div>
             <div className="sb-u-role">
               {roleLabel}
-              <i className="fa-solid fa-right-from-bracket" style={{ marginLeft:5 }} aria-hidden="true" />
+              <i className="fa-solid fa-gear" style={{ marginLeft:5 }} aria-hidden="true" />
             </div>
           </div>
-        </div>
+        </NavLink>
       </div>
     </aside>
   );
 }
 
-export default function Layout({ user, onLogout, children }) {
+/* ⚠ `onLogout` PROPI OLIB TASHLANDI (2026-09-02). Chiqish endi
+   Sozlamalar sahifasida va u `App.jsx` dan to'g'ridan-to'g'ri o'sha
+   yerga uzatiladi. Bu yerda qoldirilsa, ishlatilmaydigan prop keyingi
+   odamni «demak menyuda ham chiqish bor» deb adashtirardi. */
+export default function Layout({ user, children }) {
   const { t } = useT();
-  const confirm = useConfirm();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem("adm_sb_collapsed") === "1");
@@ -103,17 +120,6 @@ export default function Layout({ user, onLogout, children }) {
     window.addEventListener("ek:sidebar", sync);
     return () => window.removeEventListener("ek:sidebar", sync);
   }, []);
-
-  const handleLogout = async () => {
-    const ok = await confirm({
-      title: t("layout.logout"),
-      message: t("layout.logoutConfirm"),
-      type: "warning",
-      confirmText: t("layout.logout"),
-      cancelText: t("common.cancel"),
-    });
-    if (ok) onLogout();
-  };
 
   // Noma'lum manzil — 404. Sarlavha ham shunga mos bo'lsin, aks holda
   // ekranda "Sahifa topilmadi" yozuvi turib, tepada "Boshqaruv paneli"
@@ -131,7 +137,7 @@ export default function Layout({ user, onLogout, children }) {
       )}
 
       <Sidebar
-        user={user} onLogout={handleLogout}
+        user={user}
         open={open} onClose={() => setOpen(false)}
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}

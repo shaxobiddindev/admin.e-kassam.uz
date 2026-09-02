@@ -12,6 +12,7 @@ import { useLoading } from "../lib/use-loading";
 import { SkeletonList } from "../components/ek/Loading";
 import ExportButtons from "../components/ExportButtons";
 import ShopFeaturesModal from "../components/ShopFeaturesModal";
+import DirectionPicker from "../components/DirectionPicker";
 import { isoDate } from "../utils/export";
 import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
 
@@ -475,19 +476,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
           paydo bo'lardi. */}
       {!form.parentShopId && dirCatalog.length > 0 && (
         <FG label={t("adm.shops.fieldDirections")} hint={t("adm.shops.directionsHint")}>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-            {dirCatalog.map((c) => {
-              const on = dirs.has(c.direction);
-              return (
-                <button type="button" key={c.direction}
-                  className={`btn btn-sm ${on ? "btn-primary" : "btn-outline"}`}
-                  onClick={() => toggleDir(c.direction)}
-                  title={c.features.map((f) => t(`adm.feat.${f}`)).join(", ")}>
-                  {on && <i className="fa-solid fa-check" />} {t(`adm.dir.${c.direction}`)}
-                </button>
-              );
-            })}
-          </div>
+          <DirectionPicker catalog={dirCatalog} selected={dirs} onToggle={toggleDir} />
           {/* ⚠ Tanlanmagan holat NOSOZLIK EMAS — buni aytib qo'yish
               kerak, aks holda forma «to'ldirilmagan» bo'lib ko'rinadi. */}
           {dirs.size === 0 && (

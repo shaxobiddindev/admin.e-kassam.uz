@@ -4,6 +4,7 @@ import { useT } from "../lib/ek-i18n";
 import Modal from "./Modal";
 import { Badge } from "./ui";
 import { Spinner, SkeletonList } from "./ek/Loading";
+import DirectionPicker from "./DirectionPicker";
 
 /* ══════════════════════════════════════════════════════════════════════════
    DO'KON YO'NALISHLARI VA MODULLARI (V49)
@@ -134,18 +135,14 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
             </div>
           )}
 
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10 }}>
-            {catalog.map((c) => {
-              const on = draft?.has(c.direction);
-              return (
-                <button key={c.direction}
-                        className={`btn btn-sm ${on ? "btn-primary" : "btn-outline"}`}
-                        onClick={() => toggleDir(c.direction)}
-                        title={c.features.map((f) => t(`adm.feat.${f}`)).join(", ")}>
-                  {on && <i className="fa-solid fa-check" />} {t(`adm.dir.${c.direction}`)}
-                </button>
-              );
-            })}
+          {/* ⚠ Har bir yo'nalish NIMA CHEKLASHINI ochiq yozadi. Ilgari
+              bu yerda faqat nom turgan tugmalar bor edi va modullar
+              ro'yxati `title` ichida yashiringan edi — admin do'konda
+              nima yo'qolishini ko'rmasdan saqlardi. Sabab
+              `DirectionPicker` da. */}
+          <div style={{ marginBottom:10 }}>
+            <DirectionPicker catalog={catalog} selected={draft || new Set()}
+                             onToggle={toggleDir} />
           </div>
 
           {/* ⚠ OQIBAT OLDINDAN. Modul yo'qolishi do'kondagi bo'limning

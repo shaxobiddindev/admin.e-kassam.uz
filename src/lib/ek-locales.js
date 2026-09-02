@@ -1678,6 +1678,23 @@ const uz = {
   "adm.perm.CUSTOMER_VIEW": "Mijozlar soni",
   "adm.perm.ADMIN_VIEW": "Adminlarni ko'rish",
   "adm.perm.ADMIN_MANAGE": "Adminlarni boshqarish",
+
+  /* ══ Yo'nalish tavsiflari (V49 davomi) ══ */
+  "adm.dir.UNIVERSAL": "Universal (cheklovsiz)",
+  "adm.dir.without": "Bo'lmaydi",
+  "adm.dir.noLimits": "Cheklov yo'q — hamma bo'lim ochiq",
+  "adm.dirDesc.UNIVERSAL": "Aralash savdo yoki hali qanday ishlash aniq emas. Hech narsa cheklanmaydi — «sozlanmagan» dan farqi shundaki, bu ONGLI tanlov.",
+  "adm.dirDesc.RETAIL_FOOD": "Do'kon, minimarket, non-shirinlik. Tarozi bilan sotish va yaroqlilik muddati nazorati bor; sut mahsulotlari uchun markirovka ham.",
+  "adm.dirDesc.RETAIL_GENERAL": "Maishiy mollar, kanstovar, o'yinchoq, sovg'a. Tovar donalab sotiladi va buzilmaydi — tarozi ham, muddat ham kerak emas.",
+  "adm.dirDesc.CLOTHING": "Kiyim-kechak va poyabzal. Markirovka qonun bo'yicha majburiy; tarozi va yaroqlilik muddati kerak emas.",
+  "adm.dirDesc.COSMETICS": "Kosmetika va parfyumeriya. Yaroqlilik muddati va markirovka bor, tarozi yo'q.",
+  "adm.dirDesc.PHARMACY": "Dorixona. Muddat va markirovka nazorati majburiy. NASIYA ATAYLAB YO'Q — dori qarzga berilmaydi.",
+  "adm.dirDesc.ELECTRONICS": "Elektronika va maishiy texnika. Yirik tovarni ombordan berish bor; tarozi va muddat yo'q.",
+  "adm.dirDesc.CONSTRUCTION": "Qurilish va xo'jalik mollari. Mijoz kassaga to'laydi, tovarni hovlidagi omborchi beradi. Mijoz kabineti yo'q.",
+  "adm.dirDesc.AUTO_PARTS": "Avto ehtiyot qismlar. Ombordan berish va filiallararo ko'chirish bor; tarozi, muddat va mijoz kabineti yo'q.",
+  "adm.dirDesc.WHOLESALE": "Ulgurji savdo. Nasiya — asosiy to'lov shakli. BALL VA DARAJA YO'Q: ulgurjida chegirma shartnoma bilan beriladi, ball chakana mijoz uchun o'ylangan.",
+  "adm.dirDesc.SERVICE_BEAUTY": "Sartaroshxona, salon, studiya. OMBOR YO'Q — bu yerda «qoldiq» degan tushuncha yo'q, xizmat sanalmaydi. Yonida shampun ham sotsangiz, «Ombor» modulini alohida yoqib qo'ying.",
+  "adm.dirDesc.SERVICE_REPAIR": "Telefon, texnika, poyabzal ta'mirlash. Go'zallik xizmatidan farqi — ehtiyot qism bor, ya'ni ombor kerak. Sanoq va ko'chirish yo'q.",
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -3293,6 +3310,23 @@ const ru = {
   "adm.perm.CUSTOMER_VIEW": "Количество клиентов",
   "adm.perm.ADMIN_VIEW": "Просмотр администраторов",
   "adm.perm.ADMIN_MANAGE": "Управление администраторами",
+
+  /* ══ Описания направлений (продолжение V49) ══ */
+  "adm.dir.UNIVERSAL": "Универсальный (без ограничений)",
+  "adm.dir.without": "Не будет",
+  "adm.dir.noLimits": "Без ограничений — все разделы открыты",
+  "adm.dirDesc.UNIVERSAL": "Смешанная торговля или пока не ясно, как будет работать. Ничего не ограничивается — в отличие от «не настроено», это осознанный выбор.",
+  "adm.dirDesc.RETAIL_FOOD": "Магазин, минимаркет, выпечка. Есть продажа по весу и контроль срока годности; для молочной продукции — маркировка.",
+  "adm.dirDesc.RETAIL_GENERAL": "Хозтовары, канцтовары, игрушки, подарки. Товар продаётся поштучно и не портится — ни весов, ни срока годности.",
+  "adm.dirDesc.CLOTHING": "Одежда и обувь. Маркировка обязательна по закону; весы и срок годности не нужны.",
+  "adm.dirDesc.COSMETICS": "Косметика и парфюмерия. Есть срок годности и маркировка, весов нет.",
+  "adm.dirDesc.PHARMACY": "Аптека. Контроль срока годности и маркировки обязателен. РАССРОЧКИ НАМЕРЕННО НЕТ — лекарства в долг не отпускаются.",
+  "adm.dirDesc.ELECTRONICS": "Электроника и бытовая техника. Есть выдача крупного товара со склада; весов и срока годности нет.",
+  "adm.dirDesc.CONSTRUCTION": "Стройматериалы и хозтовары. Клиент платит в кассе, товар выдаёт кладовщик со двора. Кабинета клиента нет.",
+  "adm.dirDesc.AUTO_PARTS": "Автозапчасти. Есть выдача со склада и перемещение между филиалами; весов, срока годности и кабинета клиента нет.",
+  "adm.dirDesc.WHOLESALE": "Оптовая торговля. Рассрочка — основная форма оплаты. БАЛЛОВ И УРОВНЕЙ НЕТ: в опте скидка даётся по договору, баллы придуманы для розницы.",
+  "adm.dirDesc.SERVICE_BEAUTY": "Парикмахерская, салон, студия. СКЛАДА НЕТ — здесь нет понятия «остаток», услуга не считается. Если рядом продаёте шампунь, включите модуль «Склад» отдельно.",
+  "adm.dirDesc.SERVICE_REPAIR": "Ремонт телефонов, техники, обуви. Отличие от салона — есть запчасти, значит нужен склад. Инвентаризации и перемещений нет.",
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -4908,6 +4942,23 @@ const en = {
   "adm.perm.CUSTOMER_VIEW": "Customer counts",
   "adm.perm.ADMIN_VIEW": "View admins",
   "adm.perm.ADMIN_MANAGE": "Manage admins",
+
+  /* ══ Direction descriptions (V49 cont.) ══ */
+  "adm.dir.UNIVERSAL": "Universal (no limits)",
+  "adm.dir.without": "Not included",
+  "adm.dir.noLimits": "No limits — every section is open",
+  "adm.dirDesc.UNIVERSAL": "Mixed trade, or how the shop will work is not decided yet. Nothing is restricted — unlike «not configured», this is a deliberate choice.",
+  "adm.dirDesc.RETAIL_FOOD": "Grocery, minimarket, bakery. Weight-based selling and expiry tracking; marking for dairy goods.",
+  "adm.dirDesc.RETAIL_GENERAL": "Household goods, stationery, toys, gifts. Sold by the piece and does not spoil — no scale, no expiry.",
+  "adm.dirDesc.CLOTHING": "Clothing and footwear. Marking is required by law; no scale, no expiry.",
+  "adm.dirDesc.COSMETICS": "Cosmetics and perfume. Expiry tracking and marking; no scale.",
+  "adm.dirDesc.PHARMACY": "Pharmacy. Expiry and marking control are mandatory. CREDIT IS DELIBERATELY ABSENT — medicine is not sold on credit.",
+  "adm.dirDesc.ELECTRONICS": "Electronics and appliances. Warehouse pickup for large items; no scale, no expiry.",
+  "adm.dirDesc.CONSTRUCTION": "Construction and hardware. The customer pays at the till, the yard storekeeper hands over the goods. No customer portal.",
+  "adm.dirDesc.AUTO_PARTS": "Auto parts. Warehouse pickup and branch transfers; no scale, no expiry, no customer portal.",
+  "adm.dirDesc.WHOLESALE": "Wholesale. Credit is the main payment form. NO POINTS OR TIERS: wholesale discounts come from contracts, points are a retail idea.",
+  "adm.dirDesc.SERVICE_BEAUTY": "Barbershop, salon, studio. NO INVENTORY — there is no such thing as stock here, a service is not counted. If you also sell shampoo, switch the Inventory module on separately.",
+  "adm.dirDesc.SERVICE_REPAIR": "Phone, appliance and shoe repair. Unlike a salon, there are spare parts, so inventory is needed. No stock take, no transfers.",
 };
 
 export default { uz, ru, en };

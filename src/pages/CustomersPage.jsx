@@ -6,6 +6,7 @@ import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
 import { groupDigits } from "../lib/ek-format";
+import { rankItems } from "../lib/ek-search";
 
 /* ══════════════════════════════════════════════════════════════════════════
    MIJOZLAR — DO'KON BO'YICHA FAQAT SON (V50)
@@ -55,9 +56,12 @@ export default function CustomersPage({ toast }) {
      ismi va telefoni bo'yicha ishlardi — aynan o'sha yo'l yopildi.
      Do'konlar soni yuzlab, mijozlarniki esa minglab bo'lgani uchun
      bu yerda serverga chiqishning hojati yo'q. */
-  const filtered = rows.filter((r) => {
-    const q = search.trim().toLowerCase();
-    return !q || r.shopName?.toLowerCase().includes(q) || r.shopCode?.toLowerCase().includes(q);
+  /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
+     Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
+     yozilgan harfni ham topa olmasdi. */
+  const filtered = rankItems(rows, search, {
+    codes: (r) => [r.shopCode],
+    texts: (r) => [r.shopName, r.shopCode],
   });
 
   const total = filtered.reduce((sum, r) => sum + (r.customerCount || 0), 0);

@@ -10,6 +10,7 @@ import { useLoading } from "../lib/use-loading";
 import { useConfirm } from "../context/ConfirmProvider";
 import { NameField, UsernameField, PhoneField, EmailField } from "../components/ek/EkFields";
 import { phoneInput } from "../lib/ek-input";
+import { rankItems } from "../lib/ek-search";
 
 /* ══════════════════════════════════════════════════════════════════════════
    ADMIN HISOBLARI — faqat bosh admin (V50)
@@ -72,9 +73,11 @@ export default function AdminsPage({ toast, user }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = admins.filter((a) => {
-    const q = search.trim().toLowerCase();
-    return !q || a.fullName?.toLowerCase().includes(q) || a.username?.toLowerCase().includes(q);
+  /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
+     Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
+     yozilgan harfni ham topa olmasdi. */
+  const filtered = rankItems(admins, search, {
+    texts: (a) => [a.fullName, a.username],
   });
 
   /* ⚠ O'ZINI tanish ID bo'yicha, foydalanuvchi nomi bo'yicha EMAS: nom

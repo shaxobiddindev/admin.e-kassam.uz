@@ -16,6 +16,7 @@ import DirectionPicker from "../components/DirectionPicker";
 import { isoDate } from "../utils/export";
 import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
 import { phoneInput } from "../lib/ek-input";
+import { rankItems } from "../lib/ek-search";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -74,11 +75,16 @@ export default function ShopsPage({ toast }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = shops.filter((s) => {
-    const q = search.toLowerCase();
-    const matchQ = !q || s.name?.toLowerCase().includes(q) || s.code?.includes(q) || s.phone?.includes(q);
-    const matchF = filter === "ALL" || s.status === filter;
-    return matchQ && matchF;
+  /* ⚠ Avval HOLAT, keyin qidiruv: qidiruv natijani mosligiga qarab
+     saralaydi va undan keyin filtrlash saralashni buzardi. */
+  const byStatus = shops.filter((s) => filter === "ALL" || s.status === filter);
+  /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
+     Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
+     yozilgan harfni ham topa olmasdi. */
+  const filtered = rankItems(byStatus, search, {
+    codes:  (s) => [s.code],
+    digits: (s) => [s.phone],
+    texts:  (s) => [s.name, s.code],
   });
 
   // Do'konni faqat ACTIVE ↔ BLOCKED almashtirish (DELETED ga o'tkazilmaydi UI dan)

@@ -10,6 +10,7 @@ import { SkeletonList, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
 import { NameField, UsernameField } from "../components/ek/EkFields";
+import { rankItems } from "../lib/ek-search";
 
 export default function UsersPage({ toast }) {
   const { t } = useT();
@@ -64,9 +65,11 @@ export default function UsersPage({ toast }) {
     } catch (e) { toast.error(e.message); }
   };
 
-  const filtered = users.filter(u => {
-    const q = search.toLowerCase();
-    return !q || u.fullName?.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q);
+  /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
+     Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
+     yozilgan harfni ham topa olmasdi. */
+  const filtered = rankItems(users, search, {
+    texts: (u) => [u.fullName, u.username],
   });
 
   /* Eksport — tanlangan DO'KONNING ekrandagi ro'yxati. Fayl nomiga do'kon

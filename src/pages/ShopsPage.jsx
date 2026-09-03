@@ -644,6 +644,23 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
     setView({ type:"edit", user: u });
   };
 
+  /* ⚠ «NEGA KIRA OLMAYAPTI». Kirish ekranidagi xabar ataylab bir xil
+     («Login yoki parol noto'g'ri») va shunday qoladi — aks holda begona
+     odam qaysi loginlar borligini bittalab tekshirib chiqardi. Lekin
+     do'kon egasi uchun bu boshi berk ko'cha edi: xodim kira olmaydi,
+     sabab esa hech qayerda ko'rinmaydi. Endi javobni server aytadi. */
+  const [checking, setChecking] = useState(null);   // { username, data }
+  const runCheck = async (u) => {
+    setChecking({ username: u.username, data: null });
+    try {
+      const r = await userApi.loginCheck(shop.code, u.username);
+      setChecking({ username: u.username, data: r?.data || null });
+    } catch (e) {
+      toast.error(e.message);
+      setChecking(null);
+    }
+  };
+
   const isAdd  = view === "add";
   const isEdit = view?.type === "edit";
   const isList = view === "list";
@@ -711,6 +728,43 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
         </div>
       )}
 
+      {/* ══ NEGA KIRA OLMAYAPTI — JAVOB ═══════════════════════════════
+          Ro'yxatning USTIDA turadi: uni topish uchun pastga surish
+          kerak bo'lsa, javob ko'rilmay qolardi. */}
+      {isList && checking && (
+        <div className="ek-note ek-note--info" style={{ marginBottom: 10 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom: checking.data ? 6 : 0 }}>
+            <i className="fa-solid fa-stethoscope" aria-hidden="true" />
+            <b>@{checking.username}</b>
+            <button className="bic" style={{ marginLeft:"auto" }} title={t("common.close")}
+                    aria-label={t("common.close")} onClick={() => setChecking(null)}>
+              <i className="fa-solid fa-xmark" />
+            </button>
+          </div>
+          {!checking.data ? <span>{t("common.loading")}</span> : (
+            <div style={{ display:"flex", flexDirection:"column", gap:4, fontSize:12 }}>
+              <div style={{ fontWeight:800 }}>{checking.data.verdict}</div>
+              {/* ⚠ Saqlangan login QAVS ichida: «egasi» va « egasi »
+                  ekranda bir xil ko'rinadi va aynan shu farq odamni bir
+                  necha kun ovora qilishi mumkin. */}
+              {checking.data.storedUsername && (
+                <div>{t("adm.users.storedLogin")}: <span className="ek-num">{checking.data.storedUsername}</span></div>
+              )}
+              <div>{t("adm.users.shopCode")}: <span className="ek-num">{checking.data.shopCode}</span>
+                {" · "}{checking.data.shopStatus}</div>
+              {checking.data.adminWithSameLogin && (
+                <div style={{ color:"var(--fg-warning)" }}>{t("adm.users.adminSameLogin")}</div>
+              )}
+              {checking.data.sameLoginOtherShops?.length > 0 && (
+                <div style={{ color:"var(--fg-warning)" }}>
+                  {t("adm.users.loginElsewhere")}: <span className="ek-num">{checking.data.sameLoginOtherShops.join(", ")}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {isList && (
         loading ? <SkeletonList rows={4} /> : users.length === 0 ? (
           <Empty icon="fa-users" title={t("adm.users.none")} subtitle={t("adm.users.noneHint")} />
@@ -733,6 +787,10 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
                     <Badge color={u.enabled?"green":"red"}>{t(u.enabled ? "common.active" : "common.blocked")}</Badge>
                     <button className="bic b-blue" title={t("common.edit")} onClick={() => openEdit(u)}>
                       <i className="fa-solid fa-pen" />
+                    </button>
+                    <button className="bic" title={t("adm.users.whyNoLogin")}
+                            aria-label={t("adm.users.whyNoLogin")} onClick={() => runCheck(u)}>
+                      <i className="fa-solid fa-stethoscope" />
                     </button>
                     <button
                       className={`btn btn-sm ${u.enabled ? "btn-danger" : "btn-activate"}`}

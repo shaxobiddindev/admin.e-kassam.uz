@@ -211,6 +211,15 @@ export const userApi = {
   changePass:  (shopId, userId, password) => req(`/superadmin/shops/${shopId}/users/${userId}/password`, { method: "PATCH", ...body({ password }) }),
   toggleBlock: (shopId, userId) => req(`/superadmin/shops/${shopId}/users/${userId}/toggle-block`, { method: "PATCH" }),
   delete:      (shopId, userId) => req(`/superadmin/shops/${shopId}/users/${userId}`,    { method: "DELETE" }),
+
+  /* ⚠ «NEGA KIRA OLMAYAPTI» — javob serverdan keladi. Kirish ekranidagi
+     xabar ataylab bir xil («Login yoki parol noto'g'ri») va shunday
+     qoladi: aks holda begona odam qaysi loginlar borligini bittalab
+     tekshirib chiqardi. Tafsilotni esa faqat bosh admin so'ray oladi.
+     Parol bu yerda umuman ishtirok etmaydi. */
+  loginCheck:  (shopCode, username) =>
+    req(`/superadmin/shops/login-check?shopCode=${encodeURIComponent(shopCode)}`
+        + `&username=${encodeURIComponent(username)}`),
 };
 
 // ── Arizalar (landing "Demo so'rash" formasi) ───────────────────

@@ -273,7 +273,14 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
     if (!form.username.trim()) { toast.error(t("adm.users.errUsername")); return; }
     if (!form.password)        { toast.error(t("adm.users.errPassword")); return; }
     setSaving(true);
-    try { await userApi.create(shop.id, form); toast.success(t("adm.users.added")); onSaved(); }
+    try {
+      /* ⚠ Parol chetidan qirqiladi (`ShopsPage` dagi bilan bir xil sabab):
+         nusxa olingan parolga qo'shilib ketgan bo'sh joy saqlanib qolsa,
+         xodim parolini to'g'ri yozib turib ham kira olmasdi. */
+      const saved = await userApi.create(shop.id, { ...form, password: form.password.trim() });
+      toast.success(`${t("adm.users.added")}: ${saved?.data?.username || form.username}`);
+      onSaved();
+    }
     catch (e) { toast.error(e.message); }
     finally   { setSaving(false); }
   };
@@ -347,11 +354,17 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
   };
 
   const savePass = async () => {
-    if (!pass.newPass)                 { toast.error(t("adm.users.errPassword")); return; }
-    if (pass.newPass.length < 6)       { toast.error(t("adm.users.errPassMin")); return; }
-    if (pass.newPass !== pass.confirm) { toast.error(t("adm.users.errPassMatch")); return; }
+    /* ⚠ Tekshirishdan OLDIN qirqiladi: aks holda «yangi parol» ning
+       oxiridagi ko'rinmas bo'sh joy «takrorlash» maydonidagisi bilan mos
+       kelmay, xodim sababini tushunmaydigan xato olardi — mos kelib
+       qolsa esa parolga o'sha bo'sh joy bilan yozilardi. */
+    const newPass = pass.newPass.trim();
+    const confirm = pass.confirm.trim();
+    if (!newPass)                 { toast.error(t("adm.users.errPassword")); return; }
+    if (newPass.length < 6)       { toast.error(t("adm.users.errPassMin")); return; }
+    if (newPass !== confirm)      { toast.error(t("adm.users.errPassMatch")); return; }
     setSaving(true);
-    try { await userApi.changePass(shop.id, user.id, pass.newPass); toast.success(t("adm.users.passUpdated")); onSaved(); }
+    try { await userApi.changePass(shop.id, user.id, newPass); toast.success(t("adm.users.passUpdated")); onSaved(); }
     catch (e) { toast.error(e.message); }
     finally   { setSaving(false); }
   };

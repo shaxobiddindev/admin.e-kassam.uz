@@ -590,8 +590,14 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
     if (!form.password)        { toast.error(t("adm.users.errPassword")); return; }
     setSaving(true);
     try {
-      await userApi.create(shop.id, form);
-      toast.success(t("adm.users.added"));
+      /* ⚠ PAROL CHETIDAN QIRQILADI. Parol odatda boshqa joydan NUSXA
+         olinadi va nusxaga bir bo'sh joy qo'shilib ketishi juda oson.
+         U saqlanib qolsa, xodim parolini to'g'ri yozib turib ham kira
+         olmasdi va sababi hech qayerda ko'rinmasdi. */
+      const saved = await userApi.create(shop.id, { ...form, password: form.password.trim() });
+      /* Saqlangan LOGIN aytiladi: uni xodimga aynan shu ko'rinishda
+         berish kerak va u yozilganidan farq qilishi mumkin. */
+      toast.success(`${t("adm.users.added")}: ${saved?.data?.username || form.username}`);
       setView("list"); load(); onReload();
     } catch (e) { toast.error(e.message); }
     finally { setSaving(false); }
@@ -607,7 +613,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
       // yuborilmagan rolni "tegilmasin" deb tushunadi.
       await userApi.update(shop.id, view.user.id, {
         fullName: form.fullName,
-        ...(form.password ? { password: form.password } : {}),
+        ...(form.password ? { password: form.password.trim() } : {}),
       });
       toast.success(t("common.saved"));
       setView("list"); load(); onReload();

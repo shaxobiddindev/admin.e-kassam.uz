@@ -199,7 +199,7 @@ table { width: 100%; border-collapse: collapse; }
 th    { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 800; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: .5px; background: var(--bg-sunken); border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
 td    { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
 tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--bg-sunken); }
+tbody tr:hover td { background: var(--bg-hover); }
 
 /* ════ BADGE ═════════════════════════════════════════════════ */
 .badge        { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
@@ -493,5 +493,5 @@ textarea.fi { resize: vertical; min-height: 80px; }
   border: 0; background: transparent; cursor: pointer; border-radius: 8px;
   color: var(--text2, var(--fg-secondary));
 }
-.ek-date__pick:hover { background: var(--bg-sunken); }
+.ek-date__pick:hover { background: var(--bg-hover); }
 .ek-date__native { position: absolute; right: 8px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }

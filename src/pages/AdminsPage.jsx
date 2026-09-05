@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminApi } from "../api";
 import { fmtDate, ADMIN_ROLE_LABELS, adminRole } from "../utils";
 import { useT } from "../lib/ek-i18n";
@@ -11,6 +11,7 @@ import { useConfirm } from "../context/ConfirmProvider";
 import { NameField, UsernameField, PhoneField, EmailField } from "../components/ek/EkFields";
 import { phoneInput } from "../lib/ek-input";
 import { rankItems } from "../lib/ek-search";
+import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 /* ══════════════════════════════════════════════════════════════════════════
    ADMIN HISOBLARI — faqat bosh admin (V50)
@@ -76,7 +77,27 @@ export default function AdminsPage({ toast, user }) {
   /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
      Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
      yozilgan harfni ham topa olmasdi. */
-  const filtered = rankItems(admins, search, {
+  /* ══ USTUNLAR BO'YICHA FILTR (V68) ═══════════════════════════════════
+     ⚠ «2FA» — HA/YO'Q ustuni: «himoyalanmagan hisoblar» bitta bosishda
+     ko'rinishi kerak, bu xavfsizlik savoli. */
+  const COLS = useMemo(() => [
+    { key: "name",  label: t("adm.admins.colAdmin"), type: "text",
+      get: (a) => `${a.fullName || ""} ${a.username || ""}` },
+    { key: "role",  label: t("adm.admins.colRole"),  type: "enum",
+      options: Object.keys(ADMIN_ROLE_LABELS).map((k) => ({ value: k, label: adminRole(k).label })),
+      get: (a) => a.role },
+    { key: "st",    label: t("common.status"),       type: "enum",
+      options: [{ value: "on",  label: t("common.active") },
+                { value: "off", label: t("common.blocked") }],
+      get: (a) => (a.enabled ? "on" : "off") },
+    { key: "perms", label: t("adm.admins.colPerms"), type: "number",
+      get: (a) => a.permissions?.length ?? 0 },
+    { key: "fa",    label: t("adm.admins.col2fa"),   type: "bool", get: (a) => !!a.totpEnabled },
+    { key: "made",  label: t("common.date"),         type: "date", get: (a) => a.createdAt },
+  ], [t]);
+  const colFlt = useDataFilter(COLS, "adm-admins");
+
+  const filtered = rankItems(colFlt.apply(admins), search, {
     texts: (a) => [a.fullName, a.username],
   });
 
@@ -123,6 +144,7 @@ export default function AdminsPage({ toast, user }) {
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
             <Search value={search} onChange={setSearch}
                     placeholder={t("adm.admins.searchPlaceholder")} style={{ width:220 }} />
+            <DataFilter cols={COLS} flt={colFlt} />
             <button className="btn btn-primary btn-sm" onClick={() => setModal({ type:"add" })}>
               <i className="fa-solid fa-plus" /> {t("adm.admins.add")}
             </button>
@@ -142,12 +164,12 @@ export default function AdminsPage({ toast, user }) {
             <table>
               <thead>
                 <tr>
-                  <th>{t("adm.admins.colAdmin")}</th>
-                  <th>{t("adm.admins.colRole")}</th>
-                  <th>{t("common.status")}</th>
-                  <th className="num">{t("adm.admins.colPerms")}</th>
-                  <th>{t("adm.admins.col2fa")}</th>
-                  <th>{t("common.date")}</th>
+                  <SortTh flt={colFlt} col="name">{t("adm.admins.colAdmin")}</SortTh>
+                  <SortTh flt={colFlt} col="role">{t("adm.admins.colRole")}</SortTh>
+                  <SortTh flt={colFlt} col="st">{t("common.status")}</SortTh>
+                  <SortTh flt={colFlt} col="perms" className="num">{t("adm.admins.colPerms")}</SortTh>
+                  <SortTh flt={colFlt} col="fa">{t("adm.admins.col2fa")}</SortTh>
+                  <SortTh flt={colFlt} col="made">{t("common.date")}</SortTh>
                   <th />
                 </tr>
               </thead>

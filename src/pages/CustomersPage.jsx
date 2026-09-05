@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { customerApi } from "../api";
 import { useT } from "../lib/ek-i18n";
 import { Empty, Search } from "../components/ui";
@@ -7,6 +7,7 @@ import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
 import { groupDigits } from "../lib/ek-format";
 import { rankItems } from "../lib/ek-search";
+import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 /* ══════════════════════════════════════════════════════════════════════════
    MIJOZLAR — DO'KON BO'YICHA FAQAT SON (V50)
@@ -59,7 +60,17 @@ export default function CustomersPage({ toast }) {
   /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
      Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
      yozilgan harfni ham topa olmasdi. */
-  const filtered = rankItems(rows, search, {
+  /* ══ USTUNLAR BO'YICHA FILTR (V68) — uchala ustun ham ═════════════
+     «Mijozi 100 dan kam do'konlar» — sotuv bo'limining savoli va uni
+     ko'z bilan yechish yuzlab qatorli ro'yxatda imkonsiz edi. */
+  const COLS = useMemo(() => [
+    { key: "shop",  label: t("adm.shops.colShop"),        type: "text",   get: (r) => r.shopName },
+    { key: "code",  label: t("adm.shops.colCode"),        type: "text",   get: (r) => r.shopCode },
+    { key: "count", label: t("adm.customers.colCount"),   type: "number", get: (r) => r.customerCount || 0 },
+  ], [t]);
+  const colFlt = useDataFilter(COLS, "adm-cust");
+
+  const filtered = rankItems(colFlt.apply(rows), search, {
     codes: (r) => [r.shopCode],
     texts: (r) => [r.shopName, r.shopCode],
   });
@@ -80,6 +91,7 @@ export default function CustomersPage({ toast }) {
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
             <Search value={search} onChange={setSearch}
                     placeholder={t("adm.customers.searchShop")} style={{ width:240 }} />
+            <DataFilter cols={COLS} flt={colFlt} />
             <ExportButtons name="mijozlar" headers={exportHeaders} rows={exportRows} toast={toast} />
           </div>
         </div>
@@ -96,9 +108,9 @@ export default function CustomersPage({ toast }) {
             <table>
               <thead>
                 <tr>
-                  <th>{t("adm.shops.colShop")}</th>
-                  <th>{t("adm.shops.colCode")}</th>
-                  <th className="num">{t("adm.customers.colCount")}</th>
+                  <SortTh flt={colFlt} col="shop">{t("adm.shops.colShop")}</SortTh>
+                  <SortTh flt={colFlt} col="code">{t("adm.shops.colCode")}</SortTh>
+                  <SortTh flt={colFlt} col="count" className="num">{t("adm.customers.colCount")}</SortTh>
                 </tr>
               </thead>
               <tbody>

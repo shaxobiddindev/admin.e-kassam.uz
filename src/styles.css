@@ -495,3 +495,67 @@ textarea.fi { resize: vertical; min-height: 80px; }
 }
 .ek-date__pick:hover { background: var(--bg-hover); }
 .ek-date__native { position: absolute; right: 8px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   USTUNLAR BO'YICHA FILTR (V68) — ilovadagi bilan bir xil
+
+   Bir xil komponent ikki panelda BOSHQACHA ko'rinsa, foydalanuvchi
+   ikkinchisini o'rganishga majbur bo'lardi. Shuning uchun uslub
+   `app.e-kassam.uz/src/styles.css` dan aynan ko'chirilgan.
+   ══════════════════════════════════════════════════════════════════════════ */
+.flt-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: 8px; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.flt-row:last-of-type { border-bottom: 0; }
+.flt-vals { display: flex; gap: 6px; min-width: 0; }
+.flt-vals .form-input { min-width: 0; }
+.flt-enum { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+
+/* Faol shartlar — jadval tepasida, oyna yopiq bo'lsa ham ko'rinadi:
+   aks holda «nega ro'yxat qisqa?» degan savol javobsiz qolardi. */
+.flt-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.flt-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 6px 3px 9px; border-radius: 999px;
+  background: var(--bg-brand-subtle); color: var(--ek-blue-800, var(--bg-brand));
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.flt-chip b { font-weight: 800; }
+.flt-chip button {
+  border: 0; background: none; color: inherit; cursor: pointer;
+  width: 18px; height: 18px; border-radius: 50%; font-size: 11px;
+}
+.flt-chip button:hover { background: var(--bg-brand); color: #fff; }
+.flt-chips__clear {
+  border: 0; background: none; color: var(--fg-secondary, var(--muted)); cursor: pointer;
+  font-size: 12px; font-weight: 700; text-decoration: underline;
+}
+.flt-btn__badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
+  border-radius: 999px; background: var(--bg-brand); color: #fff;
+  font-size: 11px; font-weight: 800;
+}
+.btn-primary .flt-btn__badge { background: rgba(255, 255, 255, .28); }
+
+/* ⚠ SARALASH TUGMASI — `th` NING ICHIDA, `th` ning O'ZI emas: sarlavha
+   `sticky` bo'lishi mumkin va unga tugma uslublarini berish qatorni
+   siljitardi. */
+.th-sort {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
+}
+.th-sort i { font-size: 10px; opacity: .45; }
+.th-sort:hover i { opacity: .9; }
+.th-sort.is-on { color: var(--ek-blue-800, var(--bg-brand)); }
+.th-sort.is-on i { opacity: 1; }
+
+@media (max-width: 720px) {
+  .flt-row { grid-template-columns: 1fr auto; }
+  .flt-vals, .flt-enum { grid-column: 1 / -1; }
+}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { auditApi } from "../api";
 import { fmtDateTime } from "../utils";
 import { useT } from "../lib/ek-i18n";
@@ -8,6 +8,7 @@ import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
 import { isoDateTime } from "../utils/export";
+import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Audit jurnali — kim, nima qildi va qachon.
@@ -77,11 +78,31 @@ export default function AuditPage({ toast }) {
     return () => clearTimeout(id);
   }, [load]);
 
+  /* ══ USTUNLAR BO'YICHA FILTR (V68) ═══════════════════════════════════
+     ⚠ Tepadagi «amal» va «kim» maydonlari SERVERGA ketadi (sahifalash
+     bilan), bu esa KELGAN sahifani kesadi. Ikkalasi bir-birini
+     almashtirmaydi: server bitta amalni bera oladi, bu yerda esa
+     «uchta amaldan biri» va sana oralig'i ishlaydi. */
+  const COLS = useMemo(() => [
+    { key: "time",  label: t("audit.colTime"),    type: "date", get: (r) => r.createdAt },
+    { key: "actor", label: t("audit.colActor"),   type: "text", get: (r) => r.actorUsername },
+    { key: "act",   label: t("audit.colAction"),  type: "enum",
+      options: Object.keys(TONE).map((k) => ({ value: k, label: t(`enum.audit.${k}`) })),
+      get: (r) => r.action },
+    { key: "sum",   label: t("audit.colSummary"), type: "text",
+      get: (r) => `${r.summary || ""} ${r.details || ""}` },
+    { key: "ip",    label: "IP",                  type: "text", get: (r) => r.ip },
+  ], [t]);
+  const colFlt = useDataFilter(COLS, "adm-audit");
+  const shown = colFlt.apply(data.items || []);
+
   const exportHeaders = [
     t("audit.colTime"), t("audit.colActor"),
     t("audit.colAction"), t("audit.colSummary"), "IP",
   ];
-  const exportRows = (data.items || []).map((row) => [
+  /* ⚠ EKSPORT — EKRANDAGI qatorlar (filtrlangan), xom sahifa emas:
+     filtr qo'yib eksport bosgan odam o'zi ko'rgan ro'yxatni kutadi. */
+  const exportRows = shown.map((row) => [
     isoDateTime(row.createdAt),
     // Ekranda ism va tur ikki qatorda turadi; faylda bitta katakda,
     // chunki CSV da "ikkinchi qator" degan tushuncha yo'q.
@@ -109,6 +130,7 @@ export default function AuditPage({ toast }) {
             />
             <Search value={actor} onChange={setActor}
               placeholder={t("audit.filterActor")} style={{ width:200 }} />
+            <DataFilter cols={COLS} flt={colFlt} />
             {/* ⚠ Eksport JORIY SAHIFANI oladi (50 qator), butun jurnalni emas:
                 jurnal cheksiz o'sadi va uni to'liq yuklash panelni yiqitardi.
                 Butun jurnal kerak bo'lsa — bazadan, filtr bilan. */}
@@ -124,15 +146,15 @@ export default function AuditPage({ toast }) {
             <table>
               <thead>
                 <tr>
-                  <th>{t("audit.colTime")}</th>
-                  <th>{t("audit.colActor")}</th>
-                  <th>{t("audit.colAction")}</th>
-                  <th>{t("audit.colSummary")}</th>
-                  <th>IP</th>
+                  <SortTh flt={colFlt} col="time">{t("audit.colTime")}</SortTh>
+                  <SortTh flt={colFlt} col="actor">{t("audit.colActor")}</SortTh>
+                  <SortTh flt={colFlt} col="act">{t("audit.colAction")}</SortTh>
+                  <SortTh flt={colFlt} col="sum">{t("audit.colSummary")}</SortTh>
+                  <SortTh flt={colFlt} col="ip">IP</SortTh>
                 </tr>
               </thead>
               <tbody>
-                {data.items?.length > 0 ? data.items.map(row => (
+                {shown.length > 0 ? shown.map(row => (
                   <tr key={row.id}>
                     <td className="ek-num" style={{ fontSize:11, whiteSpace:"nowrap", color:"var(--fg-secondary)" }}>
                       {fmtDateTime(row.createdAt)}

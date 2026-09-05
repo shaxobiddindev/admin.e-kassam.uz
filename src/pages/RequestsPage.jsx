@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { contactApi } from "../api";
 import { fmtDateTime } from "../utils";
 import { useT } from "../lib/ek-i18n";
@@ -7,6 +7,7 @@ import { Empty, Badge, Avatar } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
+import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Arizalar — landing sahifadagi "Demo so'rash" formasidan kelgan so'rovlar.
@@ -61,9 +62,27 @@ export default function RequestsPage({ toast }) {
 
   /* ⚠ Spam «Hammasi» ro'yxatida ham ko'rinmaydi: uni ko'rish uchun ATAYLAB
      alohida bo'limga o'tish kerak. Satr esa hech qachon o'chirilmaydi. */
-  const filtered = items.filter(i =>
+  /* ══ USTUNLAR BO'YICHA FILTR (V68) ═══════════════════════════════════
+     ⚠ HOLAT USTUNI HAM BOR, garchi tepada bo'lim tanlagichi tursa
+     ham: tanlagich BITTA holatni ochadi, filtr esa «yangi YOKI
+     ko'rilgan» kabi kombinatsiyani beradi. */
+  const COLS = useMemo(() => [
+    { key: "date",  label: t("common.date"),      type: "date", get: (i) => i.createdAt },
+    { key: "who",   label: t("req.colClient"),    type: "text",
+      get: (i) => `${i.fullName || ""} ${i.shopName || ""}` },
+    { key: "phone", label: t("common.phone"),     type: "text", get: (i) => i.phone },
+    { key: "msg",   label: t("req.colMessage"),   type: "text", get: (i) => i.message },
+    { key: "st",    label: t("common.status"),    type: "enum",
+      options: [{ value: "NEW",     label: t("req.new") },
+                { value: "HANDLED", label: t("req.handled") },
+                { value: "SPAM",    label: t("req.spam") }],
+      get: (i) => st(i) },
+  ], [t]);
+  const colFlt = useDataFilter(COLS, "adm-req");
+
+  const filtered = colFlt.apply(items.filter(i =>
     filter === "ALL" ? st(i) !== "SPAM" : st(i) === filter
-  );
+  ));
 
   /* Holatni o'zgartiradi. O'CHIRISH YO'Q — `ContactStatus` izohiga qarang. */
   const changeStatus = async (item, next) => {
@@ -113,9 +132,12 @@ export default function RequestsPage({ toast }) {
               <button key={k} className={`tab ${filter===k?"on":""}`} onClick={() => setFilter(k)}>{l}</button>
             ))}
           </div>
-          <button className="btn btn-outline btn-sm" onClick={load}>
-            <i className="fa-solid fa-rotate" aria-hidden="true" /> {t("common.refresh")}
-          </button>
+          <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+            <DataFilter cols={COLS} flt={colFlt} />
+            <button className="btn btn-outline btn-sm" onClick={load}>
+              <i className="fa-solid fa-rotate" aria-hidden="true" /> {t("common.refresh")}
+            </button>
+          </div>
         </div>
 
         <p className="set-card__hint">{t("req.subtitle")}</p>
@@ -125,11 +147,11 @@ export default function RequestsPage({ toast }) {
             <table>
               <thead>
                 <tr>
-                  <th>{t("common.date")}</th>
-                  <th>{t("req.colClient")}</th>
-                  <th>{t("common.phone")}</th>
-                  <th>{t("req.colMessage")}</th>
-                  <th>{t("common.status")}</th>
+                  <SortTh flt={colFlt} col="date">{t("common.date")}</SortTh>
+                  <SortTh flt={colFlt} col="who">{t("req.colClient")}</SortTh>
+                  <SortTh flt={colFlt} col="phone">{t("common.phone")}</SortTh>
+                  <SortTh flt={colFlt} col="msg">{t("req.colMessage")}</SortTh>
+                  <SortTh flt={colFlt} col="st">{t("common.status")}</SortTh>
                   <th />
                 </tr>
               </thead>

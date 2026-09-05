@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { shopApi, userApi, featureApi } from "../api";
 import { fmtDate, fmtDateTime, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, SHOP_PLAN,
          shopStatus, shopPlan, roleLabel, money, paymentProvider } from "../utils";
@@ -17,6 +17,7 @@ import { isoDate } from "../utils/export";
 import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
 import { phoneInput } from "../lib/ek-input";
 import { rankItems } from "../lib/ek-search";
+import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -81,7 +82,38 @@ export default function ShopsPage({ toast }) {
   /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
      Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
      yozilgan harfni ham topa olmasdi. */
-  const filtered = rankItems(byStatus, search, {
+  /* ══ USTUNLAR BO'YICHA FILTR (V68) ═══════════════════════════════════
+     Ekrandagi o'n bir ustunning hammasi. Bu ro'yxat platformadagi
+     BARCHA do'konlar — «qaysi tarifdagi qaysi do'konlar bir oydan
+     beri sotmayapti?» degan savolni ko'z bilan yechib bo'lmasdi.
+
+     ⚠ «Oxirgi sotuv» — `shops` da EMAS, `stats` da: u alohida
+     so'rovdan keladi va `get` shu yerdan o'qiydi. */
+  const COLS = useMemo(() => [
+    { key: "name",  label: t("adm.shops.colShop"),       type: "text", get: (s) => s.name },
+    { key: "code",  label: t("adm.shops.colCode"),       type: "text", get: (s) => s.code },
+    { key: "type",  label: t("adm.shops.colType"),       type: "enum",
+      options: [{ value: "main",   label: t("adm.shops.typeMain") },
+                { value: "branch", label: t("adm.shops.typeBranch") }],
+      get: (s) => (s.parentShopId ? "branch" : "main") },
+    { key: "owner", label: t("adm.shops.colOwner"),      type: "text", get: (s) => s.ownerName },
+    { key: "phone", label: t("common.phone"),            type: "text", get: (s) => s.phone },
+    { key: "addr",  label: t("common.address"),          type: "text", get: (s) => s.address },
+    { key: "st",    label: t("common.status"),           type: "enum",
+      options: Object.keys(SHOP_STATUS).map((k) => ({ value: k, label: shopStatus(k).label })),
+      get: (s) => s.status },
+    { key: "plan",  label: t("adm.shops.colPlan"),       type: "enum",
+      options: Object.keys(SHOP_PLAN).map((k) => ({ value: k, label: k })),
+      get: (s) => s.plan },
+    { key: "last",  label: t("adm.shops.colLastSale"),   type: "date",
+      get: (s) => stats[s.id]?.lastSaleAt },
+    { key: "dirs",  label: t("adm.shops.colDirections"), type: "text",
+      get: (s) => (s.directions || []).map((d) => t(`adm.dir.${d}`)).join(", ") },
+    { key: "made",  label: t("common.createdAt"),        type: "date", get: (s) => s.createdAt },
+  ], [t, stats]);
+  const colFlt = useDataFilter(COLS, "adm-shops");
+
+  const filtered = rankItems(colFlt.apply(byStatus), search, {
     codes:  (s) => [s.code],
     digits: (s) => [s.phone],
     texts:  (s) => [s.name, s.code],
@@ -179,6 +211,7 @@ export default function ShopsPage({ toast }) {
             <button className="btn btn-primary btn-sm" onClick={() => setModal("add")}>
               <i className="fa-solid fa-plus" /> {t("adm.shops.new")}
             </button>
+            <DataFilter cols={COLS} flt={colFlt} />
           </div>
         </div>
 
@@ -187,19 +220,22 @@ export default function ShopsPage({ toast }) {
             <table>
               <thead>
                 <tr>
-                  <th>{t("adm.shops.colShop")}</th><th>{t("adm.shops.colCode")}</th>
-                  <th>{t("adm.shops.colType")}</th><th>{t("adm.shops.colOwner")}</th>
-                  <th>{t("common.phone")}</th><th>{t("common.address")}</th>
-                  <th>{t("common.status")}</th>
-                  <th>{t("adm.shops.colPlan")}</th>
+                  <SortTh flt={colFlt} col="name">{t("adm.shops.colShop")}</SortTh>
+                  <SortTh flt={colFlt} col="code">{t("adm.shops.colCode")}</SortTh>
+                  <SortTh flt={colFlt} col="type">{t("adm.shops.colType")}</SortTh>
+                  <SortTh flt={colFlt} col="owner">{t("adm.shops.colOwner")}</SortTh>
+                  <SortTh flt={colFlt} col="phone">{t("common.phone")}</SortTh>
+                  <SortTh flt={colFlt} col="addr">{t("common.address")}</SortTh>
+                  <SortTh flt={colFlt} col="st">{t("common.status")}</SortTh>
+                  <SortTh flt={colFlt} col="plan">{t("adm.shops.colPlan")}</SortTh>
                   {/* Tartib TANA bilan bir xil bo'lishi shart: yangi ustunlar
                       holatdan keyin qo'shildi, "Yaratilgan" esa ulardan keyin. */}
-                  <th>{t("adm.shops.colLastSale")}</th>
+                  <SortTh flt={colFlt} col="last">{t("adm.shops.colLastSale")}</SortTh>
                   {/* Yo'nalish (V49) — «bu do'kon sozlanganmi?» degan
                       savolga ro'yxatning o'zidan javob. Tushum ustuni
                       shu yerda edi; sabab pastdagi izohda. */}
-                  <th>{t("adm.shops.colDirections")}</th>
-                  <th>{t("common.createdAt")}</th>
+                  <SortTh flt={colFlt} col="dirs">{t("adm.shops.colDirections")}</SortTh>
+                  <SortTh flt={colFlt} col="made">{t("common.createdAt")}</SortTh>
                   <th />
                 </tr>
               </thead>

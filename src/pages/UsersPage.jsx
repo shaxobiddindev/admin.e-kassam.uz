@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { shopApi, userApi } from "../api";
 import { roleEntry, roleLabel } from "../utils";
 import { useT } from "../lib/ek-i18n";
@@ -11,6 +11,7 @@ import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
 import { NameField, UsernameField } from "../components/ek/EkFields";
 import { rankItems } from "../lib/ek-search";
+import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 export default function UsersPage({ toast }) {
   const { t } = useT();
@@ -68,7 +69,23 @@ export default function UsersPage({ toast }) {
   /* ⚠ QIDIRUV — kassadagi bilan BIR XIL algoritm (`lib/ek-search.js`).
      Oddiy `includes` kirillcha yozuvni ham, apostrofni ham, xato
      yozilgan harfni ham topa olmasdi. */
-  const filtered = rankItems(users, search, {
+  /* ══ USTUNLAR BO'YICHA FILTR (V68) ═══════════════════════════════════
+     ⚠ Xodimda bir NECHTA rol bo'lishi mumkin, shuning uchun rol MATN
+     sifatida qidiriladi («ichida bor»): ro'yxat solishtiruvi «kassir»
+     ni «kassir + omborchi» xodimida topa olmasdi. */
+  const COLS = useMemo(() => [
+    { key: "name",  label: t("adm.users.colUser"),  type: "text", get: (u) => u.fullName },
+    { key: "login", label: t("common.username"),    type: "text", get: (u) => u.username },
+    { key: "role",  label: t("common.role"),        type: "text",
+      get: (u) => (u.roles || []).map((r) => roleLabel(r.name || r.type || r)).join(", ") },
+    { key: "st",    label: t("common.status"),      type: "enum",
+      options: [{ value: "on",  label: t("common.active") },
+                { value: "off", label: t("common.blocked") }],
+      get: (u) => (u.enabled ? "on" : "off") },
+  ], [t]);
+  const colFlt = useDataFilter(COLS, "adm-users");
+
+  const filtered = rankItems(colFlt.apply(users), search, {
     texts: (u) => [u.fullName, u.username],
   });
 
@@ -143,6 +160,7 @@ export default function UsersPage({ toast }) {
               <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                 <Search value={search} onChange={setSearch}
                   placeholder={t("adm.users.searchPlaceholder")} style={{ width:200 }} />
+                <DataFilter cols={COLS} flt={colFlt} />
                 <ExportButtons name={`xodimlar-${selShop.code || selShop.id}`}
                                headers={exportHeaders} rows={exportRows} toast={toast} />
                 <button className={`btn btn-sm ${!hasOwner ? "btn-green" : "btn-primary"}`} onClick={() => setAddOpen(true)}>
@@ -164,10 +182,10 @@ export default function UsersPage({ toast }) {
                 <table>
                   <thead>
                     <tr>
-                      <th>{t("adm.users.colUser")}</th>
-                      <th>{t("common.username")}</th>
-                      <th>{t("common.role")}</th>
-                      <th>{t("common.status")}</th>
+                      <SortTh flt={colFlt} col="name">{t("adm.users.colUser")}</SortTh>
+                      <SortTh flt={colFlt} col="login">{t("common.username")}</SortTh>
+                      <SortTh flt={colFlt} col="role">{t("common.role")}</SortTh>
+                      <SortTh flt={colFlt} col="st">{t("common.status")}</SortTh>
                       <th />
                     </tr>
                   </thead>

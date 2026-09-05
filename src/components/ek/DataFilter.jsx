@@ -77,8 +77,30 @@ export function useDataFilter(cols, storageKey) {
     } catch { /* xotira to'lgan yoki bloklangan — filtr baribir ishlaydi */ }
   };
 
-  const set = (nextConds) => { setConds(nextConds); save(nextConds, sort); };
-  const setSorting = (nextSort) => { setSort(nextSort); save(conds, nextSort); };
+  /**
+   * Shart va tartibni BIRGA yozadi.
+   *
+   * ⚠⚠ MANA SHU YERDA HAQIQIY XATO BOR EDI. `clear()` ketma-ket
+   * `set([])` va `setSorting(...)` ni chaqirardi, ularning har biri
+   * esa `localStorage` ga O'ZICHA yozardi — ikkinchisi o'z
+   * yopilmasidan (closure) ESKI shartlarni olib, birinchisi tozalagan
+   * ro'yxatni QAYTA TIKLARDI. Natijada foydalanuvchi filtrni
+   * tozalaydi, ekran to'g'ri yangilanadi, lekin boshqa sahifaga o'tib
+   * qaytganda (yoki F5 dan keyin) shart QAYTA PAYDO bo'lardi va uni
+   * o'chirishning yo'li ko'rinmasdi.
+   *
+   * ⚠ Xato ko'rinmasligining sababi: ekrandagi holat (`useState`)
+   * to'g'ri tozalanardi, faqat DISKDAGI nusxa eski qolardi. Ya'ni
+   * hamma narsa ishlayotgandek ko'rinardi — keyingi kirishgacha.
+   */
+  const write = (nextConds, nextSort) => {
+    setConds(nextConds);
+    setSort(nextSort);
+    save(nextConds, nextSort);
+  };
+
+  const set = (nextConds) => write(nextConds, sort);
+  const setSorting = (nextSort) => write(conds, nextSort);
 
   /** Ustun sarlavhasiga bosilganda: o'sish → kamayish → tartibsiz. */
   const toggleSort = (colKey) => {
@@ -98,7 +120,9 @@ export function useDataFilter(cols, storageKey) {
   }).length, [conds]);
 
   return { cols, conds, set, sort, setSorting, toggleSort, apply, open, setOpen, activeCount,
-           clear: () => { set([]); setSorting({ key: null, dir: "asc" }); } };
+           /* ⚠ BITTA yozuv: ikkita alohida chaqiruv bir-birining
+              yozganini bosib ketardi (yuqoridagi izoh). */
+           clear: () => write([], { key: null, dir: "asc" }) };
 }
 
 /** Jadval sarlavhasi uchun: saralanadigan `th`. */

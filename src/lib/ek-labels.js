@@ -15,7 +15,7 @@
    MANBA FAYL — packages/ui/ da tahrirlanadi, sync-tokens.ps1 tarqatadi.
    ========================================================================== */
 
-import { t } from "./ek-i18n";
+import { t } from "./ek-i18n.js";
 
 /**
  * Metama'lumot jadvalidan lug'at quradi: har bir kalitga `label` GETTER
@@ -57,6 +57,121 @@ export const SALE_STATUS = dict("enum.sale", {
      kassaga bir tiyin tushmagan. Sariq: bu tugallanmagan ish. */
   CREDIT:    { tone: "warning", icon: "fa-hand-holding-dollar" },
   CANCELLED: { tone: "danger",  icon: "fa-circle-xmark" },
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AUDIT JURNALI — AuditAction (V81)
+
+   ═══ NEGA BU RO'YXAT SHU YERDA VA TO'LIQ ═══════════════════════════════
+
+   Ilgari ro'yxat `AuditPage.jsx` ichida, RANG jadvalining o'zi edi:
+   `const ACTIONS = Object.keys(TONE)`. Ya'ni amalning filtrga tushishi
+   uning RANGI borligiga bog'liq edi va rangsiz amal filtrdan JIMGINA
+   yo'qolardi.
+
+   Natijasi: jadvalda 15 ta amal bor edi, serverda esa 51 ta. Qolgan
+   36 tasi — jumladan `SALE_RETURN`, `CASH_MOVEMENT`, `TRANSFER_*` va
+   hatto admin panelining O'Z amallari (`ADMIN_CREATE`,
+   `ADMIN_PASSWORD_RESET`) — jurnalda ko'rinardi, lekin ularni
+   TANLAB BO'LMASDI. Nazorat vositasi uchun bu eng yomon nosozlik
+   turi: ma'lumot bor, lekin unga yetib bo'lmaydi.
+
+   Endi ro'yxat TO'LIQ va rangdan MUSTAQIL. Rang — ixtiyoriy bezak
+   (`color`), yo'qligi amalni ro'yxatdan chiqarmaydi.
+
+   ⚠ HECH QANDAY YANGI MA'LUMOT OCHILMADI. Server bu qatorlarni
+   allaqachon qaytarardi va sahifa ularni chizardi; qo'shilgani —
+   yorliq va filtr.
+
+   ⚠ IKKITA AMAL HALI YOZILMAYDI (`IMPERSONATE`, `PRICE_CHANGE`),
+   lekin ro'yxatda TURADI: ular yozila boshlaganda birov shu faylni
+   eslashi shart bo'lmasin — aynan shu unutish yuqoridagi nosozlikni
+   keltirib chiqargan edi. Bo'sh natija — halol javob, filtrda
+   yo'qlik esa yashirish.
+
+   Rang qoidasi:
+     red    — orqaga qaytmaydi yoki kassadan pul chiqaradi
+     yellow — e'tibor talab qiladi, lekin odatiy ish bo'lishi mumkin
+     green  — yaratish yoki pul kirishi
+     blue   — yakunlangan ish
+     (yo'q) — kulrang: oddiy o'zgarish
+   ══════════════════════════════════════════════════════════════════════════ */
+export const AUDIT_ACTION = dict("enum.audit", {
+  /* ── Do'kon ── */
+  SHOP_CREATE:            { color: "green",  icon: "fa-store" },
+  SHOP_UPDATE:            { icon: "fa-store" },
+  SHOP_DELETE:            { color: "red",    icon: "fa-store-slash" },
+  SHOP_STATUS_CHANGE:     { color: "yellow", icon: "fa-toggle-on" },
+
+  /* ── Xodim ── */
+  USER_CREATE:            { color: "green",  icon: "fa-user-plus" },
+  USER_UPDATE:            { icon: "fa-user-pen" },
+  USER_DELETE:            { color: "red",    icon: "fa-user-minus" },
+  USER_BLOCK:             { color: "red",    icon: "fa-user-lock" },
+  USER_UNBLOCK:           { color: "green",  icon: "fa-user-check" },
+  USER_PASSWORD_CHANGE:   { color: "yellow", icon: "fa-key" },
+
+  /* ── Obuna va arizalar ── */
+  PAYMENT_REGISTER:       { color: "green",  icon: "fa-money-check-dollar" },
+  SUBSCRIPTION_EXPIRED:   { color: "red",    icon: "fa-hourglass-end" },
+  CONTACT_HANDLED:        { color: "blue",   icon: "fa-envelope-open" },
+  CONTACT_STATUS:         { color: "blue",   icon: "fa-envelope" },
+
+  /* ── Admin paneli ── */
+  ADMIN_LOGIN:            { icon: "fa-right-to-bracket" },
+  /* ⚠ Hali yozilmaydi — sabab yuqoridagi izohda. */
+  IMPERSONATE:            { color: "yellow", icon: "fa-user-secret" },
+  ADMIN_CREATE:           { color: "green",  icon: "fa-user-shield" },
+  ADMIN_UPDATE:           { icon: "fa-user-shield" },
+  ADMIN_DELETE:           { color: "red",    icon: "fa-user-slash" },
+  ADMIN_ENABLE:           { color: "green",  icon: "fa-toggle-on" },
+  ADMIN_DISABLE:          { color: "yellow", icon: "fa-toggle-off" },
+  ADMIN_PASSWORD_RESET:   { color: "yellow", icon: "fa-key" },
+  ANNOUNCEMENT_CHANGE:    { icon: "fa-bullhorn" },
+  SHOP_DIRECTIONS_CHANGE: { icon: "fa-compass" },
+  SHOP_FEATURE_CHANGE:    { icon: "fa-sliders" },
+
+  /* ── Kassa va pul ──
+     ⚠ `SALE_CANCEL` QIZIL, `SALE_RETURN` esa SARIQ. Ikkalasi ham pulga
+     tegadi, lekin qaytarish — odatiy savdo hodisasi (tovar javonga
+     qaytdi), bekor qilish esa `GuardedAction` izohida «eng ko'p
+     suiiste'mol qilinadigan amal» deb belgilangan. */
+  SALE_CANCEL:            { color: "red",    icon: "fa-ban" },
+  SALE_RETURN:            { color: "yellow", icon: "fa-rotate-left" },
+  CART_ABANDONED:         { color: "yellow", icon: "fa-cart-arrow-down" },
+  SHIFT_CLOSE:            { color: "yellow", icon: "fa-lock" },
+  CASH_MOVEMENT:          { color: "yellow", icon: "fa-money-bill-transfer" },
+  STORE_SWITCH:           { color: "yellow", icon: "fa-shuffle" },
+
+  /* ── Narx ── */
+  PRICE_CHANGE:           { color: "yellow", icon: "fa-tag" },
+  PRICE_BULK_CHANGE:      { color: "yellow", icon: "fa-tags" },
+
+  /* ── Ombor ── */
+  STOCK_TAKE_CLOSE:       { color: "blue",   icon: "fa-clipboard-check" },
+  STOCK_TAKE_CANCEL:      { color: "red",    icon: "fa-clipboard" },
+  GOODS_RECEIPT:          { color: "green",  icon: "fa-truck-ramp-box" },
+  TRANSFER_SEND:          { color: "blue",   icon: "fa-arrow-right-from-bracket" },
+  TRANSFER_RECEIVE:       { color: "green",  icon: "fa-arrow-right-to-bracket" },
+  TRANSFER_CANCEL:        { color: "red",    icon: "fa-xmark" },
+
+  /* ── Xarajat va yetkazib beruvchi ── */
+  EXPENSE_CREATE:         { color: "blue",   icon: "fa-receipt" },
+  EXPENSE_DELETE:         { color: "red",    icon: "fa-trash" },
+  SUPPLIER_PAYMENT:       { color: "blue",   icon: "fa-money-bill-wave" },
+
+  /* ── Mijoz ── */
+  CUSTOMER_DEBT_ADJUST:   { color: "yellow", icon: "fa-hand-holding-dollar" },
+  CUSTOMER_ARCHIVE:       { icon: "fa-box-archive" },
+  LOYALTY_TIER_CHANGE:    { icon: "fa-medal" },
+  BONUS_SPEND:            { color: "blue",   icon: "fa-coins" },
+  BONUS_ADJUST:           { color: "yellow", icon: "fa-coins" },
+  BONUS_EXPIRE:           { icon: "fa-hourglass-end" },
+
+  /* ── Sozlama va qurilma ── */
+  SHOP_SETTING_CHANGE:    { icon: "fa-gear" },
+  DEVICE_TRUSTED:         { icon: "fa-mobile-screen" },
+  DEVICE_CONFIRMED:       { color: "green",  icon: "fa-mobile-screen-button" },
 });
 
 /* ── Ko'chirish holati — TransferStatus (V22) ────────────────────────────── */

@@ -21,7 +21,7 @@
    ========================================================================== */
 
 import { useCallback, useSyncExternalStore } from "react";
-import DICT from "./ek-locales";
+import DICT from "./ek-locales.js";
 
 const KEY = "ek_lang";
 

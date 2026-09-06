@@ -3,6 +3,7 @@ import { auditApi } from "../api";
 import { fmtDateTime } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import { Empty, Search, Badge } from "../components/ui";
+import { AUDIT_ACTION, entry, options } from "../lib/ek-labels";
 import Select from "../components/ek/Select";
 import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
@@ -27,26 +28,19 @@ import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
    yildan keyin panelni yiqitardi.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/** Amal turiga qarab ohang — rang yolg'iz signal emas, yonida matn ham bor. */
-const TONE = {
-  SHOP_DELETE:          "red",
-  USER_DELETE:          "red",
-  USER_BLOCK:           "red",
-  SUBSCRIPTION_EXPIRED: "red",
-  USER_PASSWORD_CHANGE: "yellow",
-  SHOP_STATUS_CHANGE:   "yellow",
-  IMPERSONATE:          "yellow",
-  PAYMENT_REGISTER:     "green",
-  USER_UNBLOCK:         "green",
-  SHOP_CREATE:          "green",
-  USER_CREATE:          "green",
-  CONTACT_HANDLED:      "blue",
-  ADMIN_LOGIN:          "gray",
-  SHOP_UPDATE:          "gray",
-  USER_UPDATE:          "gray",
-};
+/* ⚠ RO'YXAT VA RANG ENDI `lib/ek-labels.js` DA (V81).
 
-const ACTIONS = Object.keys(TONE);
+   Ilgari ikkalasi shu yerda, BITTA jadvalda edi va filtr o'sha
+   jadvalning kalitlaridan qurilardi (`Object.keys(TONE)`). Ya'ni
+   amalning filtrga tushishi uning RANGI borligiga bog'liq edi:
+   rangsiz amal ro'yxatdan jimgina yo'qolardi.
+
+   Natijada bu yerda 15 ta amal turardi, serverda esa 51 ta —
+   `SALE_RETURN`, `CASH_MOVEMENT`, `TRANSFER_*` va hatto admin
+   panelining o'z amallari (`ADMIN_CREATE`, `ADMIN_PASSWORD_RESET`)
+   jurnalda ko'rinardi, lekin ularni TANLAB bo'lmasdi. Nazorat
+   vositasi uchun eng yomon nosozlik: ma'lumot bor, unga yetib
+   bo'lmaydi. */
 
 export default function AuditPage({ toast }) {
   const { t } = useT();
@@ -87,7 +81,10 @@ export default function AuditPage({ toast }) {
     { key: "time",  label: t("audit.colTime"),    type: "date", get: (r) => r.createdAt },
     { key: "actor", label: t("audit.colActor"),   type: "text", get: (r) => r.actorUsername },
     { key: "act",   label: t("audit.colAction"),  type: "enum",
-      options: Object.keys(TONE).map((k) => ({ value: k, label: t(`enum.audit.${k}`) })),
+      /* ⚠ Ustun filtri ham AYNAN o'sha ro'yxatdan. Ilgari u ham rang
+         jadvalidan qurilardi va yuqoridagi tanlov bilan birga qisqarardi:
+         ikkala joyda ham bir xil 36 ta amal yo'q edi. */
+      options: options(AUDIT_ACTION),
       get: (r) => r.action },
     { key: "sum",   label: t("audit.colSummary"), type: "text",
       get: (r) => `${r.summary || ""} ${r.details || ""}` },
@@ -107,7 +104,7 @@ export default function AuditPage({ toast }) {
     // Ekranda ism va tur ikki qatorda turadi; faylda bitta katakda,
     // chunki CSV da "ikkinchi qator" degan tushuncha yo'q.
     `${row.actorUsername || "—"} (${t(`audit.actor.${row.actorType || "SYSTEM"}`)})`,
-    t(`enum.audit.${row.action}`),
+    entry(AUDIT_ACTION, row.action).label,
     [row.summary, row.details].filter(Boolean).join(" — "),
     row.ip || "",
   ]);
@@ -123,9 +120,15 @@ export default function AuditPage({ toast }) {
             <Select
               variant="field" ariaLabel={t("audit.colAction")}
               value={action} onChange={setAction}
+              /* ⚠ Ro'yxat 51 ta — `Select` sakkiztadan ko'pida qidiruvni
+                 O'ZI yoqadi, ya'ni admin «qayt» deb yozib «Tovar
+                 qaytarildi» ni topadi. Qisqartirish esa yana o'sha
+                 nosozlikni qaytarardi: ko'rinmaydigan amal = yo'q amal. */
               options={[
                 { value: "", label: t("audit.allActions"), icon: "fa-list" },
-                ...ACTIONS.map(a => ({ value: a, label: t(`enum.audit.${a}`), icon: "fa-angle-right" })),
+                ...options(AUDIT_ACTION).map((o) => ({
+                  ...o, icon: AUDIT_ACTION[o.value]?.icon || "fa-angle-right",
+                })),
               ]}
             />
             <Search value={actor} onChange={setActor}
@@ -166,8 +169,12 @@ export default function AuditPage({ toast }) {
                       </div>
                     </td>
                     <td>
-                      <Badge color={TONE[row.action] || "gray"}>
-                        {t(`enum.audit.${row.action}`)}
+                      {/* ⚠ `entry()` NOMA'LUM qiymatda ham o'qiladigan matn
+                          qaytaradi («Admin create»), xom kalit emas: server
+                          yangi amal qo'shsa, jurnal shu zahoti buziladigan
+                          ko'rinishga tushmasin. */}
+                      <Badge color={entry(AUDIT_ACTION, row.action).color || "gray"}>
+                        {entry(AUDIT_ACTION, row.action).label}
                       </Badge>
                     </td>
                     <td style={{ fontSize:12 }}>

@@ -13,10 +13,12 @@
    Ishga tushirish:  node test/dash.test.mjs
    ══════════════════════════════════════════════════════════════════════════ */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   buildAlerts, sortAlerts, countBySeverity, changes, pctChange,
   WIDGETS, allowedWidgets, readLayout, saveLayout, move, toggle,
   shopState, stateTone, healthCounts, T,
+  EVENT_KINDS_ALL, PRIORITIES, TASK_STATES,
 } from "../src/lib/ek-dash.js";
 
 const LOCALES = (await import("../src/lib/ek-locales.js")).default
@@ -28,6 +30,62 @@ const it = (name, fn) => {
   catch (e) { fail++; console.log(`  ❌ ${name}\n     ${e.message}`); }
 };
 const ids = (list) => list.map((a) => a.id);
+
+
+/* ══════════════════════════════════════════════════════════════════
+   JAMOA REJASI (V73)
+
+   ⚠ Bu bo'lim ADMIN JAMOASINIKI, do'konniki emas. Xato jimgina
+   bo'lardi: bo'lim ochilmaydigan odamga «3 ta kechikkan vazifa» deb
+   turishi yoki jamoaning ichki ro'yxati mijozning muammosini pastga
+   surib qo'yishi.
+   ══════════════════════════════════════════════════════════════════ */
+function plannerSuite() {
+console.log("\n── Jamoa rejasi ──");
+
+it("kechikkan vazifa SARIQ, qizil emas", () => {
+  const a = buildAlerts({ plan: { overdue: 3 } });
+  assert.equal(a.length, 1);
+  assert.equal(a[0].id, "tasksOverdue");
+  assert.equal(a[0].severity, "warning",
+    "jamoaning ichki ro'yxati mijozning muammosini pastga surmasligi kerak");
+  assert.equal(a[0].count, 3);
+  assert.equal(a[0].to, "/planner");
+});
+
+it("bugungi vazifa — KO'K satr", () => {
+  const a = buildAlerts({ plan: { dueToday: 2 } });
+  assert.equal(a[0].id, "tasksToday");
+  assert.equal(a[0].severity, "info");
+});
+
+it("javobsiz ariza kechikkan vazifadan YUQORIDA", () => {
+  const a = buildAlerts({ stats: { newRequests: 1 }, plan: { overdue: 99 } });
+  assert.deepEqual(ids(a), ["requests", "tasksOverdue"],
+    "mijozning arizasi jamoaning ichki ishidan muhimroq");
+});
+
+it("RUXSATSIZ adminda (`plan: null`) satr CHIQMAYDI", () => {
+  assert.deepEqual(buildAlerts({ plan: null }), [],
+    "bo'lim ochilmaydigan odamga vazifa sanog'ini ko'rsatishning ma'nosi yo'q");
+  assert.deepEqual(buildAlerts({}), []);
+});
+
+it("vazifa yo'q bo'lsa satr ham yo'q", () => {
+  assert.deepEqual(buildAlerts({ plan: { open: 4, overdue: 0, dueToday: 0 } }), [],
+    "ochiq vazifaning o'zi ogohlantirish emas");
+});
+
+it("reja bloki `PLANNER_VIEW` talab qiladi", () => {
+  const w = WIDGETS.find((x) => x.id === "plan");
+  assert.ok(w, "reja bloki ro'yxatda bo'lishi kerak");
+  assert.equal(w.perm, "PLANNER_VIEW");
+  assert.ok(!allowedWidgets((p) => p !== "PLANNER_VIEW").some((x) => x.id === "plan"),
+    "ruxsati olib qo'yilgan adminda blok ko'rinmasligi kerak");
+  assert.ok(allowedWidgets(() => true).some((x) => x.id === "plan"));
+});
+}
+plannerSuite();
 
 /* ══════════════════════════════════════════════════════════════════
    OGOHLANTIRISHLAR
@@ -298,6 +356,7 @@ const EVERY = {
           { status: "SUSPENDED", ownerName: "B" },
           { status: "ACTIVE", ownerName: null }],
   users: [{ enabled: false }],
+  plan: { open: 5, overdue: 1, dueToday: 1 },
 };
 
 const emitted = new Set();
@@ -307,9 +366,31 @@ for (const w of WIDGETS) emitted.add(w.key);
 for (const m of ["activeShops", "income", "sales", "newShops"]) emitted.add(`adm.dash.chg.${m}`);
 for (const st of ["live", "quiet", "abandoned", "never"]) emitted.add(`adm.dash.state.${st}`);
 
+/* ⚠ SANOQDAN TUG'ILADIGAN KALITLAR. Ular ekranda
+   `t(`adm.dash.pr.${x}`)` ko'rinishida quriladi — sahifani o'qib
+   chiqadigan hech qanday tekshiruv ularni topa olmaydi. Shu sababli
+   sanoqlar `ek-dash.js` da turadi va kalit AYNAN shundan chiqariladi. */
+for (const k of EVENT_KINDS_ALL) emitted.add(`adm.dash.ek.${k}`);
+for (const p of PRIORITIES)      emitted.add(`adm.dash.pr.${p}`);
+for (const st of TASK_STATES)    emitted.add(`adm.dash.st.${st}`);
+
+/* ⚠ SAHIFADAGI TO'G'RIDAN-TO'G'RI kalitlar ham — `t("...")`.
+   Ilgari faqat `ek-dash` chiqaradiganlari tekshirilardi va yangi blok
+   qo'shgan dasturchi o'nlab yozuvni tarjimasiz qoldirishi mumkin
+   edi: ekranda kalitning O'ZI ko'rinardi («adm.dash.tasks»), lekin
+   birorta sinov bundan xabar bermasdi. */
+const PAGE = readFileSync(new URL("../src/pages/DashboardPage.jsx", import.meta.url), "utf8");
+for (const m of PAGE.matchAll(/\bt\(\s*"([\w.]+)"/g)) emitted.add(m[1]);
+
 it("hamma ogohlantirish CHIQADI — sinov o'zi ham tekshiriladi", () => {
-  assert.ok(buildAlerts(EVERY).length >= 9,
-    "kamida to'qqizta satr kutilgan, kelgan: " + buildAlerts(EVERY).length);
+  assert.ok(buildAlerts(EVERY).length >= 11,
+    "kamida o'n bitta satr kutilgan, kelgan: " + buildAlerts(EVERY).length);
+});
+
+it("sahifadagi kalitlar ham qamrovga TUSHADI", () => {
+  assert.ok(emitted.has("adm.dash.tasks") && emitted.has("adm.dash.wholeTeam"),
+    "sahifa o'qilmasa, tarjimasiz yozuvni birorta sinov ko'rmasdi");
+  assert.ok(emitted.size > 40, "qamrov juda kichik: " + emitted.size);
 });
 
 for (const lang of ["uz", "ru", "en"]) {

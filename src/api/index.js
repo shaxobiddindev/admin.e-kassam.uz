@@ -236,6 +236,40 @@ export const contactApi = {
   setStatus:   (id, value) => req(`/contact/${id}/status?value=${value}`, { method: "PATCH" }),
 };
 
+/* ══════════════════════════════════════════════════════════════════════
+   JAMOA KALENDARI VA VAZIFALARI (V73)
+
+   ⚠ DO'KON KALENDARIDAN BOSHQA YO'L. Ilovadagi `/planner/**` do'konni
+   tokendagi koddan topadi va superadminda do'kon YO'Q — o'sha yo'l
+   admin uchun har doim «do'kon topilmadi» bilan tugardi. Bu yerda
+   alohida jadval, alohida yo'l va alohida ruxsat (`PLANNER_VIEW` /
+   `PLANNER_MANAGE`).
+
+   ⚠ `shopId` — EGALIK EMAS, HAVOLA: vazifa qaysi do'kon haqidaligini
+   ko'rsatadi va undan do'kon kartochkasiga o'tiladi. Ro'yxatni
+   cheklamaydi — jamoa hammasini ko'radi.
+   ══════════════════════════════════════════════════════════════════════ */
+export const plannerApi = {
+  events:    (from, to) => {
+               const q = new URLSearchParams();
+               if (from) q.set("from", from);
+               if (to)   q.set("to", to);
+               const s = q.toString();
+               return req(`/superadmin/planner/events${s ? `?${s}` : ""}`);
+             },
+  addEvent:  (data)     => req("/superadmin/planner/events", { method: "POST", ...body(data) }),
+  editEvent: (id, data) => req(`/superadmin/planner/events/${id}`, { method: "PUT", ...body(data) }),
+  delEvent:  (id)       => req(`/superadmin/planner/events/${id}`, { method: "DELETE" }),
+
+  tasks:     (status)   => req(`/superadmin/planner/tasks${status ? `?status=${status}` : ""}`),
+  addTask:   (data)     => req("/superadmin/planner/tasks", { method: "POST", ...body(data) }),
+  editTask:  (id, data) => req(`/superadmin/planner/tasks/${id}`, { method: "PUT", ...body(data) }),
+  /* ⚠ Holat ALOHIDA yo'lda: uni o'zgartirish `PLANNER_MANAGE` siz ham
+     ochiq (o'ziga tegishli vazifada), tahrirlash esa yo'q. */
+  setStatus: (id, st)   => req(`/superadmin/planner/tasks/${id}/status?status=${st}`, { method: "PATCH" }),
+  delTask:   (id)       => req(`/superadmin/planner/tasks/${id}`, { method: "DELETE" }),
+};
+
 // ── Audit jurnali — FAQAT O'QISH ────────────────────────────────
 // Yozish/tahrirlash/o'chirish endpointi YO'Q va bo'lmasligi kerak:
 // o'zgartirilishi mumkin bo'lgan jurnal audit bo'lishdan to'xtaydi.

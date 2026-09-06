@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { shopApi, userApi, contactApi, backupApi } from "../api";
+import { shopApi, userApi, contactApi, backupApi, plannerApi, adminApi } from "../api";
 import { fmtDate, SHOP_STATUS, shopStatus, money } from "../utils";
 import { percent, time } from "../lib/ek-format";
 import { useT } from "../lib/ek-i18n";
@@ -15,6 +15,7 @@ import { can } from "../routes";
 import {
   buildAlerts, countBySeverity, changes, healthCounts, shopState, stateTone,
   readLayout, saveLayout, move, toggle,
+  EVENT_ICON, EVENT_KINDS, PRIORITIES, TASK_STATES,
 } from "../lib/ek-dash";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -462,6 +463,432 @@ function RequestsPanel({ requests, loading, onGo }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   JAMOA KALENDARI VA VAZIFALARI (V73)
+
+   ⚠ DO'KON REJASI EMAS. Ilovadagi blok do'konning ishi haqida
+   («sut buyurtma qilish»), bu esa ADMIN JAMOASINIKI («serverni
+   yangilash», «Chilonzor do'koniga obuna haqida qo'ng'iroq»). Ikkalasi
+   boshqa jadvalda va boshqa yo'lda — sabab `api/index.js` da.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ⚠ Sanoqlar (`EVENT_KINDS`, `PRIORITIES`, `TASK_STATES`, `EVENT_ICON`)
+   `ek-dash.js` DA — sabab o'sha faylda: ular ekranga kalit tug'diradi
+   va sinov ularni aynan shundan chiqarib tekshiradi. */
+
+/** ISO sana — `yyyy-mm-dd`, mahalliy kun bo'yicha. */
+const isoDay = (d) => {
+  const z = new Date(d);
+  z.setMinutes(z.getMinutes() - z.getTimezoneOffset());
+  return z.toISOString().slice(0, 10);
+};
+
+/**
+ * Yaqin kunlar va ochiq vazifalar.
+ *
+ * ⚠ IKKALASI BITTA BLOKDA. Ular ikki xil jadval, lekin bitta savolga
+ * javob beradi: «bugun nima bo'ladi va kim nima qilishi kerak?».
+ * Ikkita alohida blokda ular bir-biridan uzoqlashib, ikkalasi ham
+ * qaralmay qolardi.
+ *
+ * ⚠ VAZIFA SHU YERDAN QO'SHILADI VA YOPILADI. Oyna ochishni talab
+ * qiladigan ro'yxat ishlatilmaydi: «X ga qo'ng'iroq qilish» kabi ish
+ * o'ttiz soniyada yozilishi kerak, aks holda u baribir daftarda
+ * qoladi.
+ */
+function PlanPanel({ plan, loading, canEdit, toast, onOpenAll, onChanged, onGo }) {
+  const { t } = useT();
+  const [adding, setAdding] = useState("");
+  const [busy, setBusy] = useState(false);
+  const events = plan?.events || [];
+  const tasks = plan?.tasks;
+  const rows = tasks?.top || [];
+
+  const add = () => {
+    const title = adding.trim();
+    if (!title || busy) return;
+    setBusy(true);
+    plannerApi.addTask({ title })
+      .then(() => { setAdding(""); onChanged(); })
+      .catch((e) => toast?.error?.(e.message))
+      .finally(() => setBusy(false));
+  };
+
+  const close = (id) => {
+    setBusy(true);
+    plannerApi.setStatus(id, "DONE")
+      .then(onChanged)
+      .catch((e) => toast?.error?.(e.message))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <Panel title={t("adm.dash.wPlan")} icon="fa-calendar-check" hint={t("adm.dash.hintPlan")}
+           onTitleClick={onOpenAll}
+           right={tasks?.open > 0 ? (
+             <span className="pln__n" data-tone={tasks.overdue > 0 ? "bad" : undefined}>
+               {t("adm.dash.nOpen", { n: tasks.open })}
+             </span>
+           ) : null}>
+      {loading ? <span className="ek-skeleton" style={{ height: 150 }} /> : (
+        <>
+          {/* ── Yaqin kunlar ──────────────────────────────────────── */}
+          <div className="pln__sub">{t("adm.dash.upcoming")}</div>
+          {events.length === 0 ? (
+            <div className="pln__none">{t("adm.dash.noEvents")}</div>
+          ) : (
+            <div className="pln__ev">
+              {events.slice(0, 4).map((e) => (
+                <div key={`${e.id}-${e.startsOn}`} className="pln__row"
+                     data-now={e.active ? "" : undefined}>
+                  <i className={`fa-solid ${EVENT_ICON[e.kind] || EVENT_ICON.OTHER}`} aria-hidden="true" />
+                  <span className="pln__t">{e.title}</span>
+                  <span className="pln__when ek-num">
+                    {e.active ? t("adm.dash.today")
+                     : e.daysAway === 1 ? t("adm.dash.tomorrow")
+                     : t("adm.dash.inDays", { n: e.daysAway })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Vazifalar ─────────────────────────────────────────── */}
+          <div className="pln__sub pln__sub--gap">{t("adm.dash.tasks")}</div>
+          {rows.length === 0 ? (
+            <div className="pln__none">{t("adm.dash.noTasks")}</div>
+          ) : (
+            <div className="pln__tk">
+              {rows.map((k) => (
+                <div key={k.id} className="pln__row" data-tone={k.overdue ? "bad" : undefined}>
+                  {/* ⚠ Yopish tugmasi `PLANNER_MANAGE` SIZ HAM ochiq —
+                      serverda ham shunday: vazifani yopadigan odam
+                      aynan uni bajargan admin.
+
+                      ⚠ Lekin BEGONA vazifada emas, va bu qarorni
+                      SERVER aytadi (`canClose`). Qoidani bu yerda
+                      qayta yozganda ikkalasi ajralib ketardi va tugma
+                      bosilib 403 qaytarardi — xato foydalanuvchining
+                      qo'lida ko'rinardi. */}
+                  {k.canClose !== false ? (
+                    <button type="button" className="pln__done" disabled={busy}
+                            onClick={() => close(k.id)}
+                            aria-label={t("adm.dash.markDone", { name: k.title })}>
+                      <i className="fa-solid fa-check" aria-hidden="true" />
+                    </button>
+                  ) : <span className="pln__done pln__done--off" aria-hidden="true" />}
+                  <span className="pln__t">
+                    {k.title}
+                    {k.assignee && <span className="pln__who">{k.assignee}</span>}
+                  </span>
+                  {/* ⚠ Do'kon nomi TUGMA: vazifa ko'pincha aniq bir
+                      do'kon haqida va undan kartochkaga o'tish kerak. */}
+                  {k.shopId && (
+                    <button type="button" className="pln__shop" onClick={() => onGo("/shops")}
+                            title={k.shopName || ""}>
+                      <i className="fa-solid fa-store" aria-hidden="true" />
+                      <span>{k.shopName}</span>
+                    </button>
+                  )}
+                  {k.dueOn && (
+                    <span className="pln__when ek-num" data-tone={k.overdue ? "bad" : undefined}>
+                      {fmtDate(k.dueOn)}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ⚠ Qo'shish maydoni faqat `PLANNER_MANAGE` ga — serverda ham. */}
+          {canEdit && (
+            <div className="pln__add">
+              <input
+                value={adding}
+                onChange={(e) => setAdding(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") add(); }}
+                placeholder={t("adm.dash.addTask")}
+                aria-label={t("adm.dash.addTask")}
+                maxLength={200}
+              />
+              <button type="button" disabled={!adding.trim() || busy} onClick={add}
+                      aria-label={t("common.add")} title={t("common.add")}>
+                <i className="fa-solid fa-plus" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+
+          <button type="button" className="dpn__more" onClick={onOpenAll}>
+            {t("adm.dash.allPlan")}
+          </button>
+        </>
+      )}
+    </Panel>
+  );
+}
+
+/**
+ * Vazifa va kalendarni to'liq boshqarish.
+ *
+ * ⚠ ALOHIDA SAHIFA EMAS, OYNA. Bosh sahifadagi blok kundalik ish
+ * uchun yetadi (ko'rish, qo'shish, yopish); bu yerga esa kamdan-kam —
+ * bayramni kiritish yoki bajarilganlar tarixini ko'rish uchun
+ * kiriladi. Alohida sahifa yon menyuni uzaytirardi va u yerdan bosh
+ * sahifaga qaytish kerak bo'lardi.
+ *
+ * ⚠ Yopilgan vazifalar TARIXI ham shu yerda: bosh sahifada ular
+ * ko'rinmaydi (u ochiq ishlar uchun), lekin «kim nima bajardi?» degan
+ * savolga javob beradigan yagona joy shu.
+ */
+function PlannerModal({ open, onClose, canEdit, shops, toast, onChanged }) {
+  const { t } = useT();
+  const [tab, setTab] = useState("tasks");
+  const [status, setStatus] = useState("OPEN");
+  const [tasks, setTasks] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState(null);
+
+  const load = useCallback(() => {
+    setBusy(true);
+    Promise.all([
+      plannerApi.tasks(status).then((r) => r.data || []).catch(() => []),
+      /* ⚠ Bir YILLIK oyna: bosh sahifadagi blok ikki haftani
+         ko'rsatadi, bu yerda esa kelasi bayramlar ham ko'rinishi
+         kerak — aks holda ularni kiritganini tekshirib bo'lmasdi. */
+      plannerApi.events(null, isoDay(new Date(Date.now() + 365 * 864e5)))
+        .then((r) => r.data || []).catch(() => []),
+    ]).then(([tk, ev]) => { setTasks(tk); setEvents(ev); }).finally(() => setBusy(false));
+  }, [status]);
+
+  useEffect(() => { if (open) load(); }, [open, load]);
+
+  /* Adminlar ro'yxati faqat tayinlay oladiganga va faqat BIR MARTA.
+     ⚠ Xato JIMGINA yutiladi: bu ro'yxatni faqat bosh admin o'qiy
+     oladi (`ADMIN_VIEW`) va uni ololmaslik oynaning qolgan qismini
+     ishlamas holga keltirmasligi kerak — o'shanda vazifa shunchaki
+     butun jamoaga qo'yiladi. */
+  useEffect(() => {
+    if (!open || !canEdit || admins.length) return;
+    adminApi.getAll()
+      .then((r) => setAdmins((r.data || []).filter((a) => a.enabled)))
+      .catch(() => setAdmins([]));
+  }, [open, canEdit, admins.length]);
+
+  const done = (p) => p.then(() => { load(); onChanged(); })
+                       .catch((e) => toast?.error?.(e.message));
+
+  if (!open) return null;
+
+  const empty = { title: "", note: "", kind: "MEETING", startsOn: isoDay(new Date()),
+                  endsOn: "", repeatYearly: false, remindDays: 0,
+                  assigneeId: "", shopId: "", dueOn: "", priority: "NORMAL" };
+  const f = form || empty;
+  const set = (k, v) => setForm({ ...f, [k]: v });
+
+  const save = () => {
+    if (!f.title.trim()) return;
+    const bd = tab === "tasks"
+      ? { title: f.title, note: f.note || null,
+          assigneeId: f.assigneeId ? Number(f.assigneeId) : null,
+          shopId: f.shopId ? Number(f.shopId) : null,
+          dueOn: f.dueOn || null, priority: f.priority }
+      : { title: f.title, note: f.note || null, kind: f.kind,
+          startsOn: f.startsOn, endsOn: f.endsOn || null,
+          repeatYearly: f.repeatYearly, remindDays: Number(f.remindDays) || 0 };
+    const rq = tab === "tasks"
+      ? (f.id ? plannerApi.editTask(f.id, bd) : plannerApi.addTask(bd))
+      : (f.id ? plannerApi.editEvent(f.id, bd) : plannerApi.addEvent(bd));
+    done(rq.then(() => setForm(null)));
+  };
+
+  return (
+    <Modal onClose={onClose} title={t("adm.dash.wPlan")} size="lg">
+      <div className="seg pmd__tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === "tasks"}
+                className={`seg__b${tab === "tasks" ? " is-on" : ""}`}
+                onClick={() => { setTab("tasks"); setForm(null); }}>{t("adm.dash.tasks")}</button>
+        <button type="button" role="tab" aria-selected={tab === "events"}
+                className={`seg__b${tab === "events" ? " is-on" : ""}`}
+                onClick={() => { setTab("events"); setForm(null); }}>{t("adm.dash.calendar")}</button>
+      </div>
+
+      {tab === "tasks" ? (
+        <>
+          <div className="seg pmd__f" role="group" aria-label={t("common.status")}>
+            {TASK_STATES.map((x) => (
+              <button key={x} type="button" className={`seg__b${status === x ? " is-on" : ""}`}
+                      onClick={() => setStatus(x)}>{t(`adm.dash.st.${x}`)}</button>
+            ))}
+          </div>
+
+          <div className="pmd__list">
+            {busy ? <span className="ek-skeleton" style={{ height: 90 }} />
+             : tasks.length === 0 ? <div className="pln__none">{t("adm.dash.noTasks")}</div>
+             : tasks.map((k) => (
+              <div key={k.id} className="pmd__row" data-tone={k.overdue ? "bad" : undefined}>
+                <span className="pmd__pri" data-p={k.priority} aria-hidden="true" />
+                <span className="pmd__t">
+                  {k.title}
+                  <span className="pmd__meta">
+                    {k.assignee || t("adm.dash.wholeTeam")}
+                    {k.shopName && ` · ${k.shopName}`}
+                    {k.dueOn && ` · ${fmtDate(k.dueOn)}`}
+                    {k.doneBy && ` · ${k.doneBy}`}
+                  </span>
+                </span>
+                <span className="pmd__acts">
+                  {/* ⚠ Holatga tegadigan HAR BIR tugma `canClose` ga
+                      bo'ysunadi — serverda ham bitta qoida
+                      (`AdminPlannerService.canClose`) uchalasini ham
+                      tekshiradi. */}
+                  {k.status === "OPEN" ? (
+                    <>
+                      {k.canClose !== false && (
+                        <button type="button" title={t("adm.dash.st.DONE")}
+                                aria-label={t("adm.dash.markDone", { name: k.title })}
+                                onClick={() => done(plannerApi.setStatus(k.id, "DONE"))}>
+                          <i className="fa-solid fa-check" aria-hidden="true" />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button type="button" title={t("adm.dash.st.CANCELLED")}
+                                aria-label={t("adm.dash.st.CANCELLED")}
+                                onClick={() => done(plannerApi.setStatus(k.id, "CANCELLED"))}>
+                          <i className="fa-solid fa-ban" aria-hidden="true" />
+                        </button>
+                      )}
+                    </>
+                  ) : k.canClose !== false && (
+                    /* Qayta ochish — yopilgan vazifani tahrirlashning
+                       yagona yo'li: matnni o'zgartirish taqiqlangan. */
+                    <button type="button" title={t("adm.dash.reopen")}
+                            aria-label={t("adm.dash.reopen")}
+                            onClick={() => done(plannerApi.setStatus(k.id, "OPEN"))}>
+                      <i className="fa-solid fa-rotate-left" aria-hidden="true" />
+                    </button>
+                  )}
+                  {canEdit && (
+                    <button type="button" title={t("common.delete")}
+                            aria-label={t("common.delete")}
+                            onClick={() => done(plannerApi.delTask(k.id))}>
+                      <i className="fa-solid fa-trash" aria-hidden="true" />
+                    </button>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="pmd__list">
+          {busy ? <span className="ek-skeleton" style={{ height: 90 }} />
+           : events.length === 0 ? <div className="pln__none">{t("adm.dash.noEvents")}</div>
+           : events.map((e) => (
+            <div key={`${e.id}-${e.startsOn}`} className="pmd__row">
+              <i className={`fa-solid ${EVENT_ICON[e.kind] || EVENT_ICON.OTHER} pmd__ico`} aria-hidden="true" />
+              <span className="pmd__t">
+                {e.title}
+                <span className="pmd__meta">
+                  {fmtDate(e.startsOn)}{e.endsOn && ` — ${fmtDate(e.endsOn)}`}
+                  {e.repeatYearly && ` · ${t("adm.dash.yearly")}`}
+                  {e.remindDays > 0 && ` · ${t("adm.dash.remindN", { n: e.remindDays })}`}
+                </span>
+              </span>
+              {canEdit && (
+                <span className="pmd__acts">
+                  <button type="button" title={t("common.edit")} aria-label={t("common.edit")}
+                          onClick={() => setForm({
+                            id: e.id, title: e.title, note: e.note || "", kind: e.kind,
+                            /* ⚠ Tahrirlashda BAZADAGI sana ochiladi, ekrandagi
+                               ko'chirilgani emas — aks holda har yilgi voqea
+                               saqlanganda joriy yilga «yopishib» qolardi. */
+                            startsOn: e.originalOn, endsOn: e.endsOn || "",
+                            repeatYearly: e.repeatYearly, remindDays: e.remindDays,
+                          })}>
+                    <i className="fa-solid fa-pen" aria-hidden="true" />
+                  </button>
+                  <button type="button" title={t("common.delete")} aria-label={t("common.delete")}
+                          onClick={() => done(plannerApi.delEvent(e.id))}>
+                    <i className="fa-solid fa-trash" aria-hidden="true" />
+                  </button>
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="pmd__form">
+          <input value={f.title} onChange={(e) => set("title", e.target.value)}
+                 placeholder={tab === "tasks" ? t("adm.dash.addTask") : t("adm.dash.addEvent")}
+                 aria-label={tab === "tasks" ? t("adm.dash.addTask") : t("adm.dash.addEvent")}
+                 maxLength={200} />
+
+          {tab === "tasks" ? (
+            <div className="pmd__grid">
+              <label>{t("adm.dash.due")}
+                <input type="date" value={f.dueOn} onChange={(e) => set("dueOn", e.target.value)} /></label>
+              <label>{t("adm.dash.priority")}
+                <select value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+                  {PRIORITIES.map((x) => <option key={x} value={x}>{t(`adm.dash.pr.${x}`)}</option>)}
+                </select></label>
+              <label>{t("adm.dash.assignee")}
+                <select value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
+                  <option value="">{t("adm.dash.wholeTeam")}</option>
+                  {admins.map((a) => <option key={a.id} value={a.id}>{a.fullName || a.username}</option>)}
+                </select></label>
+              {/* ⚠ Do'kon — IXTIYORIY HAVOLA, egalik emas: vazifa
+                  qaysi do'kon haqidaligini aytadi va uni ko'radigan
+                  jamoani cheklamaydi. */}
+              <label>{t("adm.dash.aboutShop")}
+                <select value={f.shopId} onChange={(e) => set("shopId", e.target.value)}>
+                  <option value="">{t("adm.dash.noShop")}</option>
+                  {(shops || []).map((x) => (
+                    <option key={x.id} value={x.id}>{x.name}</option>
+                  ))}
+                </select></label>
+            </div>
+          ) : (
+            <div className="pmd__grid">
+              <label>{t("adm.dash.kind")}
+                <select value={f.kind} onChange={(e) => set("kind", e.target.value)}>
+                  {EVENT_KINDS.map((x) => <option key={x} value={x}>{t(`adm.dash.ek.${x}`)}</option>)}
+                </select></label>
+              <label>{t("adm.dash.from")}
+                <input type="date" value={f.startsOn} onChange={(e) => set("startsOn", e.target.value)} /></label>
+              <label>{t("adm.dash.to")}
+                <input type="date" value={f.endsOn} onChange={(e) => set("endsOn", e.target.value)} /></label>
+              <label>{t("adm.dash.remind")}
+                <input type="number" min="0" max="60" value={f.remindDays}
+                       onChange={(e) => set("remindDays", e.target.value)} /></label>
+              <label className="pmd__chk">
+                <input type="checkbox" checked={f.repeatYearly}
+                       onChange={(e) => set("repeatYearly", e.target.checked)} />
+                {t("adm.dash.yearly")}
+              </label>
+            </div>
+          )}
+
+          <div className="pmd__save">
+            {f.id && (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setForm(null)}>
+                {t("common.cancel")}
+              </button>
+            )}
+            <button type="button" className="btn btn-primary btn-sm"
+                    disabled={!f.title.trim() || busy} onClick={save}>
+              {f.id ? t("common.save") : t("common.add")}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    TEZKOR AMALLAR
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -548,6 +975,7 @@ export default function DashboardPage({ toast, user }) {
   const [at, setAt] = useState(null);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const [layout, setLayout] = useState(() => readLayout((p) => can(permissions, p)));
   const busy = useLoading(loading);
 
@@ -617,13 +1045,32 @@ export default function DashboardPage({ toast, user }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const go = useCallback((to) => { if (to) navigate(to); }, [navigate]);
+  /* ⚠ «/planner» MARSHRUT EMAS, OYNA. Jamoa rejasi uchun alohida
+     sahifa qilinmadi (sabab `PlannerModal` da), lekin ogohlantirish
+     satrlari va bloklar unga «manzil» sifatida ishora qiladi —
+     boshqa satrlar bilan bir xil ko'rinsin. Shu sababli manzil shu
+     yerda ushlanadi. */
+  const go = useCallback((to) => {
+    if (!to) return;
+    if (to === "/planner") { setPlanOpen(true); return; }
+    navigate(to);
+  }, [navigate]);
 
   /* ── Ogohlantirishlar ─────────────────────────────────────────────
      Butun tizimdan kelgan signallar bitta tartiblangan ro'yxatda —
      mantiq `ek-dash.js` da, chunki u SINALADIGAN qaror. */
+  /* ⚠ `plan` — `stats.tasks`: vazifalar bosh sahifaning so'rovi
+     ichida keladi. `PLANNER_VIEW` bo'lmagan adminda u `null` va
+     ogohlantirishlarda hech qanday satr chiqmaydi. */
   const alerts = useMemo(
-    () => buildAlerts({ stats, backup, shops, users }), [stats, backup, shops, users]);
+    () => buildAlerts({ stats, backup, shops, users, plan: stats?.tasks }),
+    [stats, backup, shops, users]);
+
+  /* Blok uchun kalendar va vazifalar BIRGA — ikkalasi bitta savolga
+     javob beradi. */
+  const plan = useMemo(
+    () => (stats ? { events: stats.events || [], tasks: stats.tasks } : null), [stats]);
+  const canPlan = can(permissions, "PLANNER_MANAGE");
 
   /* ── KPI ──────────────────────────────────────────────────────────
      ⚠ `delta` endi HAQIQIY: avvalgi 30 kun serverdan keladi (V75).
@@ -674,11 +1121,14 @@ export default function DashboardPage({ toast, user }) {
     health: () => <HealthPanel key="health" stats={stats} loading={busy} onGo={go} />,
     shops: () => <ShopsPanel key="shops" shops={shops} stats={stats} loading={loading} busy={busy} onGo={go} />,
     requests: () => <RequestsPanel key="requests" requests={requests} loading={busy} onGo={go} />,
+    plan: () => <PlanPanel key="plan" plan={plan} loading={busy} canEdit={canPlan}
+                           toast={toast} onGo={go} onOpenAll={() => setPlanOpen(true)}
+                           onChanged={() => load(true)} />,
     actions: () => <ActionsPanel key="actions" permissions={permissions} onGo={go} />,
   };
 
   /* Yonma-yon tushadigan bloklar — keng ekranda joy tejaladi. */
-  const NARROW = new Set(["changes", "health", "requests", "actions"]);
+  const NARROW = new Set(["changes", "health", "requests", "plan", "actions"]);
   const blocks = layout.filter((w) => w.on && RENDER[w.id]);
   const rows = [];
   for (const w of blocks) {
@@ -730,6 +1180,9 @@ export default function DashboardPage({ toast, user }) {
                       permissions={permissions} shops={shops} users={users} />
       <LayoutModal open={layoutOpen} onClose={() => setLayoutOpen(false)}
                    list={layout} setList={setLayout} />
+      <PlannerModal open={planOpen} onClose={() => setPlanOpen(false)}
+                    canEdit={canPlan} shops={shops} toast={toast}
+                    onChanged={() => load(true)} />
     </div>
   );
 }

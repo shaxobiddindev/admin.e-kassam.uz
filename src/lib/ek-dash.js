@@ -67,7 +67,8 @@ const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
  * mijozning muammosi; zaxirasiz bir kun esa BARCHA do'konlarning butun
  * savdo tarixini yo'qotish uchun yetarli.
  */
-export function buildAlerts({ stats = null, backup = null, shops = [], users = [] } = {}) {
+export function buildAlerts({ stats = null, backup = null, shops = [], users = [],
+                             plan = null } = {}) {
   const out = [];
   const s = stats || {};
 
@@ -139,6 +140,27 @@ export function buildAlerts({ stats = null, backup = null, shops = [], users = [
   if (blockedUsers) out.push({
     id: "blockedUsers", severity: "info", icon: "fa-user-lock",
     key: "adm.dash.attBlockedUsers", count: blockedUsers, weight: blockedUsers, to: "/users",
+  });
+
+  /* ── Jamoaning o'z ishi (V73) ─────────────────────────────────────
+     ⚠ `plan` — `stats.tasks`, chunki vazifalar bosh sahifaning
+     so'rovi ichida keladi. `PLANNER_VIEW` bo'lmagan adminda u `null`
+     va bu yerda hech qanday satr chiqmaydi: bo'lim ochilmaydigan
+     odamga «3 ta kechikkan vazifa» deyishning ma'nosi yo'q.
+
+     ⚠ KECHIKKAN VAZIFA — «warning», «critical» EMAS. Zaxira yoki
+     javobsiz ariza bilan bir qatorga qo'yilganda jamoaning ichki
+     ro'yxati mijozning muammosini pastga surib qo'yardi. */
+  const overdue = n(plan?.overdue);
+  if (overdue > 0) out.push({
+    id: "tasksOverdue", severity: "warning", icon: "fa-clipboard-check",
+    key: "adm.dash.attTasksOverdue", count: overdue, weight: overdue, to: "/planner",
+  });
+
+  const dueToday = n(plan?.dueToday);
+  if (dueToday > 0) out.push({
+    id: "tasksToday", severity: "info", icon: "fa-list-check",
+    key: "adm.dash.attTasksToday", count: dueToday, weight: dueToday, to: "/planner",
   });
 
   return sortAlerts(out);
@@ -222,8 +244,45 @@ export const WIDGETS = [
   { id: "health",   key: "adm.dash.wHealth", perm: "SHOP_VIEW" },
   { id: "shops",    key: "adm.dash.wShops",  perm: "SHOP_VIEW" },
   { id: "requests", key: "adm.dash.wRequests", perm: "CONTACT_VIEW" },
+  /* ⚠ Jamoa rejasi (V73) — `PLANNER_VIEW`. U to'rttala rolda bor,
+     ya'ni blok odatda hamma uchun ochiq; ruxsat baribir yozilgan,
+     chunki bosh admin uni bitta hisobdan olib qo'yishi mumkin. */
+  { id: "plan",     key: "adm.dash.wPlan", perm: "PLANNER_VIEW" },
   { id: "actions",  key: "adm.dash.wActions" },
 ];
+
+/* ══════════════════════════════════════════════════════════════════════
+   JAMOA REJASINING SANOQLARI (V73)
+
+   ⚠ SAHIFADA EMAS, SHU YERDA. Ular ekranga `adm.dash.ek.*`,
+   `adm.dash.pr.*` va `adm.dash.st.*` kalitlarini TUG'DIRADI: kalit
+   `t(\`adm.dash.ek.${x}\`)` ko'rinishida quriladi va sahifani o'qib
+   chiqadigan hech qanday tekshiruv uni topa olmaydi. Ro'yxat shu
+   yerda turganda esa sinov kalitlarni AYNAN shundan chiqarib
+   tekshiradi — tarjimasi unutilgan qiymat darrov ko'rinadi.
+
+   Bu xato bir marta bo'lgan: ilova panelida yettita ogohlantirish
+   kaliti tarjimasiz qolgan va uni faqat ekranga qarab payqagandik.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ⚠ `SUPPLY` YO'Q: «yetkazib berish» do'konning tushunchasi va admin
+   jamoasining kalendarida ma'nosi yo'q. Bazada qiymat qoladi (do'kon
+   kalendari bilan bitta sanoq), ya'ni eski satr ochilsa ham
+   ko'rsatiladi — shunchaki YANGISINI shu turda yaratib bo'lmaydi. */
+export const EVENT_KINDS = ["MEETING", "PAYMENT", "PROMO", "HOLIDAY", "OTHER"];
+
+/** Tarjima uchun — ekranda taklif qilinmaydiganini ham qamrab oladi. */
+export const EVENT_KINDS_ALL = [...EVENT_KINDS, "SUPPLY"];
+
+export const PRIORITIES = ["HIGH", "NORMAL", "LOW"];
+
+export const TASK_STATES = ["OPEN", "DONE", "CANCELLED"];
+
+/** Voqea turining belgisi. */
+export const EVENT_ICON = {
+  HOLIDAY: "fa-star", PROMO: "fa-bullhorn", SUPPLY: "fa-truck-ramp-box",
+  PAYMENT: "fa-money-bill-wave", MEETING: "fa-users", OTHER: "fa-calendar",
+};
 
 /** Ruxsat etilgan bloklar. `has` — `(perm) => boolean`. */
 export function allowedWidgets(has) {

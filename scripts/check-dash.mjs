@@ -81,6 +81,48 @@ const SHOPS = [
     status: "SUSPENDED", createdAt: "2025-09-01T10:00:00Z" },
 ];
 
+/* ── Jamoa rejasi (V73) ─────────────────────────────────────────────
+   ⚠ Sanalar BUGUNGA nisbatan qo'yiladi, qat'iy emas: «kechikkan»,
+   «bugungi» va «yaqin kun» tushunchalari bugungi kunga bog'liq va
+   qat'iy sana bilan sinov ertaga o'z-o'zidan yiqilardi. */
+const iso = (offset) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+};
+
+const EVENTS = [
+  { id: 51, title: "Server yangilanishi", kind: "MEETING", startsOn: iso(0),
+    endsOn: null, originalOn: iso(0), repeatYearly: false, remindDays: 0,
+    daysAway: 0, active: true, createdBy: "Bosh admin" },
+  { id: 52, title: "Domen to'lovi", kind: "PAYMENT", startsOn: iso(3),
+    endsOn: null, originalOn: iso(3), repeatYearly: false, remindDays: 5,
+    daysAway: 3, active: false, createdBy: "Bosh admin" },
+  { id: 53, title: "Kompaniya tug'ilgan kuni", kind: "HOLIDAY", startsOn: iso(9),
+    endsOn: null, originalOn: "2021-04-05", repeatYearly: true, remindDays: 3,
+    daysAway: 9, active: false, createdBy: "Bosh admin" },
+];
+
+const TASKS = [
+  { id: 61, title: "Chilonzorga obuna haqida qo'ng'iroq", note: null,
+    assigneeId: 1, assignee: "Bosh admin", shopId: 1, shopName: "Chilonzor market",
+    dueOn: iso(-2), priority: "HIGH", status: "OPEN", overdue: true, canClose: true,
+    createdBy: "Bosh admin", doneBy: null, doneAt: null, createdAt: null },
+  { id: 62, title: "Zaxira skriptini tekshirish", note: null,
+    assigneeId: null, assignee: null, shopId: null, shopName: null,
+    dueOn: iso(0), priority: "NORMAL", status: "OPEN", overdue: false, canClose: true,
+    createdBy: "Bosh admin", doneBy: null, doneAt: null, createdAt: null },
+  /* ⚠ ATAYLAB BEGONA: server bu satrda «yopa olmaysan» deydi
+     (`canClose: false`) va ekran unga bo'ysunishi kerak. Qoidani
+     ekranda qayta yozganda tugma bosilib 403 qaytarardi. */
+  { id: 63, title: "Hisobotni yuborish", note: null,
+    assigneeId: 9, assignee: "Boshqa admin", shopId: null, shopName: null,
+    dueOn: null, priority: "LOW", status: "OPEN", overdue: false, canClose: false,
+    createdBy: "Boshqa admin", doneBy: null, doneAt: null, createdAt: null },
+];
+
+const TASK_SUMMARY = { open: 3, overdue: 1, dueToday: 1, mine: 1, top: TASKS };
+
 const STATS = {
   activeShops30d: 2, totalShops: 4,
   subscriptionIncome30d: 12_400_000, salesCount30d: 1840,
@@ -94,6 +136,9 @@ const STATS = {
     { shopId: 4, lastSaleAt: null, salesCount30d: 0 },
   ],
   daily: Array.from({ length: 14 }, (_, i) => ({ day: day(i), amount: (i % 4) * 300000 })),
+  /* ⚠ Reja BOSH SAHIFANING javobi ichida keladi — alohida so'rov
+     emas. Ruxsati yo'q adminda ikkalasi ham `null` bo'ladi. */
+  events: EVENTS, tasks: TASK_SUMMARY,
 };
 
 const USERS = [
@@ -115,6 +160,7 @@ const EMPTY_STATS = {
   neverSoldShops: 0, expiredShops: 0,
   prev: { activeShops: 0, subscriptionIncome: 0, salesCount: 0, newShops: 0 },
   shops: [], daily: [],
+  events: [], tasks: { open: 0, overdue: 0, dueToday: 0, mine: 0, top: [] },
 };
 
 /* ── Sahifani ochish ────────────────────────────────────────────────── */
@@ -143,6 +189,9 @@ async function open({ shops = SHOPS, users = USERS, requests = REQUESTS,
     const map = {
       "/api/superadmin/shops/stats": stats,
       "/api/superadmin/shops": shops,
+      "/api/superadmin/planner/tasks": TASKS,
+      "/api/superadmin/planner/events": EVENTS,
+      "/api/superadmin/admins": [{ id: 1, fullName: "Bosh admin", username: "root", enabled: true }],
       "/api/superadmin/users": users,
       "/api/superadmin/backups": backup,
       "/api/contact": requests,
@@ -303,7 +352,7 @@ console.log("\n── E. Bloklarni sozlash ──");
   await page.evaluate(() => [...document.querySelectorAll(".dash__icon")].pop()?.click());
   await wait(300);
   const rows = await page.$$eval(".lay__row", (n) => n.length);
-  is(rows === 8, "sakkizta blok ro'yxatda", String(rows));
+  is(rows === 9, "to'qqizta blok ro'yxatda", String(rows));
 
   await page.evaluate(() => {
     const row = [...document.querySelectorAll(".lay__row")].find((r) => /tushum/i.test(r.textContent));
@@ -384,6 +433,158 @@ console.log("\n── J. Ruxsat ──");
   is(!titles.some((x) => /ariza/i.test(x)),
      "ruxsati yo'q blok umuman chizilmaydi", titles.join(" · "));
   is(titles.some((x) => /do'kon/i.test(x)), "ruxsati bor blok esa joyida");
+  await page.close();
+}
+
+/* ══ J2. Jamoa rejasi (V73) ════════════════════════════════════════════ */
+console.log("\n── J2. Jamoa rejasi ──");
+{
+  page = await open();
+
+  /* ── Blok ekranda ─────────────────────────────────────────────── */
+  const titles = await page.$$eval(".dpn__t", (n) => n.map((x) => x.textContent.trim()));
+  is(titles.some((x) => /jamoa rejasi/i.test(x)), "reja bloki chizildi", titles.join(" · "));
+
+  const evRows = await page.$$eval(".pln__ev .pln__row", (n) => n.length);
+  is(evRows === 3, "kalendar satrlari to'ldi", String(evRows));
+
+  const tkRows = await page.$$eval(".pln__tk .pln__row", (n) => n.length);
+  is(tkRows === 3, "vazifa satrlari to'ldi", String(tkRows));
+
+  /* ⚠ BUGUNGI voqea alohida belgilanadi: «bugun» va «3 kundan keyin»
+     bir xil ko'ringanda blokning butun ma'nosi yo'qolardi. */
+  const now = await page.$$eval(".pln__ev .pln__row[data-now]", (n) => n.length);
+  is(now === 1, "bugungi voqea ajratilgan", String(now));
+
+  const when = await page.$$eval(".pln__ev .pln__when", (n) => n.map((x) => x.textContent.trim()));
+  is(when[0] === "Bugun" && /3/.test(when[1]), "yaqinlik kun bilan yozilgan", when.join(" · "));
+
+  /* Kechikkan vazifa qizil. */
+  const badTask = await page.$$eval(".pln__tk .pln__row[data-tone='bad']", (n) => n.length);
+  is(badTask === 1, "kechikkan vazifa qizil", String(badTask));
+
+  /* ⚠ SERVER «yopa olmaysan» degan satrda tugma BO'LMASLIGI kerak.
+     Uchta vazifadan bittasi begona (`canClose: false`). */
+  const doneBtns = await page.$$eval(".pln__tk .pln__done:not(.pln__done--off)", (n) => n.length);
+  is(doneBtns === 2, "begona vazifada yopish tugmasi yo'q", `${doneBtns} ta tugma`);
+  is((await page.$$eval(".pln__done--off", (n) => n.length)) === 1,
+     "uning o'rnida bo'sh doira — satr siljimaydi");
+
+  /* ⚠ Do'kon havolasi — admin jamoasining ishi ko'pincha aniq bir
+     do'kon haqida va undan kartochkaga o'tish kerak. */
+  const shopChip = await page.$$eval(".pln__shop", (n) => n.map((x) => x.textContent.trim()));
+  is(shopChip.length === 1 && /Chilonzor/.test(shopChip[0]),
+     "vazifadagi do'kon havolasi ko'rinadi", shopChip.join(", "));
+
+  /* ── Ogohlantirishlar ro'yxatida ham ────────────────────────────
+     ⚠ Ro'yxat oltitadan keyin KESILADI, shuning uchun avval
+     «yana N ta» ochiladi. Aynan shu kesish vazifalarni pastga surib
+     qo'ygan va bu TO'G'RI: jamoaning ichki ishi mijozning
+     muammosidan keyin ko'rinishi kerak. */
+  await page.evaluate(() => {
+    const panel = [...document.querySelectorAll(".dpn")]
+      .find((p) => /e'tibor talab/i.test(p.querySelector(".dpn__t")?.textContent || ""));
+    panel?.querySelector(".dpn__more")?.click();
+  });
+  await wait(250);
+
+  const alertTxt = await page.$$eval(".alr__row .alr__txt", (n) => n.map((x) => x.textContent.trim()));
+  is(alertTxt.some((x) => /muddati o'tgan vazifa/i.test(x)),
+     "kechikkan vazifa ogohlantirishlarga tushdi", alertTxt.join(" · "));
+  is(alertTxt.some((x) => /bugungi vazifa/i.test(x)), "bugungi vazifa ham");
+
+  /* ⚠ Jamoaning ichki ishi mijozning arizasidan PASTDA turishi kerak. */
+  const iReq = alertTxt.findIndex((x) => /ariza/i.test(x));
+  const iTask = alertTxt.findIndex((x) => /muddati o'tgan vazifa/i.test(x));
+  is(iReq >= 0 && iTask > iReq, "ariza vazifadan yuqorida", `${iReq} < ${iTask}`);
+
+  /* Va kechikkan bugungisidan yuqorida — sariq ko'kdan oldin. */
+  const iToday = alertTxt.findIndex((x) => /bugungi vazifa/i.test(x));
+  is(iTask < iToday, "kechikkani bugungisidan yuqorida", `${iTask} < ${iToday}`);
+
+  await shot(page, "adm-dash-plan");
+
+  /* ── Oyna ─────────────────────────────────────────────────────── */
+  await page.evaluate(() => {
+    const b = [...document.querySelectorAll(".dpn__more")]
+      .find((x) => /hammasini/i.test(x.textContent));
+    b?.click();
+  });
+  await page.waitForSelector(".pmd__list", { timeout: 5000 });
+  is(pageErrors.length === 0, "reja oynasi xatosiz ochildi", pageErrors[0] || "");
+
+  const mdRows = await page.$$eval(".pmd__list .pmd__row", (n) => n.length);
+  is(mdRows === 3, "oynada vazifalar ro'yxati", String(mdRows));
+
+  /* Biriktirilmagan vazifa «butun jamoaga» deb yoziladi — bo'sh emas. */
+  const meta = await page.$$eval(".pmd__meta", (n) => n.map((x) => x.textContent.trim()));
+  is(meta.some((x) => /butun jamoaga/i.test(x)),
+     "egasiz vazifa «butun jamoaga» deb belgilanadi", meta.join(" · "));
+  is(meta.some((x) => /Chilonzor/.test(x)), "do'kon nomi tafsilotda ham bor");
+
+  /* Oynada ham xuddi shunday: uchta satr, ikkitasida yopish tugmasi. */
+  const mdDone = await page.$$eval(
+    ".pmd__row button", (n) => n.filter((b) => /bajarildi/i.test(b.title)).length);
+  is(mdDone === 2, "oynada ham begona vazifada tugma yo'q", `${mdDone} ta`);
+
+  /* Kalendar bo'limiga o'tish. */
+  await page.evaluate(() => {
+    const b = [...document.querySelectorAll(".pmd__tabs .seg__b")]
+      .find((x) => /kalendar/i.test(x.textContent));
+    b?.click();
+  });
+  await wait(400);
+  const evMd = await page.$$eval(".pmd__list .pmd__row", (n) => n.length);
+  is(evMd === 3, "kalendar bo'limi ham to'ldi", String(evMd));
+
+  /* ⚠ Har yilgi voqeada tahrirlash BAZADAGI sanani ochishi kerak,
+     ekrandagi ko'chirilganini emas — aks holda voqea saqlanganda
+     joriy yilga «yopishib» qolardi. */
+  await page.evaluate(() => {
+    const row = [...document.querySelectorAll(".pmd__row")]
+      .find((r) => /tug'ilgan kuni/i.test(r.textContent));
+    row?.querySelector(".pmd__acts button")?.click();
+  });
+  await wait(300);
+  const start = await page.$eval('.pmd__grid input[type="date"]', (n) => n.value);
+  is(start === "2021-04-05", "tahrirlashda bazadagi asl sana ochiladi", start);
+
+  const raw = await page.evaluate(() =>
+    (document.querySelector(".mb")?.innerText || "").match(/\b(adm|common|nav)\.[a-zA-Z]+/g) || []);
+  is(raw.length === 0, "oynada tarjimasiz kalit yo'q", raw.join(", ") || "toza");
+  await shot(page, "adm-dash-plan-modal");
+
+  await page.keyboard.press("Escape");
+  await wait(300);
+  is((await page.$(".pmd__list")) === null, "Esc oynani yopdi");
+  await page.close();
+}
+
+/* ══ J3. Reja va ruxsat ════════════════════════════════════════════════ */
+console.log("\n── J3. Reja va ruxsat ──");
+{
+  /* ⚠ `PLANNER_MANAGE` SIZ: yopish tugmasi QOLADI, qo'shish maydoni
+     esa yo'qoladi. Vazifani yopadigan odam aynan uni bajargan admin —
+     serverda ham shunday. */
+  page = await open({ permissions: ["PLANNER_VIEW"] });
+  await wait(400);
+  is((await page.$(".pln__tk")) !== null, "ko'rish ruxsati bilan blok chizildi");
+  is((await page.$(".pln__done")) !== null, "vazifani yopish tugmasi QOLADI");
+  is((await page.$(".pln__add")) === null, "qo'shish maydoni esa yo'q");
+  await page.close();
+
+  /* Ruxsati umuman yo'q admin — blok chizilmaydi. */
+  page = await open({ permissions: ["SHOP_VIEW"], stats: { ...STATS, events: null, tasks: null } });
+  await wait(400);
+  const t2 = await page.$$eval(".dpn__t", (n) => n.map((x) => x.textContent.trim()));
+  is(!t2.some((x) => /jamoa rejasi/i.test(x)), "ruxsatsiz reja bloki yo'q", t2.join(" · "));
+
+  /* ⚠ Va ogohlantirishlarda ham hech narsa chiqmaydi: bo'lim
+     ochilmaydigan odamga «1 ta kechikkan vazifa» deb turishning
+     ma'nosi yo'q. */
+  const at2 = await page.$$eval(".alr__row .alr__txt", (n) => n.map((x) => x.textContent.trim()));
+  is(!at2.some((x) => /vazifa/i.test(x)), "vazifa ogohlantirishi ham chiqmaydi", at2.join(" · "));
+  is(pageErrors.length === 0, "`null` reja sahifani yiqitmadi", pageErrors[0] || "");
   await page.close();
 }
 

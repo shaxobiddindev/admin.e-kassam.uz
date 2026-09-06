@@ -90,7 +90,12 @@ export default function App() {
             propni to'g'ridan-to'g'ri oladi (pastda). */}
         <Layout user={user}>
           <Routes>
-            <Route path="/"          element={<DashboardPage toast={toast} />} />
+            {/* ⚠ `user` UZATILADI (V75): bosh sahifa bloklarni RUXSATGA
+                qarab chizadi — arizalarni ko'ra olmaydigan adminda
+                arizalar bloki umuman bo'lmasligi kerak. Ilgari prop
+                berilmasdi va `permissions` doim `null` bo'lib,
+                tekshiruv jimgina o'chib qolardi. */}
+            <Route path="/"          element={<DashboardPage toast={toast} user={user} />} />
             <Route path="/requests"  element={<RequestsPage  toast={toast} />} />
             <Route path="/shops"     element={<ShopsPage     toast={toast} />} />
             <Route path="/users"     element={<UsersPage     toast={toast} />} />

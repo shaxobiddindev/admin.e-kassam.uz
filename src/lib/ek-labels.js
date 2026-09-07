@@ -127,6 +127,21 @@ export const AUDIT_ACTION = dict("enum.audit", {
   ADMIN_ENABLE:           { color: "green",  icon: "fa-toggle-on" },
   ADMIN_DISABLE:          { color: "yellow", icon: "fa-toggle-off" },
   ADMIN_PASSWORD_RESET:   { color: "yellow", icon: "fa-key" },
+
+  /* ══ ⚠ IKKI BOSQICHLI KIRISH VA RUXSATLAR (V82) ═══════════════════
+     Server bu beshtasini YOZADI, jadval esa ularni bilmasdi. Natija
+     shu bo'lardi: qator jurnalda turadi, lekin filtrda tanlanmaydi —
+     va bu faylning o'z qoidasi bo'yicha «ko'rinmaydigan amal = yo'q
+     amal».
+
+     ⚠ Aynan shu qatorlar bo'yicha savol beriladi: «kim 2FA ni
+     o'chirdi?», «ruxsatni kim kengaytirdi?». Ular xavfsizlikka
+     tegadi, shuning uchun rangi ham betaraf emas. */
+  ADMIN_2FA_ENABLE:       { color: "green",  icon: "fa-shield-halved" },
+  ADMIN_2FA_DISABLE:      { color: "red",    icon: "fa-shield-slash" },
+  ADMIN_2FA_RECOVERY:     { color: "yellow", icon: "fa-life-ring" },
+  ADMIN_2FA_RECOVERY_RESET: { color: "yellow", icon: "fa-arrows-rotate" },
+  ADMIN_PERMISSION_CHANGE:  { color: "red",  icon: "fa-user-lock" },
   ANNOUNCEMENT_CHANGE:    { icon: "fa-bullhorn" },
   SHOP_DIRECTIONS_CHANGE: { icon: "fa-compass" },
   SHOP_FEATURE_CHANGE:    { icon: "fa-sliders" },
@@ -162,6 +177,10 @@ export const AUDIT_ACTION = dict("enum.audit", {
 
   /* ── Mijoz ── */
   CUSTOMER_DEBT_ADJUST:   { color: "yellow", icon: "fa-hand-holding-dollar" },
+  /* ⚠ QIZIL: bu amal YASHIKDAN NAQD CHIQARADI (api V102). Do'kon
+     jurnalida u allaqachon ajratib ko'rsatiladi; admin panelida esa
+     nomsiz qolib ketgan edi. */
+  CREDIT_PAYMENT_REVERSE: { color: "red",    icon: "fa-rotate-left" },
   CUSTOMER_ARCHIVE:       { icon: "fa-box-archive" },
   LOYALTY_TIER_CHANGE:    { icon: "fa-medal" },
   BONUS_SPEND:            { color: "blue",   icon: "fa-coins" },

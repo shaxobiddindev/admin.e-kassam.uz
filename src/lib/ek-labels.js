@@ -153,6 +153,12 @@ export const AUDIT_ACTION = dict("enum.audit", {
      suiiste'mol qilinadigan amal» deb belgilangan. */
   SALE_CANCEL:            { color: "red",    icon: "fa-ban" },
   SALE_RETURN:            { color: "yellow", icon: "fa-rotate-left" },
+  /* ⚠ TUZATUVCHI CHEK — QIZIL, qaytarish kabi sariq emas.
+     Qaytarish va bekor qilish MAVJUD chekka tayanadi: summa undan
+     olinadi va oshirib bo'lmaydi. Tuzatishda esa summani ODAM
+     yozadi — bu tizimdagi yagona joy, bir kishi hisobotdagi
+     tushumni o'zi yozgan raqamga o'zgartira oladi. */
+  SALE_CORRECTION:        { color: "red",    icon: "fa-file-pen" },
   CART_ABANDONED:         { color: "yellow", icon: "fa-cart-arrow-down" },
   SHIFT_CLOSE:            { color: "yellow", icon: "fa-lock" },
   CASH_MOVEMENT:          { color: "yellow", icon: "fa-money-bill-transfer" },

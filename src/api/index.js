@@ -115,6 +115,29 @@ export const shopApi = {
   delete:  (id)       => req(`/superadmin/shops/${id}`, { method: "DELETE" }),
   // ⚠ `PATCH /shops/{id}/status` QO'SHILMAYDI — backendda bunday endpoint
   // yo'q va hech qachon bo'lmagan. Holat `update` (PUT) orqali yuboriladi.
+
+  /* ══ FISKAL REJIM (V81) ═════════════════════════════════════════════
+     ⚠ Bu tizimdagi YAGONA sozlama bo'lib, u yoqilganda do'konning
+     KASSASI TO'XTASHI mumkin: rekvizit yoki tayyor kassa bo'lmasa
+     server har sotuvni rad etadi. Shuning uchun u do'kon egasida
+     emas, shu yerda.
+
+     Server yoqishdan oldin uchta rekvizit va kamida bitta tayyor
+     kassa borligini tekshiradi va yetishmasa rad etadi — ya'ni bu
+     tugma xato bosilganda ham do'konni o'ldirmaydi. */
+  setFiscalEnabled: (id, value) =>
+    req(`/superadmin/shops/${id}/fiscal-enabled?value=${value}`, { method: "PATCH" }),
+
+  /* Rekvizitlar. ⚠ Bo'sh maydon ham YUBORILADI: server bo'sh satrni
+     «tozalash» deb o'qiydi va aks holda noto'g'ri kiritilgan STIRni
+     o'chirish yo'li qolmasdi. */
+  setFiscalRequisites: (id, { tin, tinType, fiscalAddress, commissionAgentTin }) => {
+    const q = new URLSearchParams({
+      tin: tin ?? "", tinType: tinType ?? "",
+      fiscalAddress: fiscalAddress ?? "", commissionAgentTin: commissionAgentTin ?? "",
+    });
+    return req(`/superadmin/shops/${id}/fiscal-requisites?${q}`, { method: "PATCH" });
+  },
 };
 
 // ── Xizmat yo'nalishlari va interfeys modullari (V49) ───────────

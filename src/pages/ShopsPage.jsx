@@ -12,6 +12,7 @@ import { useLoading } from "../lib/use-loading";
 import { SkeletonList } from "../components/ek/Loading";
 import ExportButtons from "../components/ExportButtons";
 import ShopFeaturesModal from "../components/ShopFeaturesModal";
+import ShopFiscalModal from "../components/ShopFiscalModal";
 import DirectionPicker from "../components/DirectionPicker";
 import { isoDate } from "../utils/export";
 import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
@@ -364,6 +365,23 @@ export default function ShopsPage({ toast }) {
                               onClick={() => setModal({ type:"features", shop })}>
                               <i className="fa-solid fa-toggle-on" />
                             </button>
+                            {/* FISKAL REJIM (V81).
+                                ⚠ Modullardan ALOHIDA tugma: modul —
+                                «bu bo'lim ko'rinadimi», fiskal rejim esa
+                                «chek soliqqa ketadimi». Ikkinchisi
+                                noto'g'ri yoqilsa do'konning kassasi
+                                to'xtaydi, birinchisi esa faqat menyuni
+                                o'zgartiradi.
+
+                                ⚠ Yoqilgan do'kon ALOHIDA ko'rinadi:
+                                yuzta do'kon orasidan qaysi biri fiskal
+                                rejimda ekanini bilish uchun har birini
+                                ochib chiqish kerak bo'lardi. */}
+                            <button className={`bic ${shop.fiscalEnabled ? "b-green" : "b-blue"}`}
+                              title={t("adm.fiscal.action")}
+                              onClick={() => setModal({ type:"fiscal", shop })}>
+                              <i className="fa-solid fa-receipt" />
+                            </button>
                             <button className="bic b-blue" title={t("common.edit")}
                               onClick={() => setModal({ type:"edit", shop })}>
                               <i className="fa-solid fa-pen" />
@@ -409,6 +427,13 @@ export default function ShopsPage({ toast }) {
       )}
       {modal?.type === "features" && (
         <ShopFeaturesModal shop={modal.shop} onClose={() => setModal(null)}
+          onSaved={load} toast={toast} />
+      )}
+      {/* FISKAL REJIM (V81) — modullardan alohida oyna: modul menyuni
+          o'zgartiradi, fiskal rejim esa chekni soliqqa jo'natadi va
+          noto'g'ri yoqilsa kassani to'xtatadi. */}
+      {modal?.type === "fiscal" && (
+        <ShopFiscalModal shop={modal.shop} onClose={() => setModal(null)}
           onSaved={load} toast={toast} />
       )}
     </div>

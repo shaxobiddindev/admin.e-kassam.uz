@@ -17,6 +17,7 @@ import {
   readLayout, saveLayout, move, toggle,
   EVENT_ICON, EVENT_KINDS, PRIORITIES, TASK_STATES,
 } from "../lib/ek-dash";
+import { asArray } from "../lib/ek-array";
 
 /* ══════════════════════════════════════════════════════════════════════════
    SUPERADMIN BOSH SAHIFASI — boshqaruv paneli (V75)
@@ -652,12 +653,12 @@ function PlannerModal({ open, onClose, canEdit, shops, toast, onChanged }) {
   const load = useCallback(() => {
     setBusy(true);
     Promise.all([
-      plannerApi.tasks(status).then((r) => r.data || []).catch(() => []),
+      plannerApi.tasks(status).then((r) => asArray(r.data)).catch(() => []),
       /* ⚠ Bir YILLIK oyna: bosh sahifadagi blok ikki haftani
          ko'rsatadi, bu yerda esa kelasi bayramlar ham ko'rinishi
          kerak — aks holda ularni kiritganini tekshirib bo'lmasdi. */
       plannerApi.events(null, isoDay(new Date(Date.now() + 365 * 864e5)))
-        .then((r) => r.data || []).catch(() => []),
+        .then((r) => asArray(r.data)).catch(() => []),
     ]).then(([tk, ev]) => { setTasks(tk); setEvents(ev); }).finally(() => setBusy(false));
   }, [status]);
 
@@ -671,7 +672,7 @@ function PlannerModal({ open, onClose, canEdit, shops, toast, onChanged }) {
   useEffect(() => {
     if (!open || !canEdit || admins.length) return;
     adminApi.getAll()
-      .then((r) => setAdmins((r.data || []).filter((a) => a.enabled)))
+      .then((r) => setAdmins((asArray(r.data)).filter((a) => a.enabled)))
       .catch(() => setAdmins([]));
   }, [open, canEdit, admins.length]);
 
@@ -1002,9 +1003,9 @@ export default function DashboardPage({ toast, user }) {
       shopApi.stats(), backupApi.status(),
     ]).then((res) => {
       const [s, u, c, st, bk] = res;
-      if (s.status === "fulfilled") setShops(s.value?.data || []);
-      if (u.status === "fulfilled") setUsers(u.value?.data || []);
-      if (c.status === "fulfilled") setRequests(c.value?.data || []);
+      if (s.status === "fulfilled") setShops(asArray(s.value?.data));
+      if (u.status === "fulfilled") setUsers(asArray(u.value?.data));
+      if (c.status === "fulfilled") setRequests(asArray(c.value?.data));
       if (st.status === "fulfilled") setStats(st.value?.data || null);
       if (bk.status === "fulfilled") setBackup(bk.value?.data || null);
       setAt(new Date());

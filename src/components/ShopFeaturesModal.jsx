@@ -5,6 +5,7 @@ import Modal from "./Modal";
 import { Badge } from "./ui";
 import { Spinner, SkeletonList } from "./ek/Loading";
 import DirectionPicker from "./DirectionPicker";
+import { asArray } from "../lib/ek-array";
 
 /* ══════════════════════════════════════════════════════════════════════════
    DO'KON YO'NALISHLARI VA MODULLARI (V49)
@@ -51,8 +52,8 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
       .then(([f, d]) => {
         if (!alive) return;
         setState(f.data || null);
-        setDraft(new Set(f.data?.directions || []));
-        setCatalog(d.data || []);
+        setDraft(new Set(asArray(f.data?.directions)));
+        setCatalog(asArray(d.data));
       })
       .catch((e) => toast.error(e.message))
       .finally(() => alive && setLoading(false));
@@ -76,7 +77,7 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
     try {
       const res = await featureApi.setDirections(shop.id, [...draft]);
       setState(res.data || null);
-      setDraft(new Set(res.data?.directions || []));
+      setDraft(new Set(asArray(res.data?.directions)));
       toast.success(t("adm.features.dirsSaved"));
       onSaved?.();
     } catch (e) { toast.error(e.message); }

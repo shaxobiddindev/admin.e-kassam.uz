@@ -4,6 +4,7 @@ import { useT } from "../lib/ek-i18n";
 import { twoFactorApi } from "../api";
 import { useConfirm } from "../context/ConfirmProvider";
 import { OtpField } from "./ek/EkFields";
+import { asArray } from "../lib/ek-array";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Ikki bosqichli kirish (2FA) — superadmin hisobi uchun.
@@ -70,7 +71,7 @@ export default function TwoFactorCard({ toast }) {
     setBusy(true);
     try {
       const r = await twoFactorApi.confirm(code.trim());
-      setCodes(r.data || []);
+      setCodes(asArray(r.data));
       setSetup(null);
       setCode("");
       await load();
@@ -115,7 +116,7 @@ export default function TwoFactorCard({ toast }) {
     setBusy(true);
     try {
       const r = await twoFactorApi.regenerateCodes(regenCode.trim());
-      setCodes(r.data || []);
+      setCodes(asArray(r.data));
       setRegenCode("");
       await load();
       toast?.success?.(r.message || t("twofa.regenDone"));

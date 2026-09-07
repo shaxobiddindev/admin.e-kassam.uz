@@ -8,6 +8,7 @@ import { useConfirm } from "../context/ConfirmProvider";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
+import { asArray } from "../lib/ek-array";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Arizalar — landing sahifadagi "Demo so'rash" formasidan kelgan so'rovlar.
@@ -38,7 +39,7 @@ export default function RequestsPage({ toast }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setItems((await contactApi.getAll()).data || []); }
+    try { setItems(asArray((await contactApi.getAll()).data)); }
     catch (e) { toast.error(`${t("common.loadFailed")}: ${e.message}`); }
     finally { setLoading(false); }
   }, []);

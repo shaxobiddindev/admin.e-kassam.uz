@@ -12,6 +12,7 @@ import { NameField, UsernameField, PhoneField, EmailField } from "../components/
 import { phoneInput } from "../lib/ek-input";
 import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
+import { asArray } from "../lib/ek-array";
 
 /* ══════════════════════════════════════════════════════════════════════════
    ADMIN HISOBLARI — faqat bosh admin (V50)
@@ -63,8 +64,8 @@ export default function AdminsPage({ toast, user }) {
     setLoading(true);
     try {
       const [a, p] = await Promise.all([adminApi.getAll(), adminApi.permissions()]);
-      setAdmins(a.data || []);
-      setPerms(p.data || []);
+      setAdmins(asArray(a.data));
+      setPerms(asArray(p.data));
     } catch (e) {
       toast.error(e.message);
     } finally {

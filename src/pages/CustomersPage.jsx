@@ -8,6 +8,7 @@ import ExportButtons from "../components/ExportButtons";
 import { groupDigits } from "../lib/ek-format";
 import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
+import { asArray } from "../lib/ek-array";
 
 /* ══════════════════════════════════════════════════════════════════════════
    MIJOZLAR — DO'KON BO'YICHA FAQAT SON (V50)
@@ -48,7 +49,7 @@ export default function CustomersPage({ toast }) {
   useEffect(() => {
     setLoading(true);
     customerApi.countsByShop()
-      .then((r) => setRows(r.data || []))
+      .then((r) => setRows(asArray(r.data)))
       .catch((e) => toast.error(t("adm.customers.loadFailed", { msg: e.message })))
       .finally(() => setLoading(false));
   }, []);

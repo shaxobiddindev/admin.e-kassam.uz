@@ -12,6 +12,7 @@ import ExportButtons from "../components/ExportButtons";
 import { NameField, UsernameField } from "../components/ek/EkFields";
 import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
+import { asArray } from "../lib/ek-array";
 
 export default function UsersPage({ toast }) {
   const { t } = useT();
@@ -29,7 +30,7 @@ export default function UsersPage({ toast }) {
 
   useEffect(() => {
     shopApi.getAll()
-      .then(r => { const l = r.data || []; setShops(l); if (l.length) setSelShop(l[0]); })
+      .then(r => { const l = asArray(r.data); setShops(l); if (l.length) setSelShop(l[0]); })
       .catch(e => toast.error(e.message))
       .finally(() => setShopsLoading(false));
   }, []);
@@ -38,7 +39,7 @@ export default function UsersPage({ toast }) {
     if (!shop) return;
     setLoading(true);
     userApi.getByShop(shop.id)
-      .then(r => setUsers(r.data || []))
+      .then(r => setUsers(asArray(r.data)))
       .catch(e => toast.error(e.message))
       .finally(() => setLoading(false));
   }, []);

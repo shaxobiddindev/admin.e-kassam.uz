@@ -19,6 +19,7 @@ import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../co
 import { phoneInput } from "../lib/ek-input";
 import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
+import { asArray } from "../lib/ek-array";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -65,12 +66,12 @@ export default function ShopsPage({ toast }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setShops((await shopApi.getAll()).data || []); }
+    try { setShops(asArray((await shopApi.getAll()).data)); }
     catch (e) { toast.error(e.message); }
     finally { setLoading(false); }
 
     try {
-      const rows = (await shopApi.stats()).data?.shops || [];
+      const rows = asArray((await shopApi.stats()).data?.shops);
       setStats(Object.fromEntries(rows.map(r => [r.shopId, r])));
     } catch (_) { /* statistika ixtiyoriy — ro'yxatni to'sib qo'ymaydi */ }
   }, []);
@@ -457,12 +458,12 @@ function AddShopModal({ onClose, onSaved, toast }) {
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   useEffect(() => {
-    shopApi.getAll().then(res => setShops(res.data || [])).catch(() => {});
+    shopApi.getAll().then(res => setShops(asArray(res.data))).catch(() => {});
     /* ⚠ Yo'nalishlar ro'yxati YIQILSA forma baribir ochiladi: yo'nalish
        majburiy emas va usiz yaratilgan do'konda hamma modul ochiq
        qoladi. Ya'ni bu so'rovning yiqilishi do'kon ochishga to'sqinlik
        qilmasligi kerak. */
-    featureApi.directions().then(res => setDirCatalog(res.data || [])).catch(() => {});
+    featureApi.directions().then(res => setDirCatalog(asArray(res.data))).catch(() => {});
   }, []);
 
   const toggleDir = (key) => setDirs((prev) => {
@@ -631,7 +632,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
 
   const load = async () => {
     setLoading(true);
-    try { setUsers((await userApi.getByShop(shop.id)).data || []); }
+    try { setUsers(asArray((await userApi.getByShop(shop.id)).data)); }
     catch (e) { toast.error(e.message); }
     finally { setLoading(false); }
   };
@@ -892,7 +893,7 @@ function BillingModal({ shop, onClose, onSaved, toast }) {
 
   useEffect(() => {
     shopApi.payments(shop.id)
-      .then(r => setItems(r.data || []))
+      .then(r => setItems(asArray(r.data)))
       .catch(e => toast.error(e.message))
       .finally(() => setBusy(false));
   }, []);

@@ -163,6 +163,12 @@ export const AUDIT_ACTION = dict("enum.audit", {
   SHIFT_CLOSE:            { color: "yellow", icon: "fa-lock" },
   CASH_MOVEMENT:          { color: "yellow", icon: "fa-money-bill-transfer" },
   STORE_SWITCH:           { color: "yellow", icon: "fa-shuffle" },
+  /* Kassir smena ichida PIN bilan almashdi (V99) — `LOGIN` dan
+     ATAYLAB ajratilgan: kassadagi kamomad tekshirilganda aynan shu
+     farq kerak bo'ladi, kim kimni almashtirgani. */
+  STAFF_PIN_SWITCH:       { color: "yellow", icon: "fa-user-clock" },
+  STAFF_PIN_SET:          { color: "gray",   icon: "fa-key" },
+  STAFF_PIN_CLEAR:        { color: "red",    icon: "fa-key" },
 
   /* ── Tovar ── */
   /* ⚠ QIZIL, garchi ko'pincha zararsiz bo'lsa ham. Tovar qoldiqsiz va

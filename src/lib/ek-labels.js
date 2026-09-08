@@ -164,6 +164,14 @@ export const AUDIT_ACTION = dict("enum.audit", {
   CASH_MOVEMENT:          { color: "yellow", icon: "fa-money-bill-transfer" },
   STORE_SWITCH:           { color: "yellow", icon: "fa-shuffle" },
 
+  /* ── Tovar ── */
+  /* ⚠ QIZIL, garchi ko'pincha zararsiz bo'lsa ham. Tovar qoldiqsiz va
+     sotuvsiz bo'lsa haqiqatan o'chiriladi; qolganda esa arxivga
+     tushadi. Jurnalda ikkalasi bitta amal — chunki so'ragan odam
+     uchun ular bitta harakat edi va u qaysi biri bo'lganini shu
+     yerdan bilishi kerak. */
+  PRODUCT_DELETE:         { color: "red",    icon: "fa-trash" },
+
   /* ── Narx ── */
   PRICE_CHANGE:           { color: "yellow", icon: "fa-tag" },
   PRICE_BULK_CHANGE:      { color: "yellow", icon: "fa-tags" },

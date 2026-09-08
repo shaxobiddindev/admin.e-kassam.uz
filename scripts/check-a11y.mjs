@@ -40,7 +40,7 @@ const CHROME = process.env.CHROME_PATH
 /* Tekshiriladigan ekranlar. Kirish talab qilinmaydigan holat — SPA
    token yo'q bo'lsa kirish ekranini chizadi; shuning uchun `localStorage`
    ga soxta sessiya qo'yiladi va API javoblari bo'sh qaytariladi. */
-const ROUTES = ["/", "/shops", "/requests", "/users", "/settings"];
+const ROUTES = ["/", "/shops", "/requests", "/users", "/settings", "/catalog"];
 
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css",
                ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp",
@@ -108,8 +108,39 @@ for (const theme of ["light", "dark"]) {
     localStorage.setItem("ek_lang", "uz");
   });
   await page.evaluateOnNewDocument((t) => localStorage.setItem("ek_theme", t), theme);
+
+  /* ══ SAHIFA UMUMAN CHIZILDIMI ══════════════════════════════════════
+     ⚠ BU TEKSHIRUV a11y DAN OLDIN TURADI va sababi haqiqiy xato:
+     `App.jsx` ga yangi sahifa qo'shilganda `import` qatori tushib
+     qolgan edi. `vite build` o'tdi (u brauzerda ishlaydigan nomni
+     tekshirmaydi), a11y esa BEShTA yo'lda «buzilish: 0» dedi —
+     chunki oq ekranda tekshiradigan hech narsa yo'q va axe hech
+     nima topmaydi. Xatoni faqat `check-dash` ushladi, u ham
+     tasodifan: unda `.dash` kutilardi.
+
+     Ya'ni yashil belgi «sahifa yaxshi» degani emas, «yomon joy
+     topilmadi» degani edi. Endi TIRIKLIK alohida tekshiriladi. */
+  const crashes = [];
+  page.on("pageerror", (e) => crashes.push(e.message));
+
   await page.goto(`http://127.0.0.1:${PORT}${route}`, { waitUntil: "networkidle2", timeout: 30_000 });
   await new Promise((r) => setTimeout(r, 1200));
+
+  if (crashes.length) {
+    bad++;
+    console.log(`  ❌ ${route} [${theme}]  — sahifa yiqildi: ${crashes[0]}`);
+    await page.close();
+    continue;
+  }
+  /* Bo'sh ekran — istisnosiz ham bo'ladi (`return null`). `.page`
+     ichida matn bormi, shuni so'raymiz. */
+  const text = await page.evaluate(() => (document.body.innerText || "").trim().length);
+  if (text < 20) {
+    bad++;
+    console.log(`  ❌ ${route} [${theme}]  — ekranda matn yo'q (${text} belgi)`);
+    await page.close();
+    continue;
+  }
 
   await page.evaluate(axeSource);
   const { violations } = await page.evaluate(async () =>

@@ -44,6 +44,14 @@ export const NAV = [
     // kerak bo'lganda topilishi oson joyda.
     { id: "audit",     path: "/audit",     key: "nav.audit",     icon: "fa-clipboard-list",  perm: "AUDIT_VIEW" },
   ]},
+  /* ⚠ UMUMIY KATALOG — ALOHIDA BO'LIM (V90). U «Tizim boshqaruvi»
+     ichiga tushmadi, chunki qolgan bandlar MIJOZLARIMIZ haqida
+     (do'kon, xodim, jurnal), bu esa BARCHA do'konlar ishlatadigan
+     yagona tovar bazasi haqida. Bu yerdagi bitta tasdiq minglab
+     do'konning katalogiga tegadi. */
+  { sec: "nav.section.catalog", items: [
+    { id: "catalog",   path: "/catalog",   key: "nav.catalog",   icon: "fa-boxes-stacked",   perm: "CATALOG_MODERATE" },
+  ]},
   /* ⚠ ADMINLAR — ALOHIDA BO'LIM va u FAQAT bosh adminda ko'rinadi
      (`ADMIN_VIEW` hech kimga berilmaydi). Uni "Tizim boshqaruvi" ichiga
      qo'shish mumkin edi, lekin bu bo'lim boshqa toifadagi ish: qolgan

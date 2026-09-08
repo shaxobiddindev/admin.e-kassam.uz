@@ -325,3 +325,50 @@ export const customerApi = {
   /** Do'kon bo'yicha mijozlar soni. Shaxsiy ma'lumot qaytmaydi. */
   countsByShop: () => req("/superadmin/customers"),
 };
+
+/* ══════════════════════════════════════════════════════════════════════
+   UMUMIY KATALOG (V90)
+
+   ⚠ BU `/catalog/**` EMAS. Do'kon ilovasi `/catalog/global/**` ga
+   boradi va u yerda faqat TASDIQLANGAN yozuvlarni ko'radi. Admin
+   yo'li boshqa (`/admin/catalog/**`) va u HAMMASINI ko'radi —
+   tasdiq kutayotganini ham, rad etilganini ham. Ikkalasini bitta
+   yo'lga qo'shish tasdiqlanmagan yozuvni do'konga sizdirishning eng
+   qisqa yo'li bo'lardi.
+
+   ⚠ O'CHIRISH YO'Q va bo'lmaydi: yozuvni do'konlar allaqachon o'z
+   katalogiga olgan bo'lishi mumkin. Uning o'rniga `active: false`
+   (yangi importlarda ko'rinmaydi, olganlarda qoladi).
+   ══════════════════════════════════════════════════════════════════════ */
+export const catalogApi = {
+  /* ── Kategoriyalar ─────────────────────────────────────────── */
+  categories:   ()         => req("/admin/catalog/categories"),
+  addCategory:  (data)     => req("/admin/catalog/categories",       { method: "POST", ...body(data) }),
+  editCategory: (id, data) => req(`/admin/catalog/categories/${id}`, { method: "PUT",  ...body(data) }),
+  /* Serverda: ichida tovar bo'lsa o'chirilmaydi, faqat o'chiriladi
+     (`active: false`). Javob bir xil — front farqni bilmaydi. */
+  delCategory:  (id)       => req(`/admin/catalog/categories/${id}`, { method: "DELETE" }),
+
+  /* ── Tovarlar ──────────────────────────────────────────────── */
+  products: ({ status, businessType, categoryId, search, page = 0, size = 50 } = {}) => {
+    const q = new URLSearchParams();
+    if (status)       q.set("status", status);
+    if (businessType) q.set("businessType", businessType);
+    if (categoryId)   q.set("categoryId", categoryId);
+    if (search)       q.set("search", search);
+    q.set("page", page);
+    q.set("size", size);
+    return req(`/admin/catalog/products?${q}`);
+  },
+  addProduct:  (data)     => req("/admin/catalog/products",       { method: "POST", ...body(data) }),
+  editProduct: (id, data) => req(`/admin/catalog/products/${id}`, { method: "PUT",  ...body(data) }),
+
+  /* ── Moderatsiya ───────────────────────────────────────────── */
+  approve: (id)         => req(`/admin/catalog/products/${id}/approve`, { method: "POST" }),
+  /* ⚠ Sabab MAJBURIY emas, lekin do'kon aynan shuni ko'radi: sababsiz
+     rad etish do'konga «nimadir noto'g'ri» degandan boshqa hech narsa
+     aytmaydi va u xuddi shu tovarni yana yuboradi. */
+  reject:  (id, reason) => req(`/admin/catalog/products/${id}/reject`,
+                               { method: "POST", ...body({ reason: reason || null }) }),
+  pendingCount: ()      => req("/admin/catalog/pending-count"),
+};

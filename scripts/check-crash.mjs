@@ -71,7 +71,7 @@ const browser = await puppeteer.launch({
 /* Admin panelining barcha bo'limlari. */
 const ROUTES = [
   "/", "/requests", "/shops", "/users", "/customers",
-  "/audit", "/admins", "/settings",
+  "/audit", "/admins", "/settings", "/catalog",
 ];
 
 let bad = 0;

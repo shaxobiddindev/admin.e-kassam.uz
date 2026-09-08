@@ -6,6 +6,7 @@ import LangSelect from "../components/ek/LangSelect";
 import { useConfirm } from "../context/ConfirmProvider";
 import TwoFactorCard from "../components/TwoFactorCard";
 import RecoveryContactsCard from "../components/RecoveryContactsCard";
+import SessionsCard from "../components/SessionsCard";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Sozlamalar — BARCHA sozlamalar uchun YAGONA joy.
@@ -133,6 +134,11 @@ export default function SettingsPage({ user, onLogout, toast }) {
           yo'qolsa, yagona yo'l — tiklash kodlari va pochtadagi
           ogohlantirishlar. Ya'ni avval manzilni qo'yish, keyin himoyani
           yoqish kerak; ekran tartibi ham shu ketma-ketlikni aytadi. */}
+      {/* ⚠ QURILMALAR RO'YXATI 2FA DAN OLDIN: «kimdir kirib qolgan»
+          degan gumon paytida birinchi qilinadigan ish — begona
+          sessiyani to'xtatish, keyin himoyani kuchaytirish. */}
+      <SessionsCard toast={toast} />
+
       <RecoveryContactsCard toast={toast} />
 
       <TwoFactorCard toast={toast} />

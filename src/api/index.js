@@ -95,6 +95,13 @@ export const authApi = {
     method: "POST",
     ...body({ refreshToken: localStorage.getItem("ek_refresh") || "" }),
   }),
+
+  /* ⚠ ADMIN SESSIYALARI (V100). Hisob tizimdagi eng qimmatli nishon,
+     lekin uning sessiyalarini ko'rib ham, to'xtatib ham bo'lmasdi:
+     parol bir marta oshkor bo'lsa, begona odam istagancha qurilmadan
+     kirib turaverar va haqiqiy admin buni hech qachon bilmasdi. */
+  sessions:      ()  => req("/auth/admin/sessions"),
+  revokeOthers:  ()  => req("/auth/admin/sessions/revoke-others", { method: "POST" }),
 };
 
 // ── Do'konlar ───────────────────────────────────────────────────

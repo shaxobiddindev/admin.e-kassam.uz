@@ -1054,3 +1054,17 @@ button.stk__c:hover { background: var(--bg-hover); }
 }
 .pmd__grid .pmd__chk input { padding: 0; }
 .pmd__save { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ══ KIRGAN QURILMALAR (V100) ════════════════════════════════════════ */
+.ses-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ses-row {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--border, rgba(127,127,127,.25));
+}
+/* Joriy qurilma ajralib tursin — admin qaysi qator o'ziniki ekanini
+   bir qarashda ko'rishi kerak. */
+.ses-row.is-current { border-color: var(--ok, #2E9E5B); }
+.ses-row__main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ses-row__ua { font-weight: 700; font-size: 13px; }
+.ses-row__meta { font-size: 12px; opacity: .7; }

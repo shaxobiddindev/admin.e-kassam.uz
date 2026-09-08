@@ -55,8 +55,36 @@ for (const [, key, raw] of rows) {
   }
 }
 
+/* ══ TAKRORLANGAN KALIT (V105) ═══════════════════════════════════════
+   ⚠ Obyekt literalida bir kalit ikki marta yozilsa, JavaScript XATO
+   BERMAYDI — KEYINGISI oldingisini jimgina bosadi. Ya'ni tarjimon
+   yozgan matn ekranga umuman chiqmaydi va buni bilishning yagona yo'li
+   ekranga qarab, boshqa matn turganini payqash.
+
+   ⚠ TEKSHIRUV TIL BLOKI BO'YICHA: bu faylda `uz`, `ru`, `en` uchta
+   obyekt yonma-yon turadi, ya'ni har kalit tabiiy ravishda uch marta
+   uchraydi. Butun fayl bo'yicha sanash har kalitni «takror» deb
+   ko'rsatardi.
+
+   Ilovada (`app`) shu tekshiruv 15 ta takrorni topdi, bu yerda 6 ta. */
+const blocks = [...src.matchAll(/^const (uz|ru|en) = \{$/gm)];
+for (let i = 0; i < blocks.length; i++) {
+  const from = blocks[i].index;
+  const to = i + 1 < blocks.length ? blocks[i + 1].index : src.length;
+  const seen = new Map();
+  for (const m of src.slice(from, to).matchAll(/^\s*"([\w.]+)"\s*:/gm)) {
+    seen.set(m[1], (seen.get(m[1]) || 0) + 1);
+  }
+  for (const [k, n] of seen) {
+    if (n > 1) problems.push(`${blocks[i][1]}/${k}: kalit ${n} marta yozilgan `
+                           + "— oldingisi jimgina o'ladi");
+  }
+}
+
 if (problems.length) {
-  console.log(`❌ ${problems.length} ta yozuv murakkab:\n`);
+  /* «Murakkab» emas, «muammo»: bu ro'yxatga endi takrorlangan
+     kalitlar ham tushadi va ular soddalik masalasi emas. */
+  console.log(`❌ ${problems.length} ta muammo:\n`);
   for (const p of problems.slice(0, 30)) console.log("   " + p);
   if (problems.length > 30) console.log(`   … yana ${problems.length - 30} ta`);
   process.exit(1);

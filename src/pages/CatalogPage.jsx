@@ -4,7 +4,7 @@ import { fmtDateTime } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import Modal from "../components/Modal";
 import Select from "../components/ek/Select";
-import { Empty, Badge, FG } from "../components/ui";
+import { Empty, Badge, FG, StatCard } from "../components/ui";
 import { useConfirm } from "../context/ConfirmProvider";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
@@ -53,6 +53,7 @@ export default function CatalogPage({ toast }) {
   const [tab, setTab]         = useState("products");
   const [cats, setCats]       = useState([]);
   const [pending, setPending] = useState(0);
+  const [health, setHealth]   = useState(null);
 
   /* Kategoriyalar IKKALA bo'limga ham kerak (tovar filtri va ro'yxat),
      shuning uchun ular shu yerda — bo'lim almashganda qayta so'ralmaydi. */
@@ -64,6 +65,12 @@ export default function CatalogPage({ toast }) {
   const loadPending = useCallback(async () => {
     try { setPending(Number((await catalogApi.pendingCount()).data) || 0); }
     catch (_) { /* Sanoq — bezak. U kelmasa ham ekran ishlaydi. */ }
+    /* ⚠ SOG'LIQ PANELI BO'LMASA NAVBAT JIMGINA O'SADI. «Eng eskisi
+       necha kun kutdi» — bitta raqam, lekin u butun tizimning
+       holatini aytadi: u o'sib borayotgan bo'lsa, moderatsiya
+       ishlamayapti va do'konlar javob kutib o'tirishibdi. */
+    try { setHealth((await catalogApi.health()).data || null); }
+    catch (_) { setHealth(null); }
   }, []);
 
   useEffect(() => { loadCats(); loadPending(); }, [loadCats, loadPending]);
@@ -82,6 +89,32 @@ export default function CatalogPage({ toast }) {
           {t("adm.catalog.tabCategories")}
         </button>
       </div>
+
+      {/* ══ KATALOG SOG'LIGI ═══════════════════════════════════════
+          ⚠ «Eng eski kutayotgan» — panelning eng muhim raqami. Uni
+          sanoqdan keyin qo'ydik, chunki «12 ta kutmoqda» o'zi
+          xavotirli emas; «eng eskisi 9 kun kutdi» esa xavotirli. */}
+      {tab === "products" && health && (() => {
+        /* ⚠ RANG — «E'TIBOR BERING», «XATO» EMAS. Kutayotgan taklif
+           bo'lishi normal holat; uzoq kutayotgani esa normal emas. */
+        const warn = (on) => on
+          ? { bg: "var(--bg-warning-subtle)", color: "var(--fg-warning)" }
+          : { bg: "var(--bg-sunken)", color: "var(--fg-secondary)" };
+        const days = health.oldestPendingDays;
+        return (
+          <div className="stats">
+            <StatCard label={t("adm.catalog.hPending")} value={health.pending}
+                      icon="fa-hourglass-half" {...warn(health.pending > 0)} />
+            <StatCard label={t("adm.catalog.hOldest")}
+                      value={days == null ? "—" : t("adm.catalog.hDays", { n: days })}
+                      icon="fa-clock" {...warn((days || 0) >= 3)} />
+            <StatCard label={t("adm.catalog.hVerified")} value={health.verified}
+                      icon="fa-circle-check" {...warn(false)} />
+            <StatCard label={t("adm.catalog.hNoCategory")} value={health.verifiedWithoutCategory}
+                      icon="fa-layer-group" {...warn(health.verifiedWithoutCategory > 0)} />
+          </div>
+        );
+      })()}
 
       {tab === "products"
         ? <ProductsTab toast={toast} cats={cats} onModerated={loadPending} />
@@ -117,6 +150,9 @@ function ProductsTab({ toast, cats, onModerated }) {
   const [reject, setReject] = useState(null);   // rad etish oynasi
   /* Tasdiqlashdan oldin ko'rsatiladigan dublikat ro'yxati. */
   const [dupes,  setDupes]  = useState(null);   // null | { row, rows }
+  /* Ommaviy moderatsiya uchun belgilanganlar — `Set` id lardan. */
+  const [marked, setMarked] = useState(new Set());
+  const [bulkReject, setBulkReject] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -203,6 +239,54 @@ function ProductsTab({ toast, cats, onModerated }) {
     await doApprove(row);
   };
 
+  /* ══ OMMAVIY MODERATSIYA ═══════════════════════════════════════
+     ⚠ NAVBAT YUZLAB QATORGA O'SADI va uni bittalab bosib chiqish bir
+     necha soatlik ish. Amalda bu moderatsiyaning umuman
+     qilinmasligiga olib keladi — ya'ni do'kon uchun «yubordim,
+     javob yo'q».
+
+     ⚠ TASDIQLASHDA DUBLIKAT SO'RALMAYDI va bu ataylab: yuzta
+     yozuvning har biri uchun alohida oyna ochish ommaviy amalning
+     butun ma'nosini yo'q qilardi. Moderator dublikatdan
+     qo'rqadigan yozuvni bittalab tasdiqlaydi — o'sha yo'l joyida
+     qoldi. */
+  const markable = rows.filter((r) => r.status !== "VERIFIED" && !r.mergedIntoId);
+  const allMarked = markable.length > 0 && markable.every((r) => marked.has(r.id));
+
+  const toggleMark = (id) => setMarked((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  /* ⚠ «Hammasi» — FAQAT SHU SAHIFADAGI. Ko'rinmagan mingta yozuvni
+     tasdiqlash — odam ko'rmagan narsasini katalogga qo'yishi
+     demakdir. */
+  const toggleMarkAll = () => setMarked((prev) => {
+    const next = new Set(prev);
+    markable.forEach((r) => (allMarked ? next.delete(r.id) : next.add(r.id)));
+    return next;
+  });
+
+  const bulkApprove = async () => {
+    const ok = await confirm({
+      title: t("adm.catalog.bulkApproveTitle"),
+      message: t("adm.catalog.bulkApproveMsg", { n: marked.size }),
+      type: "info",
+      confirmText: t("adm.catalog.approve"),
+    });
+    if (!ok) return;
+    setActing("bulk");
+    try {
+      const r = (await catalogApi.approveBulk([...marked])).data || {};
+      toast.success(t("adm.catalog.bulkDone", { n: r.done || 0 }));
+      setMarked(new Set());
+      await load();
+      onModerated();
+    } catch (e) { toast.error(e.message); }
+    finally { setActing(null); }
+  };
+
   const catOptions = useMemo(() => [
     { value: "", label: t("adm.catalog.allCategories"), icon: "fa-layer-group" },
     ...cats.map((c) => ({ value: String(c.id), label: c.name, icon: "fa-tag" })),
@@ -245,11 +329,40 @@ function ProductsTab({ toast, cats, onModerated }) {
 
       <p className="set-card__hint">{t("adm.catalog.subtitle")}</p>
 
+      {/* ⚠ PANEL FAQAT BELGILANGANDA. Doim ko'rinsa, u har safar
+          «nima belgilangan edi?» degan savol tug'dirardi. */}
+      {marked.size > 0 && (
+        <div className="c-head" style={{ background: "var(--bg-sunken)", borderRadius: 10, padding: 10 }}>
+          <span style={{ fontWeight: 800, fontSize: 13 }} className="ek-num">
+            {t("adm.catalog.markedN", { n: marked.size })}
+          </span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="btn btn-outline btn-sm" onClick={() => setMarked(new Set())}>
+              {t("adm.catalog.unmarkAll")}
+            </button>
+            <button className="btn btn-outline btn-sm" disabled={acting === "bulk"}
+                    onClick={() => setBulkReject(true)}>
+              <i className="fa-solid fa-ban" aria-hidden="true" /> {t("adm.catalog.reject")}
+            </button>
+            <button className="btn btn-primary btn-sm" disabled={acting === "bulk"}
+                    onClick={bulkApprove}>
+              {acting === "bulk" ? <><Spinner /> {t("common.saving")}</>
+                                 : <><i className="fa-solid fa-check" aria-hidden="true" /> {t("adm.catalog.approve")}</>}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="tw">
         {busy ? <SkeletonTable rows={8} cols={["text", "wide", "text", "text", "narrow", "narrow"]} /> : (
           <table>
             <thead>
               <tr>
+                <th style={{ width: 34 }}>
+                  <input type="checkbox" checked={allMarked} disabled={markable.length === 0}
+                         onChange={toggleMarkAll}
+                         aria-label={t("adm.catalog.markAll")} />
+                </th>
                 <th>{t("adm.catalog.colBarcode")}</th>
                 <th>{t("adm.catalog.colName")}</th>
                 <th>{t("adm.catalog.fieldCategory")}</th>
@@ -262,6 +375,14 @@ function ProductsTab({ toast, cats, onModerated }) {
             <tbody>
               {rows.length > 0 ? rows.map((r) => (
                 <tr key={r.id} style={{ opacity: r.active === false ? 0.5 : 1 }}>
+                  <td>
+                    {/* Tasdiqlangan va birlashtirilgan yozuvlarni
+                        belgilashning ma'nosi yo'q. */}
+                    <input type="checkbox" checked={marked.has(r.id)}
+                           disabled={r.status === "VERIFIED" || !!r.mergedIntoId}
+                           onChange={() => toggleMark(r.id)}
+                           aria-label={r.name} />
+                  </td>
                   {/* ══ NAZORAT RAQAMI BAYROG'I ═══════════════════════
                       Xato terilgan barkod tasdiqlansa, u yuzlab
                       do'konga tarqaladi va ularning hech birida
@@ -294,6 +415,24 @@ function ProductsTab({ toast, cats, onModerated }) {
                         do'kondan ketma-ket axlat kelsa shu yerda ko'rinadi. */}
                     {r.createdByShopName || r.createdByShopCode || t("adm.catalog.byAdmin")}
                     <div className="ek-num" style={{ fontSize: 11 }}>{fmtDateTime(r.createdAt)}</div>
+                    {/* ⚠ QAROR EMAS, KONTEKST. «40 tasi tasdiqlangan,
+                        0 tasi rad etilgan» bilan «0 tasi tasdiqlangan,
+                        12 tasi rad etilgan» moderator uchun butunlay
+                        boshqa savol — lekin qarorni baribir u qabul
+                        qiladi. */}
+                    {r.createdByShopTrust && (
+                      <div className="ek-num" style={{ fontSize: 11 }}>
+                        <span style={{ color: "var(--fg-success)" }}>
+                          {r.createdByShopTrust.verified}
+                        </span>
+                        {" / "}
+                        <span style={{ color: r.createdByShopTrust.rejected > 0
+                                              ? "var(--fg-warning)" : "var(--fg-secondary)" }}>
+                          {r.createdByShopTrust.rejected}
+                        </span>
+                        <span style={{ marginInlineStart: 5 }}>{t("adm.catalog.trust")}</span>
+                      </div>
+                    )}
                   </td>
                   <td className="ek-num">{r.importCount ?? 0}</td>
                   <td>
@@ -343,7 +482,7 @@ function ProductsTab({ toast, cats, onModerated }) {
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={7}>
+                <tr><td colSpan={8}>
                   <Empty icon="fa-boxes-stacked"
                          title={t(status === "PENDING" ? "adm.catalog.noPending" : "adm.catalog.none")}
                          subtitle={t(status === "PENDING" ? "adm.catalog.noPendingHint" : "adm.catalog.noneHint")} />
@@ -376,6 +515,23 @@ function ProductsTab({ toast, cats, onModerated }) {
                       onSaved={() => { setForm(null); load(); onModerated(); }} />
       )}
 
+      {bulkReject && (
+        <BulkRejectModal count={marked.size} toast={toast}
+                         onClose={() => setBulkReject(false)}
+                         onDone={async (reason) => {
+                           setActing("bulk");
+                           try {
+                             const r = (await catalogApi.rejectBulk([...marked], reason)).data || {};
+                             toast.success(t("adm.catalog.bulkDone", { n: r.done || 0 }));
+                             setMarked(new Set());
+                             setBulkReject(false);
+                             await load();
+                             onModerated();
+                           } catch (e) { toast.error(e.message); }
+                           finally { setActing(null); }
+                         }} />
+      )}
+
       {dupes && (
         <DupeModal data={dupes} busy={acting === dupes.row.id}
                    onClose={() => setDupes(null)}
@@ -389,6 +545,40 @@ function ProductsTab({ toast, cats, onModerated }) {
                      onDone={() => { setReject(null); load(); onModerated(); }} />
       )}
     </div>
+  );
+}
+
+/**
+ * Ommaviy rad etish — bitta sabab bilan.
+ *
+ * ⚠ HAR BIRIGA ALOHIDA SABAB YOZISH imkoni berilsa, moderator baribir
+ * hech narsa yozmasdi: ommaviy amalning butun ma'nosi tezlikda.
+ * Sabab esa do'konga ko'rinadi va usiz do'kon xuddi shu tovarni yana
+ * yuboradi.
+ */
+function BulkRejectModal({ count, onClose, onDone }) {
+  const { t } = useT();
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => { setBusy(true); await onDone(reason.trim()); setBusy(false); };
+
+  return (
+    <Modal title={t("adm.catalog.bulkRejectTitle", { n: count })} onClose={onClose}
+           footer={
+             <>
+               <button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
+               <button className="btn btn-danger btn-sm" onClick={send} disabled={busy}>
+                 {busy ? <><Spinner /> {t("common.saving")}</>
+                       : <><i className="fa-solid fa-ban" aria-hidden="true" /> {t("adm.catalog.reject")}</>}
+               </button>
+             </>
+           }>
+      <FG label={t("adm.catalog.rejectReason")} hint={t("adm.catalog.bulkRejectHint")}>
+        <textarea className="fi" rows={3} maxLength={500} autoFocus
+                  value={reason} onChange={(e) => setReason(e.target.value)} />
+      </FG>
+    </Modal>
   );
 }
 

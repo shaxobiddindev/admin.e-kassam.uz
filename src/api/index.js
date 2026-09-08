@@ -385,4 +385,16 @@ export const catalogApi = {
      Katalogdan esa u yo'qoladi — dublikat qaytadan tug'ilmasin. */
   merge: (id, targetId) => req(`/admin/catalog/products/${id}/merge`,
                                { method: "POST", ...body({ targetId }) }),
+
+  /* ⚠ NAVBAT YUZLAB QATORGA O'SADI va uni bittalab bosib chiqish bir
+     necha soatlik ish — amalda bu moderatsiyaning umuman
+     qilinmasligiga olib keladi. */
+  approveBulk: (ids)         => req("/admin/catalog/products/approve-bulk",
+                                    { method: "POST", ...body({ ids }) }),
+  rejectBulk:  (ids, reason) => req("/admin/catalog/products/reject-bulk",
+                                    { method: "POST", ...body({ ids, reason: reason || null }) }),
+
+  /* ⚠ Bu panel bo'lmasa navbat JIMGINA o'sadi. «Eng eskisi necha kun
+     kutdi» — bitta raqam, lekin u butun tizimning holatini aytadi. */
+  health: () => req("/admin/catalog/health"),
 };

@@ -52,6 +52,10 @@
    ══════════════════════════════════════════════════════════════════════════ */
 import fs from "node:fs";
 import path from "node:path";
+/* ⚠ `esbuild` VA `rollup` — vite ning O'Z bog'liqliklari, alohida
+   o'rnatilmagan. Agar ular biror kun yo'qolsa, bu `import` xato
+   beradi va skript YIQILADI — ya'ni qo'riqchi jimgina yashil
+   bo'lib qolmaydi. Aynan shu kerak. */
 import * as esbuild from "esbuild";
 import { parseAst } from "rollup/parseAst";
 

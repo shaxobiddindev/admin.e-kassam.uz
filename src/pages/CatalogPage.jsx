@@ -404,6 +404,13 @@ function ProductsTab({ toast, cats, onModerated }) {
                   </td>
                   <td>
                     <div style={{ fontWeight: 700 }}>{r.name}</div>
+                    {/* ⚠ Ruscha nom ADMIN uchun XOM holda ko'rsatiladi:
+                        moderator «tarjima bormi» degan savolga javob
+                        olishi kerak. Do'kon esa allaqachon tanlangan
+                        nomni oladi. */}
+                    {r.nameRu && (
+                      <div style={{ fontSize: 11, color: "var(--fg-secondary)" }}>{r.nameRu}</div>
+                    )}
                     <div style={{ fontSize: 11, color: "var(--fg-secondary)" }}>
                       {[r.brand, unitLabel(r.unit), r.businessType ? businessType(r.businessType).label : null]
                         .filter(Boolean).join(" · ")}
@@ -718,6 +725,7 @@ function ProductModal({ row, cats, toast, onClose, onSaved }) {
   const [form, setForm] = useState({
     barcode: row?.barcode || "",
     name: row?.name || "",
+    nameRu: row?.nameRu || "",
     brand: row?.brand || "",
     unit: row?.unit || "DONA",
     mxikCode: row?.mxikCode || "",
@@ -740,6 +748,7 @@ function ProductModal({ row, cats, toast, onClose, onSaved }) {
       const payload = {
         barcode: form.barcode.trim(),
         name: form.name.trim(),
+        nameRu: nz(form.nameRu),
         brand: nz(form.brand),
         unit: nz(form.unit),
         mxikCode: nz(form.mxikCode),
@@ -785,6 +794,17 @@ function ProductModal({ row, cats, toast, onClose, onSaved }) {
 
       <FG label={`${t("adm.catalog.colName")} *`} hint={t("adm.catalog.nameHint")}>
         <input className="fi" value={form.name} onChange={setE("name")} maxLength={255} />
+      </FG>
+
+      {/* ══ RUS TILIDAGI NOM ═══════════════════════════════════════
+          ⚠ MAJBURIY EMAS. Bo'sh bo'lsa do'kon asosiy nomni ko'radi,
+          ya'ni bugungi holat o'zgarmaydi. Tarjima moderator
+          qo'shgani sayin asta-sekin paydo bo'ladi.
+
+          ⚠ INGLIZCHASI YO'Q va ataylab: O'zbekistonda do'kon kassasi
+          ingliz tilida yuritilmaydi. */}
+      <FG label={t("adm.catalog.fieldNameRu")} hint={t("adm.catalog.nameRuHint")}>
+        <input className="fi" value={form.nameRu} onChange={setE("nameRu")} maxLength={255} />
       </FG>
 
       <div className="g2">

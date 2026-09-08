@@ -141,6 +141,25 @@ function ProductsTab({ toast, cats, onModerated }) {
      almashtirgan odam bo'sh ro'yxat ko'rardi va uni xato deb o'ylardi. */
   const setFilter = (fn) => (v) => { fn(v); setPage(0); };
 
+  /* ══ BIRLASHTIRISH ═══════════════════════════════════════════════
+     ⚠ O'CHIRISH EMAS. Manba satri qoladi va nishonga
+     yo'naltiriladi; uni olgan do'konlarning tovarlari umuman
+     o'zgarmaydi — ular do'konning o'z ma'lumoti. Katalogdan esa
+     manba yo'qoladi, ya'ni dublikat qaytadan tug'ilmaydi.
+
+     ⚠ TASDIQLASH EMAS: birlashtirilgan yozuv katalogga chiqmaydi,
+     shuning uchun uni tasdiqlashning ma'nosi ham yo'q. */
+  const doMerge = async (row, targetId) => {
+    setActing(row.id);
+    try {
+      await catalogApi.merge(row.id, targetId);
+      toast.success(t("adm.catalog.merged"));
+      await load();
+      onModerated();
+    } catch (e) { toast.error(e.message); }
+    finally { setActing(null); setDupes(null); }
+  };
+
   /** Tasdiqlashning o'zi — tasdiq olingandan keyin. */
   const doApprove = async (row) => {
     setActing(row.id);
@@ -281,7 +300,16 @@ function ProductsTab({ toast, cats, onModerated }) {
                     <Badge color={r.status === "VERIFIED" ? "green" : r.status === "REJECTED" ? "red" : "yellow"}>
                       {globalStatus(r.status).label}
                     </Badge>
-                    {r.active === false && (
+                    {/* ⚠ «Birlashtirilgan» «yashirilgan» dan OLDIN: har
+                        birlashtirilgan yozuv ayni paytda yashirilgan
+                        ham va ikkala yozuvni ko'rsatish qatorni
+                        chalkashtirardi. Sabab muhimroq. */}
+                    {r.mergedIntoId ? (
+                      <div style={{ fontSize: 11, color: "var(--fg-secondary)" }}>
+                        <i className="fa-solid fa-code-merge" aria-hidden="true" />{" "}
+                        {t("adm.catalog.mergedInto")}: {r.mergedIntoName}
+                      </div>
+                    ) : r.active === false && (
                       <div style={{ fontSize: 11, color: "var(--fg-secondary)" }}>
                         {t("adm.catalog.hidden")}
                       </div>
@@ -351,7 +379,8 @@ function ProductsTab({ toast, cats, onModerated }) {
       {dupes && (
         <DupeModal data={dupes} busy={acting === dupes.row.id}
                    onClose={() => setDupes(null)}
-                   onApprove={() => doApprove(dupes.row)} />
+                   onApprove={() => doApprove(dupes.row)}
+                   onMerge={(targetId) => doMerge(dupes.row, targetId)} />
       )}
 
       {reject && (
@@ -376,9 +405,24 @@ function ProductsTab({ toast, cats, onModerated }) {
    holatda o'xshash yozuv haqiqatan boshqa tovar (boshqa hajm,
    boshqa ta'm) va uni to'sish moderatsiyani to'xtatib qo'yardi.
    ══════════════════════════════════════════════════════════════════════════ */
-function DupeModal({ data, busy, onClose, onApprove }) {
+function DupeModal({ data, busy, onClose, onApprove, onMerge }) {
   const { t } = useT();
+  const confirm = useConfirm();
   const { row, rows } = data;
+
+  /* ⚠ Birlashtirish TASDIQ SO'RAYDI: u import izlarini ko'chiradi va
+     ortga qaytarish yo'li yo'q. Tasdiq matnida ikkala nom ham
+     turadi — «qaysi biri qoladi» degan savol eng ko'p uchraydigan
+     xato manbai. */
+  const merge = async (target) => {
+    const ok = await confirm({
+      title: t("adm.catalog.mergeTitle"),
+      message: t("adm.catalog.mergeMsg", { from: row.name, to: target.name }),
+      type: "warning",
+      confirmText: t("adm.catalog.merge"),
+    });
+    if (ok) onMerge(target.id);
+  };
 
   return (
     <Modal size="md" title={t("adm.catalog.dupeTitle")} onClose={onClose}
@@ -416,10 +460,17 @@ function DupeModal({ data, busy, onClose, onApprove }) {
                 {r.createdByShopCode && <> · {r.createdByShopCode}</>}
               </div>
             </div>
-            <div className="set-row__control">
+            <div className="set-row__control" style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <Badge color={r.status === "VERIFIED" ? "green" : r.status === "REJECTED" ? "red" : "yellow"}>
                 {globalStatus(r.status).label}
               </Badge>
+              {/* «Bunisiga birlashtir» — yangi yozuv shu qatorga
+                  yo'naltiriladi va katalogdan yo'qoladi. */}
+              <button className="btn btn-sm btn-outline" disabled={busy}
+                      title={t("adm.catalog.mergeHint")}
+                      onClick={() => merge(r)}>
+                <i className="fa-solid fa-code-merge" aria-hidden="true" /> {t("adm.catalog.merge")}
+              </button>
             </div>
           </div>
         ))}

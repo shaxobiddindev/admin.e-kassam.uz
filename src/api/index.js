@@ -379,4 +379,10 @@ export const catalogApi = {
      ikkalasini ham tasdiqlaydi — katalogda bitta ichimlik ikkita
      bo'lib qoladi. */
   similar: (id) => req(`/admin/catalog/products/${id}/similar`),
+
+  /* ⚠ O'CHIRISH EMAS, YO'NALTIRISH. Manba satri qoladi va nishonga
+     bog'lanadi; uni olgan do'konlarning tovarlari o'zgarmaydi.
+     Katalogdan esa u yo'qoladi — dublikat qaytadan tug'ilmasin. */
+  merge: (id, targetId) => req(`/admin/catalog/products/${id}/merge`,
+                               { method: "POST", ...body({ targetId }) }),
 };

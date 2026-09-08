@@ -171,6 +171,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
      uchun ular bitta harakat edi va u qaysi biri bo'lganini shu
      yerdan bilishi kerak. */
   PRODUCT_DELETE:         { color: "red",    icon: "fa-trash" },
+  PRODUCT_CODE_ISSUE:     { color: "blue",   icon: "fa-tag" },
 
   /* ── Narx ── */
   PRICE_CHANGE:           { color: "yellow", icon: "fa-tag" },

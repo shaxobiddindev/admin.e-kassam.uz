@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "node test/array-guard.test.mjs && node test/filter.test.mjs && node test/dash.test.mjs && node test/audit.test.mjs && node scripts/check-hooks.mjs && node scripts/check-modals.mjs",
+    "test": "node test/barcode-check.test.mjs && node test/array-guard.test.mjs && node test/filter.test.mjs && node test/dash.test.mjs && node test/audit.test.mjs && node scripts/check-hooks.mjs && node scripts/check-modals.mjs",
     "check": "node scripts/check-array.mjs && npm run build && node scripts/check-budget.mjs && node scripts/check-locales.mjs && node scripts/check-a11y.mjs && node scripts/check-dash.mjs && node scripts/check-crash.mjs && node scripts/check-undefined.mjs && node scripts/check-zero.mjs",
     "build": "node node_modules/vite/bin/vite.js build",
     "preview": "vite preview"

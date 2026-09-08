@@ -371,4 +371,12 @@ export const catalogApi = {
   reject:  (id, reason) => req(`/admin/catalog/products/${id}/reject`,
                                { method: "POST", ...body({ reason: reason || null }) }),
   pendingCount: ()      => req("/admin/catalog/pending-count"),
+
+  /* ⚠ TASDIQLASHDAN OLDIN SO'RALADI. Umumiy bazada yagonalik faqat
+     aniq shtrix-kod bo'yicha: «Coca-Cola 0.5» va «Кока-Кола 0,5 л»
+     bir raqami xato terilgan barkod bilan bemalol yonma-yon
+     yashaydi. Moderator ularni boshqa-boshqa kunlarda ko'radi va
+     ikkalasini ham tasdiqlaydi — katalogda bitta ichimlik ikkita
+     bo'lib qoladi. */
+  similar: (id) => req(`/admin/catalog/products/${id}/similar`),
 };

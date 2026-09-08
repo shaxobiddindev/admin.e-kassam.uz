@@ -14,6 +14,7 @@ import {
   businessType, globalStatus, unitLabel, options,
 } from "../lib/ek-labels";
 import { BarcodeField, MxikField } from "../components/ek/EkFields";
+import { barcodeSuspicious } from "../lib/ek-barcode-check";
 
 /* ══════════════════════════════════════════════════════════════════════════
    UMUMIY KATALOG — ADMIN EKRANI (V90)
@@ -114,6 +115,8 @@ function ProductsTab({ toast, cats, onModerated }) {
   const [acting, setActing] = useState(null);
   const [form,   setForm]   = useState(null);   // null | {} | row
   const [reject, setReject] = useState(null);   // rad etish oynasi
+  /* Tasdiqlashdan oldin ko'rsatiladigan dublikat ro'yxati. */
+  const [dupes,  setDupes]  = useState(null);   // null | { row, rows }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -138,14 +141,8 @@ function ProductsTab({ toast, cats, onModerated }) {
      almashtirgan odam bo'sh ro'yxat ko'rardi va uni xato deb o'ylardi. */
   const setFilter = (fn) => (v) => { fn(v); setPage(0); };
 
-  const approve = async (row) => {
-    const ok = await confirm({
-      title: t("adm.catalog.approveTitle"),
-      message: t("adm.catalog.approveMsg", { name: row.name }),
-      type: "info",
-      confirmText: t("adm.catalog.approve"),
-    });
-    if (!ok) return;
+  /** Tasdiqlashning o'zi — tasdiq olingandan keyin. */
+  const doApprove = async (row) => {
     setActing(row.id);
     try {
       await catalogApi.approve(row.id);
@@ -153,7 +150,38 @@ function ProductsTab({ toast, cats, onModerated }) {
       await load();
       onModerated();
     } catch (e) { toast.error(e.message); }
-    finally { setActing(null); }
+    finally { setActing(null); setDupes(null); }
+  };
+
+  /* ══ TASDIQLASHDAN OLDIN: DUBLIKAT BORMI ═══════════════════════════
+     ⚠ NEGA AYNAN SHU YERDA. Umumiy bazada yagonalik faqat aniq
+     shtrix-kod bo'yicha. Ya'ni «Coca-Cola 0.5» va «Кока-Кола 0,5 л»
+     bir raqami xato terilgan barkod bilan bemalol yonma-yon
+     yashaydi. Moderator ularni boshqa-boshqa kunlarda ko'radi —
+     ikkalasini ham tasdiqlaydi va katalogda bitta ichimlik ikkita
+     bo'lib qoladi. Savol qaror qabul qilinadigan JOYDA turishi kerak.
+
+     ⚠ QAROR ODAMNIKI. «Boshqa hajmdagi shu ichimlik» bilan «o'sha
+     ichimlikning xato yozilgani» ni faqat odam ajrata oladi.
+
+     ⚠ Qidiruv XATOSI tasdiqlashni TO'SMAYDI: o'xshashlik yordamchi
+     xususiyat (serverda `pg_trgm` bo'lmasa u umuman ishlamaydi) va
+     uning tufayli moderatsiya to'xtab qolishi mumkin emas. */
+  const approve = async (row) => {
+    let similar = [];
+    try { similar = asArray((await catalogApi.similar(row.id)).data); }
+    catch (_) { /* yordamchi — jim o'tamiz */ }
+
+    if (similar.length > 0) { setDupes({ row, rows: similar }); return; }
+
+    const ok = await confirm({
+      title: t("adm.catalog.approveTitle"),
+      message: t("adm.catalog.approveMsg", { name: row.name }),
+      type: "info",
+      confirmText: t("adm.catalog.approve"),
+    });
+    if (!ok) return;
+    await doApprove(row);
   };
 
   const catOptions = useMemo(() => [
@@ -215,7 +243,25 @@ function ProductsTab({ toast, cats, onModerated }) {
             <tbody>
               {rows.length > 0 ? rows.map((r) => (
                 <tr key={r.id} style={{ opacity: r.active === false ? 0.5 : 1 }}>
-                  <td className="ek-num" style={{ whiteSpace: "nowrap" }}>{r.barcode}</td>
+                  {/* ══ NAZORAT RAQAMI BAYROG'I ═══════════════════════
+                      Xato terilgan barkod tasdiqlansa, u yuzlab
+                      do'konga tarqaladi va ularning hech birida
+                      skaner tovarni topa olmaydi. Nazorat raqami
+                      buni bepul ushlaydi.
+
+                      ⚠ Bayroq SERVERDAN keladi (`barcodeIssue`) —
+                      qoida bitta joyda. Ichki kod va artikul hech
+                      qachon belgilanmaydi: ular qonuniy va ularni
+                      belgilash bayroqni foydasiz qilardi. */}
+                  <td className="ek-num" style={{ whiteSpace: "nowrap" }}>
+                    {r.barcode}
+                    {r.barcodeIssue === "CHECK_DIGIT" && (
+                      <div style={{ fontSize: 11, color: "var(--fg-warning)", fontWeight: 700 }}>
+                        <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />{" "}
+                        {t("adm.catalog.barcodeSuspect")}
+                      </div>
+                    )}
+                  </td>
                   <td>
                     <div style={{ fontWeight: 700 }}>{r.name}</div>
                     <div style={{ fontSize: 11, color: "var(--fg-secondary)" }}>
@@ -302,12 +348,83 @@ function ProductsTab({ toast, cats, onModerated }) {
                       onSaved={() => { setForm(null); load(); onModerated(); }} />
       )}
 
+      {dupes && (
+        <DupeModal data={dupes} busy={acting === dupes.row.id}
+                   onClose={() => setDupes(null)}
+                   onApprove={() => doApprove(dupes.row)} />
+      )}
+
       {reject && (
         <RejectModal row={reject} toast={toast}
                      onClose={() => setReject(null)}
                      onDone={() => { setReject(null); load(); onModerated(); }} />
       )}
     </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DUBLIKAT SO'ROVI — TASDIQLASHDAN OLDIN
+
+   ⚠ RO'YXAT «BULAR DUBLIKAT» DEMAYDI. U «bularga o'xshaydi» deydi.
+   O'xshashlik foizi ham ATAYLAB ko'rsatilmaydi: raqam chiqsa, odam
+   o'z qaroridan ko'ra raqamga ishonib qolardi va «0.91» bilan
+   «0.89» orasida ma'no izlardi. Ro'yxat allaqachon eng o'xshashidan
+   boshlab tartiblangan.
+
+   ⚠ «Baribir tasdiqlash» tugmasi BOR va u birinchi emas: ko'p
+   holatda o'xshash yozuv haqiqatan boshqa tovar (boshqa hajm,
+   boshqa ta'm) va uni to'sish moderatsiyani to'xtatib qo'yardi.
+   ══════════════════════════════════════════════════════════════════════════ */
+function DupeModal({ data, busy, onClose, onApprove }) {
+  const { t } = useT();
+  const { row, rows } = data;
+
+  return (
+    <Modal size="md" title={t("adm.catalog.dupeTitle")} onClose={onClose}
+           footer={
+             <>
+               <button className="btn btn-outline btn-sm" onClick={onClose}>
+                 {t("common.cancel")}
+               </button>
+               <button className="btn btn-primary btn-sm" onClick={onApprove} disabled={busy}>
+                 {busy ? <><Spinner /> {t("common.saving")}</>
+                       : <><i className="fa-solid fa-check" aria-hidden="true" /> {t("adm.catalog.approveAnyway")}</>}
+               </button>
+             </>
+           }>
+      <p className="set-card__hint">{t("adm.catalog.dupeHint")}</p>
+
+      <div className="set-list">
+        <div className="set-row">
+          <div className="set-row__text">
+            <div className="set-row__label">{row.name}</div>
+            <div className="set-row__hint ek-num">{row.barcode}</div>
+          </div>
+          <div className="set-row__control">
+            <Badge color="yellow">{t("adm.catalog.dupeNew")}</Badge>
+          </div>
+        </div>
+
+        {rows.map((r) => (
+          <div className="set-row" key={r.id}>
+            <div className="set-row__text">
+              <div className="set-row__label">{r.name}</div>
+              <div className="set-row__hint">
+                <span className="ek-num">{r.barcode}</span>
+                {r.categoryName && <> · {r.categoryName}</>}
+                {r.createdByShopCode && <> · {r.createdByShopCode}</>}
+              </div>
+            </div>
+            <div className="set-row__control">
+              <Badge color={r.status === "VERIFIED" ? "green" : r.status === "REJECTED" ? "red" : "yellow"}>
+                {globalStatus(r.status).label}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Modal>
   );
 }
 
@@ -412,7 +529,10 @@ function ProductModal({ row, cats, toast, onClose, onSaved }) {
              </>
            }>
       <div className="g2">
-        <FG label={`${t("adm.catalog.colBarcode")} *`} hint={t("adm.catalog.barcodeHint")}>
+        <FG label={`${t("adm.catalog.colBarcode")} *`}
+            hint={barcodeSuspicious(form.barcode)
+                    ? t("adm.catalog.barcodeSuspectHint")
+                    : t("adm.catalog.barcodeHint")}>
           <BarcodeField className="fi ek-num" value={form.barcode} onChange={setE("barcode")} autoFocus />
         </FG>
         <FG label={t("adm.catalog.fieldUnit")}>

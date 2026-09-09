@@ -13,7 +13,11 @@
    (docs/09-CHETLANISHLAR.md ga qarang).
    ========================================================================== */
 
-import { t, getLang } from "./ek-i18n";
+/* ⚠ KENGAYTMA BILAN: shu fayl Node ostidagi sinovdan ham yuklanadi
+   (`test/format.test.mjs`). Vite kengaytmasiz ham hal qiladi, Node
+   esa yo'q — kengaytmasiz import sinovni umuman yozib bo'lmas holga
+   keltirardi. */
+import { t, getLang } from "./ek-i18n.js";
 
 const NNBSP = " ";           // tor bo'shliq — razryad ajratgichi
 /* Oy va hafta nomlari — TILGA BOG'LIQ (`ek-locales.js` dagi `fmt.*`).
@@ -119,12 +123,26 @@ export function weekdayDate(iso) {
   return `${weekdays()[d.getDay()]}, ${date(d.toISOString())}`;
 }
 
-/** Jadval uchun sana+vaqt: 02.08.2026 14:32 */
+/**
+ * Jadval uchun sana+vaqt: 02-08-2026 14:32
+ *
+ * ⚠ AJRATGICH — CHIZIQCHA, nuqta emas (V76). Ilgari bu yerda nuqta
+ * turardi va u tizimdagi YAGONA joy edi: `shortDate` ham, sana
+ * kiritish niqobi ham (`dateDisplayInput` — foydalanuvchi
+ * `31-01-2026` deb YOZADI) chiziqcha bilan ishlaydi. Ikki xil
+ * ajratgich bir ekranda ikki xil sana tizimi borday tuyulardi.
+ *
+ * ⚠ ADMIN NUSXASI KECHIKKAN. Tuzatish ilovada qilingan, bu yerga esa
+ * ko'chirilmagan — `ek-format.js` UCHALA yuzga QO'LDA tarqatiladi va
+ * nusxalar jimgina ajralib ketadi. Admin panelda audit jurnali,
+ * katalog, ops, do'konlar va arizalar sahifasi `fmtDateTime` ni
+ * chaqiradi, ya'ni nuqta HAQIQATAN ekranda turgan edi.
+ */
 export function dateTime(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /** Faqat vaqt: 14:32 */

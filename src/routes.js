@@ -56,6 +56,14 @@ export const NAV = [
      (`ADMIN_VIEW` hech kimga berilmaydi). Uni "Tizim boshqaruvi" ichiga
      qo'shish mumkin edi, lekin bu bo'lim boshqa toifadagi ish: qolgan
      hammasi mijozlarimiz haqida, bu esa BIZNING xodimlarimiz haqida. */
+  /* ⚠ TIZIM SOG'LIGI — ALOHIDA BO'LIM. Qolgan bandlar MIJOZLAR haqida
+     (do'kon, xodim, jurnal, katalog), bu esa TIZIMNING O'ZI haqida:
+     baza qo'riqchilari nima topgani. `perm: ADMIN_VIEW` — backenddagi
+     `hasRole('SUPER_ADMIN')` bilan bir xil doira, ya'ni band faqat bosh
+     adminda ko'rinadi va bosolmaydigan tugma chizilmaydi. */
+  { sec: "nav.section.ops", items: [
+    { id: "ops",       path: "/ops",       key: "nav.ops",       icon: "fa-heart-pulse",     perm: "ADMIN_VIEW" },
+  ]},
   { sec: "nav.section.access", items: [
     { id: "admins",    path: "/admins",    key: "nav.admins",    icon: "fa-user-shield",     perm: "ADMIN_VIEW" },
   ]},

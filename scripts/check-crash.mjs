@@ -72,6 +72,11 @@ const browser = await puppeteer.launch({
 const ROUTES = [
   "/", "/requests", "/shops", "/users", "/customers",
   "/audit", "/admins", "/settings", "/catalog",
+  /* ⚠ Yangi sahifa shu ro'yxatga QO'SHILADI. Qo'shilmasa u qo'riqchidan
+     tashqarida qoladi: server ro'yxat o'rniga obyekt qaytarganda sahifa
+     jimgina oq ekran bo'lib qolardi va buni faqat foydalanuvchi
+     ko'rardi. */
+  "/ops",
 ];
 
 let bad = 0;

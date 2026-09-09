@@ -16,6 +16,7 @@ import CustomersPage from "./pages/CustomersPage";
 import RequestsPage  from "./pages/RequestsPage";
 import AuditPage     from "./pages/AuditPage";
 import CatalogPage   from "./pages/CatalogPage";
+import OpsPage       from "./pages/OpsPage";
 import AdminsPage    from "./pages/AdminsPage";
 import SettingsPage  from "./pages/SettingsPage";
 import NotFound      from "./pages/NotFound";
@@ -104,6 +105,8 @@ export default function App() {
             <Route path="/audit"     element={<AuditPage     toast={toast} />} />
             {/* Umumiy katalog (V90) — moderatsiya va boshqaruv. */}
             <Route path="/catalog"   element={<CatalogPage   toast={toast} />} />
+            {/* Tizim sog'ligi — baza qo'riqchilarining chiqishi. */}
+            <Route path="/ops"       element={<OpsPage       toast={toast} />} />
             {/* Adminlar (V50) — sahifaga `user` uzatiladi: unda o'ziga
                 nisbatan xavfli amallarni chizmaslik uchun `id` kerak. */}
             <Route path="/admins"    element={<AdminsPage    toast={toast} user={user} />} />

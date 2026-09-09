@@ -405,3 +405,38 @@ export const catalogApi = {
      kutdi» — bitta raqam, lekin u butun tizimning holatini aytadi. */
   health: () => req("/admin/catalog/health"),
 };
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TIZIM SOG'LIGI (`/ops`) — C va D bosqichlaridagi qo'riqchilar chiqishi
+
+   ⚠ NEGA BU KERAK. Backendda uchta qo'riqchi bor va ularning HAMMASI
+   `ops_findings` ga yozadi: barkod yagonaligining indeksi yo'qolgani,
+   nusxa ustunning ayrilishi, jurnaldan tiklanmagan barkodlar va RLS
+   bo'shlik zondi. Ular ERROR darajasida jurnalga ham yozadi — lekin
+   konteyner jurnalini hech kim kunda o'qimaydi.
+
+   Ya'ni qo'riqchilar ishlab turardi va ularning natijasini KO'RADIGAN
+   joy yo'q edi. Bu ekran o'sha bo'shliqni yopadi.
+
+   ⚠ Hamma yo'l SUPER_ADMIN ga yopilgan (`OpsController`), shuning uchun
+   menyu bandi ham faqat bosh adminda ko'rinadi.
+   ══════════════════════════════════════════════════════════════════════════ */
+export const opsApi = {
+  /** Ochiq belgilar turi bo'yicha: `{ MISSING_UNIQUE_INDEX: 1, ... }`. */
+  summary:   ()   => req("/ops/summary"),
+
+  /** Zond holati va bo'sh javoblar ulushi (D/4). */
+  emptiness: ()   => req("/ops/emptiness"),
+
+  /** Ochiq belgilar ro'yxati; `shopId` berilsa — bitta do'kon bo'yicha. */
+  findings:  (shopId) => req(`/ops/findings${shopId ? `?shopId=${shopId}` : ""}`),
+
+  /** Belgini yopish — muammo hal qilingach. */
+  resolve:   (id) => req(`/ops/findings/${id}/resolve`, { method: "POST" }),
+
+  /* ⚠ TEKSHIRUV — O'QISH, TUZATISH — ALOHIDA AMAL. Ko'rish bilan
+     o'zgartirish bir tugmada bo'lsa, «bir qarab qo'yay» degan odam
+     bazani o'zgartirib qo'yardi. */
+  barcodeDrift: ()  => req("/ops/barcode-drift"),
+  repairDrift:  ()  => req("/ops/barcode-drift/repair", { method: "POST" }),
+};

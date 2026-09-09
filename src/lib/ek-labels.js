@@ -36,6 +36,22 @@ function dict(prefix, meta) {
   return out;
 }
 
+/* ── Tizim sog'ligi belgilari — `ops_findings.kind` ───────────────────────
+   ⚠ Bu enum EMAS, matn ustuni: backend unga yangi tur qo'sha oladi va
+   kod o'zgarmaydi. Shuning uchun `OpsPage` topilmagan turni YASHIRMAYDI,
+   xom nomini chiqaradi — aks holda yangi qo'riqchining ogohlantirishi
+   jimgina ko'rinmas bo'lardi.
+
+   Rang tanlovi: qizil — himoya YO'Q (indeks tushib qolgan, ma'lumot
+   ko'rinmayapti); sariq — e'tibor kerak, lekin tizim ishlayapti. */
+export const OPS_FINDING = dict("enum.ops", {
+  MISSING_UNIQUE_INDEX:  { tone: "danger", icon: "fa-shield-halved" },
+  RLS_EMPTY_PROBE:       { tone: "danger", icon: "fa-eye-slash" },
+  BARCODE_NOT_RESTORED:  { tone: "warn",   icon: "fa-barcode" },
+  BARCODE_DEDUPE:        { tone: "warn",   icon: "fa-clone" },
+  B0_REVERTED:           { tone: "muted",  icon: "fa-clock-rotate-left" },
+});
+
 /* ── To'lov turi — uz.kassa.common.enums.PaymentType ─────────────────────── */
 export const PAYMENT_TYPE = dict("enum.payment", {
   CASH:  { icon: "fa-money-bill-1",         color: "var(--ek-pay-cash)" },

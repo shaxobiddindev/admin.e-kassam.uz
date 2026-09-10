@@ -194,6 +194,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
      yerdan bilishi kerak. */
   PRODUCT_DELETE:         { color: "red",    icon: "fa-trash" },
   PRODUCT_CODE_ISSUE:     { color: "blue",   icon: "fa-tag" },
+  LABEL_PRINT:            { color: "blue",   icon: "fa-print" },
   PRODUCT_BARCODE_RELEASE:{ color: "yellow", icon: "fa-barcode" },
   PRODUCT_RESTORE:        { color: "green",  icon: "fa-rotate-left" },
   PRODUCT_BARCODE_ACTIVE_REPAIR: { color: "yellow", icon: "fa-wrench" },

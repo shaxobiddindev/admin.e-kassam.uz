@@ -9,6 +9,9 @@ import { useConfirm } from "../context/ConfirmProvider";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import { asArray } from "../lib/ek-array";
+import { useInfinite } from "../hooks/useInfinite";
+import { useDebounced } from "../hooks/useDebounced";
+import InfiniteList from "../components/ek/InfiniteList";
 import {
   BUSINESS_TYPE, GLOBAL_STATUS, UNIT, MARKING_GROUP,
   businessType, globalStatus, unitLabel, options,
@@ -138,13 +141,11 @@ function ProductsTab({ toast, cats, onModerated }) {
   const [type,   setType]   = useState("");
   const [cat,    setCat]    = useState("");
   const [search, setSearch] = useState("");
-  const [page,   setPage]   = useState(0);
-
-  const [rows,    setRows]    = useState([]);
-  const [total,   setTotal]   = useState(0);
-  const [pages,   setPages]   = useState(0);
-  const [loading, setLoading] = useState(true);
-  const busy = useLoading(loading);
+  /* ⚠ SAHIFA HOLATI `useInfinite` DA: `rows`, `total`, «yana bormi»
+     va sahifa raqami — hammasi u yerda. Ilgari bu yerda to'rtta
+     alohida `useState` turardi. */
+  /* Qatorni tasdiqlash/rad etishdan keyin ro'yxatni qaytadan so'rash. */
+  const [version, setVersion] = useState(0);
   const [acting, setActing] = useState(null);
   const [form,   setForm]   = useState(null);   // null | {} | row
   const [reject, setReject] = useState(null);   // rad etish oynasi
@@ -154,28 +155,65 @@ function ProductsTab({ toast, cats, onModerated }) {
   const [marked, setMarked] = useState(new Set());
   const [bulkReject, setBulkReject] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await catalogApi.products({
-        status: status || undefined,
-        businessType: type || undefined,
-        categoryId: cat || undefined,
-        search: search.trim() || undefined,
-        page,
-      });
-      setRows(asArray(res.data));
-      setTotal(Number(res.data?.totalElements) || 0);
-      setPages(Number(res.data?.totalPages) || 0);
-    } catch (e) { toast.error(`${t("common.loadFailed")}: ${e.message}`); }
-    finally { setLoading(false); }
-  }, [status, type, cat, search, page]);
+  /* ⚠ TERISH KECHIKTIRILADI: har harfda so'rov ketsa, «shokolad»
+     so'zi 8 ta so'rov yuborardi va ularning 7 tasi darhol keraksiz
+     bo'lib qolardi. Bo'sh qiymat DARHOL o'tadi — qidiruvni tozalash
+     kutishni talab qilmasligi kerak. */
+  const slowSearch = useDebounced(search, 300);
 
-  useEffect(() => { load(); }, [load]);
+  /**
+   * ⚠ QIDIRUV, FILTR VA SAHIFA — HAMMASI SERVERDA edi va shunday
+   * qoladi. Bu sahifada o'zgargan yagona narsa — RAQAMLI TUGMALAR
+   * o'rniga scroll.
+   *
+   * ⚠ `useCallback` SHART: har renderda yangi `fetcher` bo'lsa,
+   * `useInfinite` ro'yxatni boshidan yuklab, cheksiz so'rov
+   * yuborardi.
+   *
+   * ⚠ FILTR O'ZGARSA RO'YXAT BOSHIDAN — va bu endi QO'LDA
+   * yozilmaydi: `fetcher` o'zgaradi, hook esa buni «boshqa
+   * ro'yxat» deb tushunadi. Ilgari shu maqsadda `setPage(0)` har
+   * filtr o'zgarishida qo'lda chaqirilardi va bittasi unutilsa,
+   * 7-sahifada turgan odam bo'sh ro'yxat ko'rardi.
+   */
+  const fetchPage = useCallback((page, size) => catalogApi.products({
+    status: status || undefined,
+    businessType: type || undefined,
+    categoryId: cat || undefined,
+    search: slowSearch.trim() || undefined,
+    page, size,
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }), [status, type, cat, slowSearch, version]);
 
-  /* Filtr o'zgarsa birinchi sahifaga qaytamiz: 7-sahifada turib filtrni
-     almashtirgan odam bo'sh ro'yxat ko'rardi va uni xato deb o'ylardi. */
-  const setFilter = (fn) => (v) => { fn(v); setPage(0); };
+  const { rows, loading, error, hasNext, total, loadMore, retry } =
+    useInfinite(fetchPage, { size: 50 });
+
+  /* ⚠ BU QATOR `useInfinite` DAN KEYIN: `loading` va `rows` — shu
+     chaqiruvning natijasi; oldin o'qilsa `ReferenceError` va React
+     sahifani UMUMAN chizmaydi (`scripts/check-tdz.mjs`). */
+  const busy = useLoading(loading && !rows.length);
+
+  useEffect(() => {
+    if (error) toast.error(`${t("common.loadFailed")}: ${error}`);
+  }, [error]);
+
+  /** Ro'yxatni qaytadan so'rash (tasdiqlash/rad etishdan keyin). */
+  const load = useCallback(() => setVersion((v) => v + 1), []);
+
+  /**
+   * ⚠ FILTRNI O'RNATISH — ENDI SHUNCHAKI O'RNATISH.
+   *
+   * Ilgari u `setPage(0)` ni ham chaqirardi: 7-sahifada turib
+   * filtrni almashtirgan odam bo'sh ro'yxat ko'rardi va uni xato
+   * deb o'ylardi. Endi `fetcher` o'zgarishi bilan `useInfinite`
+   * o'zi boshidan boshlaydi, ya'ni qo'lda tiklash kerak emas.
+   *
+   * ⚠ FUNKSIYA SAQLANDI, OLIB TASHLANMADI: uni beshta filtr
+   * chaqiradi va «endi kerak emas» deb har joyda `set…` ga
+   * almashtirish keyinchalik biror filtr uchun tiklash yana kerak
+   * bo'lganda uni bitta joyda emas, beshta joyda tuzatishga majbur
+   * qilardi. */
+  const setFilter = (fn) => (v) => fn(v);
 
   /* ══ BIRLASHTIRISH ═══════════════════════════════════════════════
      ⚠ O'CHIRISH EMAS. Manba satri qoladi va nishonga
@@ -315,7 +353,7 @@ function ProductsTab({ toast, cats, onModerated }) {
           <input className="fi" style={{ maxWidth: 220 }}
                  placeholder={t("adm.catalog.searchPlaceholder")}
                  value={search}
-                 onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
+                 onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="btn btn-outline btn-sm" onClick={load}>
@@ -500,21 +538,16 @@ function ProductsTab({ toast, cats, onModerated }) {
         )}
       </div>
 
-      {pages > 1 && (
-        <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", padding: 12 }}>
-          <span style={{ fontSize: 12, color: "var(--fg-secondary)" }} className="ek-num">
-            {t("adm.catalog.pageOf", { page: page + 1, pages, total })}
-          </span>
-          <button className="btn btn-outline btn-sm" disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}>
-            <i className="fa-solid fa-chevron-left" aria-hidden="true" /> {t("common.prev")}
-          </button>
-          <button className="btn btn-outline btn-sm" disabled={page + 1 >= pages}
-                  onClick={() => setPage((p) => p + 1)}>
-            {t("common.next")} <i className="fa-solid fa-chevron-right" aria-hidden="true" />
-          </button>
-        </div>
-      )}
+      {/* ⚠ RAQAMLI SAHIFALAR O'RNIGA SCROLL. Eski «‹ 3 / 12 ›»
+          tugmalari har bosishda ro'yxatni BUTUNLAY almashtirardi:
+          moderator 4-sahifadagi qatorni ko'rib, 5-ga o'tib, keyin
+          qaytib kelsa — o'sha qatorni yana qidirishi kerak edi.
+          Moderatsiya esa aynan shunday ishlaydi: qator tasdiqlanadi,
+          keyingisiga o'tiladi. */}
+      <InfiniteList
+        loading={loading} error={error} hasNext={hasNext}
+        total={total} count={rows.length}
+        onMore={loadMore} onRetry={retry} />
 
       {form && (
         <ProductModal row={form.id ? form : null} cats={cats} toast={toast}

@@ -186,6 +186,16 @@ const uz = {
   "common.error": "Xatolik",
   "common.success": "Muvaffaqiyatli",
   "common.retry": "Qayta urinish",
+  /* ── Cheksiz ro'yxat (scrollda yuklash) ──────────────────────────────
+     ⚠ «Ko'proq» TUGMASI MAJBURIY, faqat scroll YETMAYDI: klaviatura
+     bilan ishlaydigan va ekran o'quvchidan foydalanadigan odam
+     sentinelga «yetib» bora olmaydi. */
+  "inf.loading": "Yuklanmoqda…",
+  "inf.failed": "Ro'yxatning qolgani yuklanmadi",
+  "inf.more": "Ko'proq ko'rsatish",
+  "inf.moreOf": "Ko'proq ({n} / {total})",
+  "inf.all": "Hammasi ko'rsatildi — {n} ta",
+  "inf.allOf": "Hammasi ko'rsatildi — {n} ta ({total})",
   "common.export": "Eksport",
   "common.print": "Chop etish",
   "common.reset": "Tozalash",
@@ -2038,7 +2048,6 @@ const uz = {
   "adm.catalog.sortHint": "Kichik raqam ro'yxatda yuqorida turadi.",
   "adm.catalog.activeHint": "O'chirilgan tovar yangi importda ko'rinmaydi. Uni olgan do'konlarda qoladi.",
   "adm.catalog.catActiveHint": "O'chirilgan kategoriya do'konlarga ko'rinmaydi.",
-  "adm.catalog.pageOf": "{page} / {pages} · jami {total}",
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2212,6 +2221,12 @@ const ru = {
   "common.error": "Ошибка",
   "common.success": "Готово",
   "common.retry": "Повторить",
+  "inf.loading": "Загрузка…",
+  "inf.failed": "Остальное не загрузилось",
+  "inf.more": "Показать ещё",
+  "inf.moreOf": "Ещё ({n} / {total})",
+  "inf.all": "Показано всё — {n}",
+  "inf.allOf": "Показано всё — {n} ({total})",
   "common.export": "Экспорт",
   "common.print": "Печать",
   "common.reset": "Сбросить",
@@ -4014,7 +4029,6 @@ const ru = {
   "adm.catalog.sortHint": "Меньшее число стоит выше в списке.",
   "adm.catalog.activeHint": "Скрытый товар не виден при новом импорте. У тех, кто уже взял, он остаётся.",
   "adm.catalog.catActiveHint": "Скрытую категорию магазины не видят.",
-  "adm.catalog.pageOf": "{page} / {pages} · всего {total}",
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -4188,6 +4202,12 @@ const en = {
   "common.error": "Error",
   "common.success": "Done",
   "common.retry": "Retry",
+  "inf.loading": "Loading…",
+  "inf.failed": "The rest of the list did not load",
+  "inf.more": "Show more",
+  "inf.moreOf": "More ({n} / {total})",
+  "inf.all": "All shown — {n}",
+  "inf.allOf": "All shown — {n} ({total})",
   "common.export": "Export",
   "common.print": "Print",
   "common.reset": "Reset",
@@ -5990,7 +6010,6 @@ const en = {
   "adm.catalog.sortHint": "A smaller number sits higher in the list.",
   "adm.catalog.activeHint": "A hidden product is not offered on new imports. Shops that took it keep it.",
   "adm.catalog.catActiveHint": "Shops do not see a hidden category.",
-  "adm.catalog.pageOf": "{page} / {pages} · {total} total",
 };
 
 export default { uz, ru, en };

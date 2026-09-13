@@ -193,6 +193,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
      uchun ular bitta harakat edi va u qaysi biri bo'lganini shu
      yerdan bilishi kerak. */
   PRODUCT_DELETE:         { color: "red",    icon: "fa-trash" },
+  CATEGORY_MERGE:         { color: "red",    icon: "fa-code-merge" },
   PRODUCT_CODE_ISSUE:     { color: "blue",   icon: "fa-tag" },
   LABEL_PRINT:            { color: "blue",   icon: "fa-print" },
   PRODUCT_BARCODE_RELEASE:{ color: "yellow", icon: "fa-barcode" },

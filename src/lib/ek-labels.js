@@ -219,6 +219,10 @@ export const AUDIT_ACTION = dict("enum.audit", {
   EXPENSE_CREATE:         { color: "blue",   icon: "fa-receipt" },
   EXPENSE_DELETE:         { color: "red",    icon: "fa-trash" },
   SUPPLIER_PAYMENT:       { color: "blue",   icon: "fa-money-bill-wave" },
+  /* ⚠ SARIQ, ko'k emas: to'lovdan farqli, bu amal QARZNI
+     hujjatsiz emas, TOVAR ORQALI kamaytiradi va tekshiruvda
+     ko'zga tashlanib turishi kerak. */
+  SUPPLIER_RETURN:        { color: "yellow", icon: "fa-rotate-left" },
 
   /* ── Mijoz ── */
   CUSTOMER_DEBT_ADJUST:   { color: "yellow", icon: "fa-hand-holding-dollar" },

@@ -849,7 +849,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
               const roles = u.roles || [];
               const isOwner = roles.some(r => (r.name||r.type||r) === "OWNER");
               return (
-                <div key={u.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 14px", borderRadius:11, border:"1.5px solid var(--border-default)", background:"var(--bg-surface)", opacity: u.enabled ? 1 : 0.55 }}>
+                <div key={u.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 14px", borderRadius:11, border:"1.5px solid var(--border-subtle)", background:"var(--bg-surface)", opacity: u.enabled ? 1 : 0.55 }}>
                   <Avatar name={u.fullName} size={36} />
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontWeight:800, fontSize:13, display:"flex", alignItems:"center", gap:6 }}>

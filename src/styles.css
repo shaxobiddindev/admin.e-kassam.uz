@@ -507,7 +507,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
   position: absolute; right: 4px; width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   border: 0; background: transparent; cursor: pointer; border-radius: 8px;
-  color: var(--text2, var(--fg-secondary));
+  color: var(--fg-secondary);
 }
 .ek-date__pick:hover { background: var(--bg-hover); }
 .ek-date__native { position: absolute; right: 8px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -524,7 +524,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.4fr) auto;
   gap: 8px; align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border-subtle, var(--border));
+  border-bottom: 1px solid var(--border-subtle);
 }
 .flt-row:last-of-type { border-bottom: 0; }
 .flt-vals { display: flex; gap: 6px; min-width: 0; }
@@ -547,7 +547,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
 }
 .flt-chip button:hover { background: var(--bg-brand); color: #fff; }
 .flt-chips__clear {
-  border: 0; background: none; color: var(--fg-secondary, var(--muted)); cursor: pointer;
+  border: 0; background: none; color: var(--fg-secondary); cursor: pointer;
   font-size: 12px; font-weight: 700; text-decoration: underline;
 }
 .flt-btn__badge {
@@ -596,7 +596,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 12px; padding: 10px 0; margin: -4px 0 0;
-  background: var(--bg-page, var(--bg-surface));
+  background: var(--bg-surface);
 }
 .dash__left { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
 .dash__period {
@@ -1060,11 +1060,11 @@ button.stk__c:hover { background: var(--bg-hover); }
 .ses-row {
   display: flex; flex-direction: column; gap: 2px;
   padding: 8px 10px; border-radius: 8px;
-  border: 1px solid var(--border, rgba(127,127,127,.25));
+  border: 1px solid var(--border-subtle);
 }
 /* Joriy qurilma ajralib tursin — admin qaysi qator o'ziniki ekanini
    bir qarashda ko'rishi kerak. */
-.ses-row.is-current { border-color: var(--ok, #2E9E5B); }
+.ses-row.is-current { border-color: var(--fg-success); }
 .ses-row__main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ses-row__ua { font-weight: 700; font-size: 13px; }
 .ses-row__meta { font-size: 12px; opacity: .7; }
@@ -1081,7 +1081,7 @@ button.stk__c:hover { background: var(--bg-hover); }
 .inf            { display: flex; align-items: center; justify-content: center;
                   gap: 10px; min-height: 56px; padding: 12px;
                   font-size: 13px; color: var(--fg-secondary); }
-.inf--done      { color: var(--fg-muted, var(--fg-secondary)); font-size: 12px; }
+.inf--done      { color: var(--fg-secondary); font-size: 12px; }
 .inf--error     { color: var(--fg-danger); flex-wrap: wrap; }
 /* Sezgir chiziq ko'rinmaydi, lekin joy egallashi kerak emas. */
 .inf__sentinel  { width: 1px; height: 1px; }

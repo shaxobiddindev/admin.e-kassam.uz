@@ -211,6 +211,9 @@ export const AUDIT_ACTION = dict("enum.audit", {
   STOCK_TAKE_CLOSE:       { color: "blue",   icon: "fa-clipboard-check" },
   STOCK_TAKE_CANCEL:      { color: "red",    icon: "fa-clipboard" },
   GOODS_RECEIPT:          { color: "green",  icon: "fa-truck-ramp-box" },
+  /* Sariq: muddat uzaytirilsa, muddati o'tgan tovar sotuvga
+     qaytadi — jurnalda ko'zga tashlanishi kerak. */
+  BATCH_EXPIRY_CHANGE:    { color: "yellow", icon: "fa-calendar-day" },
   TRANSFER_SEND:          { color: "blue",   icon: "fa-arrow-right-from-bracket" },
   TRANSFER_RECEIVE:       { color: "green",  icon: "fa-arrow-right-to-bracket" },
   TRANSFER_CANCEL:        { color: "red",    icon: "fa-xmark" },

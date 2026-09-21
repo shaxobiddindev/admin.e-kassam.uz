@@ -99,7 +99,11 @@ export default function App() {
                 tekshiruv jimgina o'chib qolardi. */}
             <Route path="/"          element={<DashboardPage toast={toast} user={user} />} />
             <Route path="/requests"  element={<RequestsPage  toast={toast} />} />
-            <Route path="/shops"     element={<ShopsPage     toast={toast} />} />
+            {/* ⚠ `user` UZATILADI: do'konni bloklash (`SHOP_STATUS`) va
+                o'chirish (`SHOP_DELETE`) alohida vakolat va server ularni
+                endi HAQIQATAN tekshiradi. Prop bo'lmasa, ruxsati yo'q
+                admin har bosganda 403 oladigan tugmani ko'rib turardi. */}
+            <Route path="/shops"     element={<ShopsPage     toast={toast} user={user} />} />
             <Route path="/users"     element={<UsersPage     toast={toast} />} />
             <Route path="/customers" element={<CustomersPage toast={toast} />} />
             <Route path="/audit"     element={<AuditPage     toast={toast} />} />

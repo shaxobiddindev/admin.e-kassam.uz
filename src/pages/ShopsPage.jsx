@@ -9,6 +9,7 @@ import { useConfirm } from "../context/ConfirmProvider";
 import Select from "../components/ek/Select";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
+import { can } from "../routes";
 import { SkeletonList } from "../components/ek/Loading";
 import ExportButtons from "../components/ExportButtons";
 import ShopFeaturesModal from "../components/ShopFeaturesModal";
@@ -48,8 +49,12 @@ function expiryTone(shop) {
   return "var(--fg-secondary)";
 }
 
-export default function ShopsPage({ toast }) {
+export default function ShopsPage({ toast, user }) {
   const { t } = useT();
+  /* ⚠ `null` — ruxsatlar HALI NOMA'LUM va bunda hamma narsa ko'rinadi
+     (`can` izohi). Serverdagi tekshiruv baribir joyida: bu yerdagi
+     yashirish qulaylik uchun, himoya uchun emas. */
+  const perms = user?.permissions ?? null;
   const confirm = useConfirm();
   const [shops,   setShops]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -387,7 +392,13 @@ export default function ShopsPage({ toast }) {
                               onClick={() => setModal({ type:"edit", shop })}>
                               <i className="fa-solid fa-pen" />
                             </button>
-                            {(shop.status === "ACTIVE" || shop.status === "BLOCKED") && (
+                            {/* ⚠ BLOKLASH — ALOHIDA VAKOLAT. Server buni
+                                tekshirmasdi va panel katakchasi hech
+                                narsani boshqarmasdi; endi tekshiradi,
+                                shuning uchun tugma ham ruxsatga qarab
+                                chiziladi. */}
+                            {can(perms, "SHOP_STATUS")
+                             && (shop.status === "ACTIVE" || shop.status === "BLOCKED") && (
                               <button
                                 className={`bic ${shop.status==="ACTIVE" ? "b-yellow" : "b-green"}`}
                                 title={t(shop.status==="ACTIVE" ? "adm.shops.block" : "adm.shops.activate")}
@@ -395,10 +406,12 @@ export default function ShopsPage({ toast }) {
                                 <i className={`fa-solid ${shop.status==="ACTIVE" ? "fa-ban" : "fa-check"}`} />
                               </button>
                             )}
-                            <button className="bic b-red" title={t("common.delete")}
-                              onClick={() => handleDelete(shop)}>
-                              <i className="fa-solid fa-trash" />
-                            </button>
+                            {can(perms, "SHOP_DELETE") && (
+                              <button className="bic b-red" title={t("common.delete")}
+                                onClick={() => handleDelete(shop)}>
+                                <i className="fa-solid fa-trash" />
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>

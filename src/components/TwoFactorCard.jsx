@@ -293,7 +293,13 @@ export default function TwoFactorCard({ toast }) {
               />
               <button className="btn btn-danger btn-sm" onClick={disable}
                       disabled={busy || code.trim().length < 6}>
-                <i className="fa-solid fa-shield-slash" aria-hidden="true" /> {t("twofa.disable")}
+                {/* ⚠ `fa-ban`, `fa-shield-slash` EMAS: chizilgan qalqon
+                    Font Awesome'ning PULLIK to'plamida va bepul faylda
+                    uning kod nuqtasi yo'q — tugmada ikonka umuman
+                    chizilmasdi. `fa-ban` ilovada allaqachon «bloklangan»
+                    va «bekor qilingan» ma'nosida ishlatiladi
+                    (`ek-labels.js`), ya'ni kassirga tanish belgi. */}
+                <i className="fa-solid fa-ban" aria-hidden="true" /> {t("twofa.disable")}
               </button>
             </div>
           </div>

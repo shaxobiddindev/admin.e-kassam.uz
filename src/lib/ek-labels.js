@@ -154,7 +154,11 @@ export const AUDIT_ACTION = dict("enum.audit", {
      o'chirdi?», «ruxsatni kim kengaytirdi?». Ular xavfsizlikka
      tegadi, shuning uchun rangi ham betaraf emas. */
   ADMIN_2FA_ENABLE:       { color: "green",  icon: "fa-shield-halved" },
-  ADMIN_2FA_DISABLE:      { color: "red",    icon: "fa-shield-slash" },
+  /* ⚠ Chizilgan qalqon Font Awesome'ning PULLIK to'plamida — bepul
+     faylda kod nuqtasi yo'q va jurnal qatorida ikonka o'rnida bo'sh joy
+     turardi. `fa-ban` shu ro'yxatning o'zida «bloklangan» va «bekor
+     qilingan» uchun allaqachon ishlatiladi. `check-icons.mjs` qo'riqlaydi. */
+  ADMIN_2FA_DISABLE:      { color: "red",    icon: "fa-ban" },
   ADMIN_2FA_RECOVERY:     { color: "yellow", icon: "fa-life-ring" },
   ADMIN_2FA_RECOVERY_RESET: { color: "yellow", icon: "fa-arrows-rotate" },
   ADMIN_PERMISSION_CHANGE:  { color: "red",  icon: "fa-user-lock" },

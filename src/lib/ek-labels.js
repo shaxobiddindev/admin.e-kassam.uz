@@ -247,6 +247,16 @@ export const AUDIT_ACTION = dict("enum.audit", {
   SHOP_SETTING_CHANGE:    { icon: "fa-gear" },
   DEVICE_TRUSTED:         { icon: "fa-mobile-screen" },
   DEVICE_CONFIRMED:       { color: "green",  icon: "fa-mobile-screen-button" },
+
+  /* ── Breezz integratsiyasi (V139) ──
+     ⚠ Kalit berilishi SARIQ: u do'kon katalogini tashqi platformaga
+     ochadi va tekshiruvda ko'zga tashlanishi kerak. Uzilish — qizil. */
+  BREEZZ_LINK_REQUEST:    { color: "blue",   icon: "fa-link" },
+  BREEZZ_LINK_CANCEL:     { icon: "fa-xmark" },
+  BREEZZ_LINK_APPROVE:    { color: "green",  icon: "fa-link" },
+  BREEZZ_LINK_REJECT:     { color: "yellow", icon: "fa-ban" },
+  BREEZZ_LINK_REVOKE:     { color: "red",    icon: "fa-link-slash" },
+  BREEZZ_KEY_ISSUE:       { color: "yellow", icon: "fa-key" },
 });
 
 /* ── Ko'chirish holati — TransferStatus (V22) ────────────────────────────── */

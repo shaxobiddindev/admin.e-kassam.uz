@@ -248,7 +248,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
   DEVICE_TRUSTED:         { icon: "fa-mobile-screen" },
   DEVICE_CONFIRMED:       { color: "green",  icon: "fa-mobile-screen-button" },
 
-  /* ── Breezz integratsiyasi (V139) ──
+  /* ── Breezz integratsiyasi (V140) ──
      ⚠ Kalit berilishi SARIQ: u do'kon katalogini tashqi platformaga
      ochadi va tekshiruvda ko'zga tashlanishi kerak. Uzilish — qizil. */
   BREEZZ_LINK_REQUEST:    { color: "blue",   icon: "fa-link" },

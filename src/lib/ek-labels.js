@@ -257,6 +257,8 @@ export const AUDIT_ACTION = dict("enum.audit", {
   BREEZZ_LINK_REJECT:     { color: "yellow", icon: "fa-ban" },
   BREEZZ_LINK_REVOKE:     { color: "red",    icon: "fa-link-slash" },
   BREEZZ_KEY_ISSUE:       { color: "yellow", icon: "fa-key" },
+  /* V141: «Breezz'da pauza» — tovar do'konda sotilaveradi (umumiy hujjat §17). */
+  PRODUCT_BREEZZ_PAUSE:   { color: "blue",   icon: "fa-circle-pause" },
 });
 
 /* ── Ko'chirish holati — TransferStatus (V22) ────────────────────────────── */

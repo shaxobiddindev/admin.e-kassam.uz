@@ -130,6 +130,9 @@ export const AUDIT_ACTION = dict("enum.audit", {
   /* ── Obuna va arizalar ── */
   PAYMENT_REGISTER:       { color: "green",  icon: "fa-money-check-dollar" },
   SUBSCRIPTION_EXPIRED:   { color: "red",    icon: "fa-hourglass-end" },
+  /* Obunani admin boshqaradi (V145): bepul muddat, cheksiz, sana, tarif, bekor qilish. */
+  SUBSCRIPTION_CHANGE:    { color: "blue",   icon: "fa-sliders" },
+  PAYMENT_CANCEL:         { color: "red",    icon: "fa-rotate-left" },
   CONTACT_HANDLED:        { color: "blue",   icon: "fa-envelope-open" },
   CONTACT_STATUS:         { color: "blue",   icon: "fa-envelope" },
 
@@ -295,6 +298,28 @@ export const PAYMENT_PROVIDER = dict("enum.provider", {
   CLICK:  { icon: "fa-mobile-screen",        tone: "info" },
 });
 
+/* ── To'lov holati — uz.kassa.common.enums.PaymentStatus (V145) ─────────── */
+export const PAYMENT_STATUS = dict("enum.paymentStatus", {
+  PAID:      { tone: "success", icon: "fa-circle-check" },
+  PENDING:   { tone: "warning", icon: "fa-clock" },
+  CANCELLED: { tone: "neutral", icon: "fa-rotate-left" },
+  FAILED:    { tone: "danger",  icon: "fa-circle-xmark" },
+});
+
+/* ── Obuna tarixi hodisasi — SubscriptionEventType (V145) ──────────────────
+   ⚠ Backend enum'iga yangi qiymat qo'shilsa — shu yerga va `enum.subEvent.*`
+   (uz/ru/en) ga ham. */
+export const SUBSCRIPTION_EVENT = dict("enum.subEvent", {
+  PAYMENT:        { tone: "success", icon: "fa-money-bill-wave" },
+  PAYMENT_CANCEL: { tone: "danger",  icon: "fa-rotate-left" },
+  GRANT:          { tone: "info",    icon: "fa-gift" },
+  UNLIMITED:      { tone: "success", icon: "fa-infinity" },
+  SET_DATE:       { tone: "info",    icon: "fa-calendar-check" },
+  PLAN_CHANGE:    { tone: "info",    icon: "fa-arrow-right-arrow-left" },
+  CANCEL:         { tone: "danger",  icon: "fa-ban" },
+  EXPIRED:        { tone: "warning", icon: "fa-hourglass-end" },
+});
+
 /* ── Do'kon xodimi roli — RoleType ───────────────────────────────────────── */
 export const ROLE = dict("enum.role", {
   OWNER:       { hasShort: true, color: "var(--ek-role-owner)",   bg: "var(--ek-role-owner-bg)" },
@@ -424,6 +449,8 @@ export const transferStatus = (v) => entry(TRANSFER_STATUS, v);
 export const shopStatus     = (v) => entry(SHOP_STATUS, v);
 export const shopPlan       = (v) => entry(SHOP_PLAN, v);
 export const paymentProvider= (v) => entry(PAYMENT_PROVIDER, v);
+export const paymentStatus  = (v) => entry(PAYMENT_STATUS, v);
+export const subEvent       = (v) => entry(SUBSCRIPTION_EVENT, v);
 export const roleEntry      = (v) => entry(ROLE, v);
 export const roleLabel      = (v) => entry(ROLE, v).label;
 export const adminRole      = (v) => entry(ADMIN_ROLE, v);

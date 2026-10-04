@@ -11,6 +11,7 @@ import { BootLoader } from "./components/ek/Loading";
 import { ConfirmProvider } from "./context/ConfirmProvider";
 import DashboardPage from "./pages/DashboardPage";
 import ShopsPage     from "./pages/ShopsPage";
+import SubscriptionsPage from "./pages/SubscriptionsPage";
 import UsersPage     from "./pages/UsersPage";
 import CustomersPage from "./pages/CustomersPage";
 import RequestsPage  from "./pages/RequestsPage";
@@ -104,6 +105,8 @@ export default function App() {
                 endi HAQIQATAN tekshiradi. Prop bo'lmasa, ruxsati yo'q
                 admin har bosganda 403 oladigan tugmani ko'rib turardi. */}
             <Route path="/shops"     element={<ShopsPage     toast={toast} user={user} />} />
+            {/* Obunalar (V145) — `user`: amallar BILLING_REGISTER ga qarab chiziladi. */}
+            <Route path="/subscriptions" element={<SubscriptionsPage toast={toast} user={user} />} />
             <Route path="/users"     element={<UsersPage     toast={toast} />} />
             <Route path="/customers" element={<CustomersPage toast={toast} />} />
             <Route path="/audit"     element={<AuditPage     toast={toast} />} />

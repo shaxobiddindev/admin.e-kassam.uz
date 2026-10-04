@@ -147,6 +147,21 @@ export const shopApi = {
   },
 };
 
+// ── Obunalar (V145) ──────────────────────────────────────────────
+/* Har o'zgartirish YANGI holatni (`Detail`) qaytaradi — oyna ikkinchi
+   so'rov yubormaydi. To'lov qayd etish avvalgidek `shopApi.addPayment`. */
+export const subscriptionApi = {
+  list:          ()              => req("/superadmin/subscriptions"),
+  plans:         ()              => req("/superadmin/subscriptions/plans"),
+  detail:        (id)            => req(`/superadmin/subscriptions/${id}`),
+  grant:         (id, data)      => req(`/superadmin/subscriptions/${id}/grant`,     { method: "POST", ...body(data) }),
+  unlimited:     (id, data)      => req(`/superadmin/subscriptions/${id}/unlimited`, { method: "POST", ...body(data) }),
+  setDate:       (id, data)      => req(`/superadmin/subscriptions/${id}/date`,      { method: "POST", ...body(data) }),
+  changePlan:    (id, data)      => req(`/superadmin/subscriptions/${id}/plan`,      { method: "POST", ...body(data) }),
+  cancel:        (id, data)      => req(`/superadmin/subscriptions/${id}/cancel`,    { method: "POST", ...body(data) }),
+  cancelPayment: (id, pid, data) => req(`/superadmin/subscriptions/${id}/payments/${pid}/cancel`, { method: "POST", ...body(data) }),
+};
+
 // ── Xizmat yo'nalishlari va interfeys modullari (V49) ───────────
 /* Do'konda QAYSI BO'LIMLAR bo'lishi shu yerdan boshqariladi: yo'nalish
    standart to'plamni beradi, istisno esa uni bitta modul darajasida

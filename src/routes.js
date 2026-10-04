@@ -38,6 +38,8 @@ export const NAV = [
   ]},
   { sec: "nav.section.system", items: [
     { id: "shops",     path: "/shops",     key: "nav.shops",     icon: "fa-store",           perm: "SHOP_VIEW" },
+    // Obunalar (V145) — do'konlardan keyin: ikkalasi ham mijozlarimiz haqida.
+    { id: "subscriptions", path: "/subscriptions", key: "nav.subscriptions", icon: "fa-credit-card", perm: "BILLING_VIEW" },
     { id: "users",     path: "/users",     key: "nav.users",     icon: "fa-users",           perm: "SHOP_USER_VIEW" },
     { id: "customers", path: "/customers", key: "nav.customers", icon: "fa-address-book",    perm: "CUSTOMER_VIEW" },
     // Audit — tizim boshqaruvining oxirida: kundalik emas, lekin

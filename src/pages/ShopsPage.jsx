@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { shopApi, userApi, featureApi } from "../api";
-import { fmtDate, fmtDateTime, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, SHOP_PLAN,
-         shopStatus, shopPlan, roleLabel, money, paymentProvider } from "../utils";
+import { fmtDate, SHOP_STATUS, STATUS_OPTIONS, ROLE_OPTIONS, SHOP_PLAN,
+         shopStatus, shopPlan, roleLabel } from "../utils";
 import { useT } from "../lib/ek-i18n";
 import Modal from "../components/Modal";
 import { Empty, Search, FG, Badge, Avatar } from "../components/ui";
@@ -16,11 +16,12 @@ import ShopFeaturesModal from "../components/ShopFeaturesModal";
 import ShopFiscalModal from "../components/ShopFiscalModal";
 import DirectionPicker from "../components/DirectionPicker";
 import { isoDate } from "../utils/export";
-import { CodeField, PhoneField, NameField, UsernameField, NumField } from "../components/ek/EkFields";
+import { CodeField, PhoneField, NameField, UsernameField } from "../components/ek/EkFields";
 import { phoneInput } from "../lib/ek-input";
 import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 import { asArray } from "../lib/ek-array";
+import SubscriptionManager from "../components/SubscriptionManager";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ export default function ShopsPage({ toast, user }) {
       options: Object.keys(SHOP_STATUS).map((k) => ({ value: k, label: shopStatus(k).label })),
       get: (s) => s.status },
     { key: "plan",  label: t("adm.shops.colPlan"),       type: "enum",
-      options: Object.keys(SHOP_PLAN).map((k) => ({ value: k, label: k })),
+      options: Object.keys(SHOP_PLAN).map((k) => ({ value: k, label: shopPlan(k).label })),
       get: (s) => s.plan },
     { key: "last",  label: t("adm.shops.colLastSale"),   type: "date",
       get: (s) => stats[s.id]?.lastSaleAt },
@@ -355,11 +356,14 @@ export default function ShopsPage({ toast, user }) {
                               onClick={() => setModal({ type:"users", shop })}>
                               <i className="fa-solid fa-users" />
                             </button>
-                            {/* Filialda obuna yo'q — to'lov bosh do'konga qayd etiladi */}
-                            {!shop.parentShopId && (
-                              <button className="bic b-green" title={t("bill.action")}
+                            {/* Filialda obuna yo'q — bosh do'konniki boshqariladi.
+                                ⚠ Vakolat bilan (V145): ilgari tugma hammaga
+                                chizilardi va ko'rish huquqi yo'q admin 403 olardi. */}
+                            {!shop.parentShopId && can(perms, "BILLING_VIEW") && (
+                              <button className="bic b-green" title={t("sub.manageTitle")}
+                                aria-label={t("sub.manageTitle")}
                                 onClick={() => setModal({ type:"billing", shop })}>
-                                <i className="fa-solid fa-credit-card" />
+                                <i className="fa-solid fa-credit-card" aria-hidden="true" />
                               </button>
                             )}
                             {/* Modullar (V49) — do'konning INTERFEYSI.
@@ -433,8 +437,8 @@ export default function ShopsPage({ toast, user }) {
         <EditShopModal shop={modal.shop} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} toast={toast} />
       )}
       {modal?.type === "billing" && (
-        <BillingModal shop={modal.shop} onClose={() => setModal(null)}
-          onSaved={() => { setModal(null); load(); }} toast={toast} />
+        <SubscriptionManager shopId={modal.shop.id} shopName={modal.shop.name} perms={perms}
+          onClose={() => setModal(null)} onChanged={load} toast={toast} />
       )}
       {modal?.type === "users" && (
         <ShopUsersModal shop={modal.shop} onClose={() => setModal(null)} onReload={load} toast={toast} />
@@ -885,125 +889,3 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
 }
 
 
-/* ══════════════════════════════════════════════════════════════════════════
-   To'lovni qayd etish va tarix.
-
-   Hozircha to'lov QO'LDA kiritiladi (naqd, bank o'tkazmasi, shartnoma).
-   Forma maydonlari ataylab Payme/Click callback'i bilan bir xil shaklda:
-   `provider` va `providerTransactionId` allaqachon bor, ya'ni shlyuz
-   ulanganda bu forma ham, backend so'rovi ham o'zgarmaydi.
-   ══════════════════════════════════════════════════════════════════════════ */
-function BillingModal({ shop, onClose, onSaved, toast }) {
-  const { t } = useT();
-  const [items,  setItems]  = useState([]);
-  const [busy,   setBusy]   = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [form,   setForm]   = useState({
-    plan: shop.plan && shop.plan !== "FREE" ? shop.plan : "BASIC",
-    amount: "", months: 1, provider: "MANUAL", providerTransactionId: "", note: "",
-  });
-  const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-
-  useEffect(() => {
-    shopApi.payments(shop.id)
-      .then(r => setItems(asArray(r.data)))
-      .catch(e => toast.error(e.message))
-      .finally(() => setBusy(false));
-  }, []);
-
-  const save = async () => {
-    if (!form.amount || Number(form.amount) <= 0) { toast.error(t("bill.amount")); return; }
-    setSaving(true);
-    try {
-      await shopApi.addPayment(shop.id, {
-        plan: form.plan,
-        amount: Number(form.amount),
-        months: Number(form.months) || 1,
-        provider: form.provider,
-        providerTransactionId: form.providerTransactionId || null,
-        note: form.note || null,
-      });
-      toast.success(t("bill.registered"));
-      onSaved();
-    } catch (e) { toast.error(e.message); }
-    finally { setSaving(false); }
-  };
-
-  return (
-    <Modal title={t("bill.title", { name: shop.name })} onClose={onClose} size="md" footer={
-      <>
-        <button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
-        <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
-          {saving ? <><Spinner /> {t("common.saving")}</>
-                  : <><i className="fa-solid fa-check" /> {t("bill.action")}</>}
-        </button>
-      </>
-    }>
-      <div className="g2">
-        <FG label={t("bill.plan")}>
-          <Select block variant="field" ariaLabel={t("bill.plan")}
-            value={form.plan}
-            onChange={(v) => set("plan")({ target: { value: v } })}
-            options={["BASIC", "PREMIUM", "ENTERPRISE"].map(k => ({
-              value: k, label: shopPlan(k).label, icon: SHOP_PLAN[k]?.icon }))} />
-        </FG>
-        <FG label={t("bill.months")}>
-          <NumField className="fi ek-num" kind="int" min={1} max={36}
-            value={form.months} onChange={set("months")} />
-        </FG>
-      </div>
-      <FG label={`${t("bill.amount")} *`}>
-        <NumField className="fi ek-num" kind="money"
-          value={form.amount} onChange={set("amount")} placeholder="240000" autoFocus />
-      </FG>
-      <div className="g2">
-        <FG label={t("bill.provider")}>
-          <Select block variant="field" ariaLabel={t("bill.provider")}
-            value={form.provider}
-            onChange={(v) => set("provider")({ target: { value: v } })}
-            options={["MANUAL", "PAYME", "CLICK"].map(k => ({
-              value: k, label: paymentProvider(k).label, icon: paymentProvider(k).icon }))} />
-        </FG>
-        <FG label={t("bill.txnId")} hint={t("bill.txnHint")}>
-          <input className="fi ek-num" maxLength={128} value={form.providerTransactionId}
-            onChange={set("providerTransactionId")} />
-        </FG>
-      </div>
-      <FG label={t("bill.note")}>
-        <input className="fi" maxLength={500} value={form.note} onChange={set("note")} />
-      </FG>
-
-      <div className="c-head" style={{ padding:"14px 0 6px" }}>
-        <span className="c-title" style={{ fontSize:13 }}>
-          <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> {t("bill.history")}
-        </span>
-      </div>
-      {busy ? <SkeletonList rows={3} avatar={false} /> : items.length === 0 ? (
-        <Empty icon="fa-receipt" title={t("bill.none")} subtitle={t("bill.noneHint")} />
-      ) : (
-        <div className="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>{t("bill.paidAt")}</th><th>{t("bill.plan")}</th>
-                <th className="num">{t("bill.amount")}</th>
-                <th>{t("bill.provider")}</th><th>{t("bill.coversUntil")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(pmt => (
-                <tr key={pmt.id}>
-                  <td className="ek-num" style={{ fontSize:11 }}>{fmtDateTime(pmt.paidAt)}</td>
-                  <td>{shopPlan(pmt.plan).label}</td>
-                  <td className="num ek-num" style={{ fontWeight:700 }}>{money(pmt.amount)}</td>
-                  <td style={{ fontSize:12 }}>{paymentProvider(pmt.provider).label}</td>
-                  <td className="ek-num" style={{ fontSize:11 }}>{fmtDate(pmt.coversUntil)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </Modal>
-  );
-}

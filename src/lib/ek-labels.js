@@ -213,6 +213,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
   /* ── Narx ── */
   PRICE_CHANGE:           { color: "yellow", icon: "fa-tag" },
   PRICE_BULK_CHANGE:      { color: "yellow", icon: "fa-tags" },
+  MODIFIER_CHANGE:        { color: "yellow", icon: "fa-utensils" },
 
   /* ── Ombor ── */
   STOCK_TAKE_CLOSE:       { color: "blue",   icon: "fa-clipboard-check" },

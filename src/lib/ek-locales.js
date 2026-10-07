@@ -747,6 +747,7 @@ const uz = {
   "enum.audit.PRICE_CHANGE": "Narx o'zgardi",
   "enum.audit.PRICE_BULK_CHANGE": "Ommaviy narx o'zgardi",
   "enum.audit.MODIFIER_CHANGE": "Taom qo'shimchalari o'zgardi",
+  "enum.audit.RECIPE_CHANGE": "Retsept o'zgardi",
   "enum.audit.STOCK_TAKE_CLOSE": "Inventarizatsiya yakunlandi",
   "enum.audit.BATCH_EXPIRY_CHANGE": "Partiya muddati o'zgartirildi",
   "enum.audit.STOCK_TAKE_CANCEL": "Inventarizatsiya bekor qilindi",
@@ -1661,6 +1662,7 @@ const uz = {
   /* ── v2: tovar turi ──────────────────────────────────────────────────── */
   "enum.productType.GOODS": "Tovar",
   "enum.productType.SERVICE": "Xizmat",
+  "enum.productType.DISH": "Taom (retsept bilan)",
 
   /* ── v2: markirovka guruhi ───────────────────────────────────────────── */
   "enum.marking.TAMAKI": "Tamaki",
@@ -1684,6 +1686,7 @@ const uz = {
   "enum.business.ELECTRONICS": "Elektronika",
   "enum.business.AUTO_PARTS": "Avto ehtiyot qismlar",
   "enum.business.SERVICE": "Xizmat ko'rsatish",
+  "enum.business.RESTAURANT": "Restoran va kafe",
   "enum.business.OTHER": "Boshqa",
 
   /* ── v2: global katalog ──────────────────────────────────────────────── */
@@ -2889,6 +2892,7 @@ const ru = {
   "enum.audit.PRICE_CHANGE": "Цена изменена",
   "enum.audit.PRICE_BULK_CHANGE": "Массовое изменение цен",
   "enum.audit.MODIFIER_CHANGE": "Изменены модификаторы блюд",
+  "enum.audit.RECIPE_CHANGE": "Изменена техкарта",
   "enum.audit.STOCK_TAKE_CLOSE": "Инвентаризация завершена",
   "enum.audit.BATCH_EXPIRY_CHANGE": "Изменён срок годности партии",
   "enum.audit.STOCK_TAKE_CANCEL": "Инвентаризация отменена",
@@ -3774,6 +3778,7 @@ const ru = {
   /* ── v2: тип товара ──────────────────────────────────────────────────── */
   "enum.productType.GOODS": "Товар",
   "enum.productType.SERVICE": "Услуга",
+  "enum.productType.DISH": "Блюдо (по техкарте)",
 
   /* ── v2: группа маркировки ───────────────────────────────────────────── */
   "enum.marking.TAMAKI": "Табак",
@@ -3797,6 +3802,7 @@ const ru = {
   "enum.business.ELECTRONICS": "Электроника",
   "enum.business.AUTO_PARTS": "Автозапчасти",
   "enum.business.SERVICE": "Услуги",
+  "enum.business.RESTAURANT": "Ресторан и кафе",
   "enum.business.OTHER": "Прочее",
 
   /* ── v2: общий каталог ───────────────────────────────────────────────── */
@@ -5002,6 +5008,7 @@ const en = {
   "enum.audit.PRICE_CHANGE": "Price changed",
   "enum.audit.PRICE_BULK_CHANGE": "Bulk price change",
   "enum.audit.MODIFIER_CHANGE": "Dish modifiers changed",
+  "enum.audit.RECIPE_CHANGE": "Recipe changed",
   "enum.audit.STOCK_TAKE_CLOSE": "Stock-take finished",
   "enum.audit.BATCH_EXPIRY_CHANGE": "Batch expiry changed",
   "enum.audit.STOCK_TAKE_CANCEL": "Stock-take cancelled",
@@ -5887,6 +5894,7 @@ const en = {
   /* ── v2: product type ────────────────────────────────────────────────── */
   "enum.productType.GOODS": "Goods",
   "enum.productType.SERVICE": "Service",
+  "enum.productType.DISH": "Dish (with recipe)",
 
   /* ── v2: marking group ───────────────────────────────────────────────── */
   "enum.marking.TAMAKI": "Tobacco",
@@ -5910,6 +5918,7 @@ const en = {
   "enum.business.ELECTRONICS": "Electronics",
   "enum.business.AUTO_PARTS": "Auto parts",
   "enum.business.SERVICE": "Services",
+  "enum.business.RESTAURANT": "Restaurant and cafe",
   "enum.business.OTHER": "Other",
 
   /* ── v2: global catalog ──────────────────────────────────────────────── */

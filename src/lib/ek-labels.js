@@ -214,6 +214,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
   PRICE_CHANGE:           { color: "yellow", icon: "fa-tag" },
   PRICE_BULK_CHANGE:      { color: "yellow", icon: "fa-tags" },
   MODIFIER_CHANGE:        { color: "yellow", icon: "fa-utensils" },
+  RECIPE_CHANGE:          { color: "yellow", icon: "fa-scroll" },
 
   /* ── Ombor ── */
   STOCK_TAKE_CLOSE:       { color: "blue",   icon: "fa-clipboard-check" },
@@ -368,6 +369,7 @@ export const UNIT = dict("enum.unit", {
 export const PRODUCT_TYPE = dict("enum.productType", {
   GOODS:   { icon: "fa-box",       tone: "neutral" },
   SERVICE: { icon: "fa-handshake", tone: "info" },
+  DISH:    { icon: "fa-utensils",  tone: "info" },
 });
 
 /* ── Markirovka guruhi — MarkingGroup ("Asl Belgisi") ────────────────────── */
@@ -395,6 +397,7 @@ export const BUSINESS_TYPE = dict("enum.business", {
   ELECTRONICS:  { icon: "fa-tv" },
   AUTO_PARTS:   { icon: "fa-car" },
   SERVICE:      { icon: "fa-handshake" },
+  RESTAURANT:   { icon: "fa-utensils" },
   OTHER:        { icon: "fa-store" },
 });
 

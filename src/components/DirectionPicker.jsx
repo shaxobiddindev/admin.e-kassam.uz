@@ -33,8 +33,14 @@ import { useT } from "../lib/ek-i18n";
    ekranda ikkita belgi turib, admin «demak dorixona cheklovlari ham
    ishlayapti» deb o'ylardi. Ya'ni zarar natijada emas — TUSHUNISHDA.
 
-   ⚠ Server ham shunday normallashtiradi: `UNIVERSAL` bo'lsa faqat o'zi
-   saqlanadi. Ikki tomonda ham qilingani ataylab — panel qoidasi
+   ⚠ ISTISNO — RESTORAN (2026-10-07). Restoran modullari (qo'shimcha,
+   retsept, oshxona cheki) `UNIVERSAL` ga kirmaydi: aralash do'kon tovar
+   formasida «Retsept» ko'rmasin. Shuning uchun universalga YANGI NARSA
+   qo'shadigan yo'nalish qulflanmaydi — kafesi bor aralash do'kon
+   ikkalasini tanlaydi. Qoida nom bilan emas, modullar bilan.
+
+   ⚠ Server ham shunday normallashtiradi: `UNIVERSAL` bo'lsa u va unga
+   yangi modul qo'shadiganlar saqlanadi. Ikki tomonda ham qilingani ataylab — panel qoidasi
    ko'rinish uchun, server qoidasi esa to'g'ridan-to'g'ri API ga
    yozilgan qiymat uchun.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -49,6 +55,9 @@ export default function DirectionPicker({ catalog, selected, onToggle }) {
   const allFeatures = [...new Set(catalog.flatMap((c) => c.features))];
 
   const universalOn = selected.has(UNIVERSAL);
+  const universalFeatures = catalog.find((c) => c.direction === UNIVERSAL)?.features || [];
+  /** Universalda yo'q modul olib keladimi (hozir faqat restoran). */
+  const addsToUniversal = (c) => c.features.some((f) => !universalFeatures.includes(f));
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
@@ -59,7 +68,7 @@ export default function DirectionPicker({ catalog, selected, onToggle }) {
         /* Universal yoqilganda qolganlari BOSILMAYDI. Universalning
            o'zi bosiladi — aks holda uni bekor qilib bo'lmasdi va
            admin tanlovda qamalib qolardi. */
-        const locked = universalOn && c.direction !== UNIVERSAL;
+        const locked = universalOn && c.direction !== UNIVERSAL && !addsToUniversal(c);
 
         return (
           <button

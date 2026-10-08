@@ -48,8 +48,8 @@ export default function UsersPage({ toast }) {
 
   const hasOwner   = users.some(u => (u.roles||[]).some(r => (r.name||r.type||r) === "OWNER"));
   const roleOpts   = hasOwner
-    ? ["SHOP_ADMIN","STOREKEEPER","CASHIER"]
-    : ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER"];
+    ? ["SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER"]
+    : ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER"];
 
   const handleToggle = async (u) => {
     const isBlocking = u.enabled;

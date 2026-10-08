@@ -550,6 +550,8 @@ const uz = {
   "enum.role.CASHIER.short": "Kassir",
   "enum.role.STOREKEEPER": "Omborchi",
   "enum.role.STOREKEEPER.short": "Omborchi",
+  "enum.role.WAITER": "Ofitsiant",
+  "enum.role.WAITER.short": "Ofitsiant",
 
   /* ── Enumlar: tizim admini ──────────────────────────────────────────── */
   "enum.adminRole.SUPER_ADMIN": "Super admin",
@@ -2702,6 +2704,8 @@ const ru = {
   "enum.role.CASHIER.short": "Кассир",
   "enum.role.STOREKEEPER": "Кладовщик",
   "enum.role.STOREKEEPER.short": "Кладовщик",
+  "enum.role.WAITER": "Официант",
+  "enum.role.WAITER.short": "Официант",
 
   "enum.adminRole.SUPER_ADMIN": "Суперадмин",
   "enum.adminRole.SYSTEM_ADMIN": "Системный админ",
@@ -4819,6 +4823,8 @@ const en = {
   "enum.role.CASHIER.short": "Cashier",
   "enum.role.STOREKEEPER": "Storekeeper",
   "enum.role.STOREKEEPER.short": "Storekeeper",
+  "enum.role.WAITER": "Waiter",
+  "enum.role.WAITER.short": "Waiter",
 
   "enum.adminRole.SUPER_ADMIN": "Super admin",
   "enum.adminRole.SYSTEM_ADMIN": "System admin",

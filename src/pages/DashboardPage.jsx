@@ -43,8 +43,6 @@ import { asArray } from "../lib/ek-array";
    hech kim qaramaydigan varaq kechasi ham so'rov yuborardi.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/** Avto-yangilanish oralig'i — panel jonli emas, uch daqiqa yetadi. */
-const REFRESH_MS = 180_000;
 
 /* ══════════════════════════════════════════════════════════════════════
    KICHIK BO'LAKLAR
@@ -1019,20 +1017,9 @@ export default function DashboardPage({ toast, user }) {
 
   useEffect(() => { load(false); }, [load]);
 
-  /* ⚠ Ko'rinmayotgan varaqda yangilanish TO'XTAYDI; varaq qaytganda
-     esa DARHOL yangilanadi — eski raqamni ko'rsatib turish yomonroq. */
-  useEffect(() => {
-    let id = null;
-    const stop = () => { if (id) clearInterval(id); id = null; };
-    const start = () => { stop(); id = setInterval(() => load(true), REFRESH_MS); };
-    const onVis = () => {
-      if (document.hidden) stop();
-      else { load(true); start(); }
-    };
-    if (!document.hidden) start();
-    document.addEventListener("visibilitychange", onVis);
-    return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
-  }, [load]);
+  /* ⚠ AVTOMATIK YANGILASH OLIB TASHLANDI (2026-10-08). Egasi: «muhim ish
+     qilayotganda yangilanib ketyapti — oynada yangilash tugmasi bor, shu
+     yetarli». Raqamlar — sahifa ochilganda va «Yangilash» tugmasi bilan. */
 
   /* ── Ctrl+K ─────────────────────────────────────────────────────── */
   useEffect(() => {

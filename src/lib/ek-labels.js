@@ -330,6 +330,8 @@ export const ROLE = dict("enum.role", {
   STOREKEEPER: { hasShort: true, color: "var(--ek-role-stock)",   bg: "var(--ek-role-stock-bg)" },
   /* Ofitsiant (V154) — alohida rang tokeni yo'q, ogohlantirish oilasi. */
   WAITER:      { hasShort: true, color: "var(--fg-warning-strong)", bg: "var(--bg-warning-subtle)" },
+  /* Oshpaz (V158) — faqat oshxona ekrani. */
+  COOK:        { hasShort: true, color: "var(--fg-danger)", bg: "var(--bg-danger-subtle)" },
 });
 
 /* ── Tizim admini — AdminRole ────────────────────────────────────────────── */

@@ -6,6 +6,7 @@ import { Badge } from "./ui";
 import { Spinner, SkeletonList } from "./ek/Loading";
 import DirectionPicker from "./DirectionPicker";
 import { asArray } from "../lib/ek-array";
+import { RESTAURANT, RESTAURANT_FEATURES, isMixed, isRestaurant, toggleDirection } from "../lib/ek-shop-kind";
 
 /* ══════════════════════════════════════════════════════════════════════════
    DO'KON YO'NALISHLARI VA MODULLARI (V49)
@@ -60,13 +61,17 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
     return () => { alive = false; };
   }, [shop.id]);
 
-  const toggleDir = (key) => {
-    setDraft((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
+  const toggleDir = (key) => setDraft((prev) => toggleDirection(prev || new Set(), key));
+
+  /* ⚠ TUR BO'YICHA (2026-10-08). Restoranning yo'nalishi o'zgarmaydi —
+     tanlov ko'rsatilmaydi. Do'konda restoran yo'nalishi ham, restoran
+     modullari ham ko'rinmaydi. Aralash eski joyda — to'liq ro'yxat va
+     ogohlantirish: admin bittasini tanlaydi. */
+  const mixed = isMixed(state || shop);
+  const rest = isRestaurant(state || shop) && !mixed;
+  const pickCatalog = mixed ? catalog : catalog.filter((c) => c.direction !== RESTAURANT);
+  const shownFeatures = (state?.features || []).filter(
+    (f) => isRestaurant(state || shop) || !RESTAURANT_FEATURES.includes(f.feature));
 
   const dirty = state && draft &&
     (draft.size !== (state.directions || []).length ||
@@ -141,8 +146,19 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
               ro'yxati `title` ichida yashiringan edi — admin do'konda
               nima yo'qolishini ko'rmasdan saqlardi. Sabab
               `DirectionPicker` da. */}
+          {mixed && (
+            <div className="ek-note ek-note--warning" style={{ marginBottom:8 }}>
+              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <span>{t("adm.shops.mixedHint")}</span>
+            </div>
+          )}
+          {rest ? (
+            <div className="ek-note ek-note--info" style={{ marginBottom:16 }}>
+              <i className="fa-solid fa-utensils" aria-hidden="true" /> <span>{t("adm.rest.fixedDirection")}</span>
+            </div>
+          ) : (
+          <>
           <div style={{ marginBottom:10 }}>
-            <DirectionPicker catalog={catalog} selected={draft || new Set()}
+            <DirectionPicker catalog={pickCatalog} selected={draft || new Set()}
                              onToggle={toggleDir} />
           </div>
 
@@ -167,6 +183,8 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
                           : <><i className="fa-solid fa-check" /> {t("adm.features.saveDirs")}</>}
             </button>
           </div>
+          </>
+          )}
 
           {/* ── Modullar ───────────────────────────────────────────────── */}
           <div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase",
@@ -177,7 +195,7 @@ export default function ShopFeaturesModal({ shop, onClose, onSaved, toast }) {
             {t("adm.features.modulesHint")}
           </div>
 
-          {state.features.map((f) => (
+          {shownFeatures.map((f) => (
             <div key={f.feature}
                  style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 0",
                           borderBottom:"1px solid var(--border-subtle)" }}>

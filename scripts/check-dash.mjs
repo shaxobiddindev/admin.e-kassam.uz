@@ -608,7 +608,10 @@ console.log("\n── K. Avto-yangilanish ──");
   });
   await wait(500);
   const after = calls.filter((c) => c.includes("/shops/stats")).length;
-  is(after > before, "varaq qaytganda DARHOL yangilanadi", `${before} → ${after}`);
+  /* ⚠ 2026-10-08 dan TESKARI: egasi «muhim ish qilayotganda yangilanib
+     ketyapti» dedi — raqamlar faqat ochilganda va «Yangilash» tugmasi
+     bilan. Varaqqa qaytish ham so'rov yubormaydi. */
+  is(after === before, "varaq qaytganda ham o'zi YANGILANMAYDI (faqat tugma bilan)", `${before} → ${after}`);
   await page.close();
 }
 

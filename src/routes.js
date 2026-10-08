@@ -36,40 +36,29 @@ export const NAV = [
     // javobsiz qolmasligi kerak, bu bo'lim ko'zga birinchi tushsin.
     { id: "requests",  path: "/requests",  key: "nav.requests",  icon: "fa-inbox",           perm: "CONTACT_VIEW" },
   ]},
-  { sec: "nav.section.system", items: [
+  /* ⚠ MIJOZLARIMIZ — do'kon va restoran YONMA-YON, lekin ALOHIDA band
+     (2026-10-08, egasi: «restoran do'kon bilan bir joyda tayinlanyapti —
+     alohida ochish kerak»). Ikkalasi bitta sahifa (`ShopsPage kind`),
+     lekin ro'yxat, yaratish formasi va rollar turga qarab. */
+  { sec: "nav.section.clients", items: [
     { id: "shops",     path: "/shops",     key: "nav.shops",     icon: "fa-store",           perm: "SHOP_VIEW" },
-    // Obunalar (V145) — do'konlardan keyin: ikkalasi ham mijozlarimiz haqida.
-    { id: "subscriptions", path: "/subscriptions", key: "nav.subscriptions", icon: "fa-credit-card", perm: "BILLING_VIEW" },
+    { id: "restaurants", path: "/restaurants", key: "nav.restaurants", icon: "fa-utensils",  perm: "SHOP_VIEW" },
     { id: "users",     path: "/users",     key: "nav.users",     icon: "fa-users",           perm: "SHOP_USER_VIEW" },
+    // Obunalar (V145) — mijozlarimiz haqida: kim qancha to'lagan.
+    { id: "subscriptions", path: "/subscriptions", key: "nav.subscriptions", icon: "fa-credit-card", perm: "BILLING_VIEW" },
     { id: "customers", path: "/customers", key: "nav.customers", icon: "fa-address-book",    perm: "CUSTOMER_VIEW" },
-    // Audit — tizim boshqaruvining oxirida: kundalik emas, lekin
-    // kerak bo'lganda topilishi oson joyda.
-    { id: "audit",     path: "/audit",     key: "nav.audit",     icon: "fa-clipboard-list",  perm: "AUDIT_VIEW" },
   ]},
-  /* ⚠ UMUMIY KATALOG — ALOHIDA BO'LIM (V90). U «Tizim boshqaruvi»
-     ichiga tushmadi, chunki qolgan bandlar MIJOZLARIMIZ haqida
-     (do'kon, xodim, jurnal), bu esa BARCHA do'konlar ishlatadigan
-     yagona tovar bazasi haqida. Bu yerdagi bitta tasdiq minglab
-     do'konning katalogiga tegadi. */
-  { sec: "nav.section.catalog", items: [
+  /* ⚠ PLATFORMA — oltita kichik bo'lim (katalog, sog'lik, adminlar, audit,
+     sozlamalar har biri o'z sarlavhasi bilan) bitta guruhga yig'ildi:
+     menyuda 11 band uchun 6 sarlavha bor edi va kerakli band ko'zdan
+     yo'qolardi. Ruxsat (`perm`) o'zgarmagan — bo'sh band chizilmaydi. */
+  { sec: "nav.section.platform", items: [
+    // Umumiy katalog (V90): BARCHA do'konlar ishlatadigan tovar bazasi.
     { id: "catalog",   path: "/catalog",   key: "nav.catalog",   icon: "fa-boxes-stacked",   perm: "CATALOG_MODERATE" },
-  ]},
-  /* ⚠ ADMINLAR — ALOHIDA BO'LIM va u FAQAT bosh adminda ko'rinadi
-     (`ADMIN_VIEW` hech kimga berilmaydi). Uni "Tizim boshqaruvi" ichiga
-     qo'shish mumkin edi, lekin bu bo'lim boshqa toifadagi ish: qolgan
-     hammasi mijozlarimiz haqida, bu esa BIZNING xodimlarimiz haqida. */
-  /* ⚠ TIZIM SOG'LIGI — ALOHIDA BO'LIM. Qolgan bandlar MIJOZLAR haqida
-     (do'kon, xodim, jurnal, katalog), bu esa TIZIMNING O'ZI haqida:
-     baza qo'riqchilari nima topgani. `perm: ADMIN_VIEW` — backenddagi
-     `hasRole('SUPER_ADMIN')` bilan bir xil doira, ya'ni band faqat bosh
-     adminda ko'rinadi va bosolmaydigan tugma chizilmaydi. */
-  { sec: "nav.section.ops", items: [
+    { id: "audit",     path: "/audit",     key: "nav.audit",     icon: "fa-clipboard-list",  perm: "AUDIT_VIEW" },
+    // Tizim sog'ligi va adminlar — faqat bosh adminda (`ADMIN_VIEW`).
     { id: "ops",       path: "/ops",       key: "nav.ops",       icon: "fa-heart-pulse",     perm: "ADMIN_VIEW" },
-  ]},
-  { sec: "nav.section.access", items: [
     { id: "admins",    path: "/admins",    key: "nav.admins",    icon: "fa-user-shield",     perm: "ADMIN_VIEW" },
-  ]},
-  { sec: "nav.section.settings", items: [
     // `perm` YO'Q — o'z hisobingizning sozlamasi, har qanday adminga ochiq.
     { id: "settings",  path: "/settings",  key: "nav.settings",  icon: "fa-gear" },
   ]},

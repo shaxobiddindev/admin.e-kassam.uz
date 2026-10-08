@@ -104,7 +104,10 @@ export default function App() {
                 o'chirish (`SHOP_DELETE`) alohida vakolat va server ularni
                 endi HAQIQATAN tekshiradi. Prop bo'lmasa, ruxsati yo'q
                 admin har bosganda 403 oladigan tugmani ko'rib turardi. */}
-            <Route path="/shops"     element={<ShopsPage     toast={toast} user={user} />} />
+            {/* ⚠ `key` — bitta komponent ikki manzilda: usiz /shops dan
+                /restaurants ga o'tilganda holat (ro'yxat, filtr) qolardi. */}
+            <Route path="/shops"     element={<ShopsPage     key="store" kind="store" toast={toast} user={user} />} />
+            <Route path="/restaurants" element={<ShopsPage   key="restaurant" kind="restaurant" toast={toast} user={user} />} />
             {/* Obunalar (V145) — `user`: amallar BILLING_REGISTER ga qarab chiziladi. */}
             <Route path="/subscriptions" element={<SubscriptionsPage toast={toast} user={user} />} />
             <Route path="/users"     element={<UsersPage     toast={toast} />} />

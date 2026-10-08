@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { shopApi, userApi } from "../api";
 import { roleEntry, roleLabel } from "../utils";
+import { isRestaurant, ofKind, rolesFor, roleNameIn } from "../lib/ek-shop-kind";
 import { useT } from "../lib/ek-i18n";
 import Modal from "../components/Modal";
 import { Empty, Search, FG, Badge, Avatar } from "../components/ui";
@@ -30,10 +31,18 @@ export default function UsersPage({ toast }) {
 
   useEffect(() => {
     shopApi.getAll()
-      .then(r => { const l = asArray(r.data); setShops(l); if (l.length) setSelShop(l[0]); })
+      .then(r => {
+        const l = asArray(r.data);
+        setShops(l);
+        const first = ofKind(l, "store")[0] || l[0];
+        if (first) { setSelShop(first); setKind(isRestaurant(first) ? "restaurant" : "store"); }
+      })
       .catch(e => toast.error(e.message))
       .finally(() => setShopsLoading(false));
   }, []);
+
+  const [kind, setKind] = useState("store");
+  const kindShops = ofKind(shops, kind);
 
   const loadUsers = useCallback((shop) => {
     if (!shop) return;
@@ -47,9 +56,11 @@ export default function UsersPage({ toast }) {
   useEffect(() => { loadUsers(selShop); }, [selShop]);
 
   const hasOwner   = users.some(u => (u.roles||[]).some(r => (r.name||r.type||r) === "OWNER"));
-  const roleOpts   = hasOwner
-    ? ["SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER"]
-    : ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER"];
+  /* Ofitsiant va oshpaz — faqat restoranda (2026-10-08; server ham rad etadi). */
+  const roleOpts   = rolesFor(selShop, hasOwner
+    ? ["SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER","COOK"]
+    : ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER","COOK"]);
+  const roleName   = (r) => roleNameIn(selShop, r, t, roleLabel);
 
   const handleToggle = async (u) => {
     const isBlocking = u.enabled;
@@ -78,12 +89,12 @@ export default function UsersPage({ toast }) {
     { key: "name",  label: t("adm.users.colUser"),  type: "text", get: (u) => u.fullName },
     { key: "login", label: t("common.username"),    type: "text", get: (u) => u.username },
     { key: "role",  label: t("common.role"),        type: "text",
-      get: (u) => (u.roles || []).map((r) => roleLabel(r.name || r.type || r)).join(", ") },
+      get: (u) => (u.roles || []).map((r) => roleName(r.name || r.type || r)).join(", ") },
     { key: "st",    label: t("common.status"),      type: "enum",
       options: [{ value: "on",  label: t("common.active") },
                 { value: "off", label: t("common.blocked") }],
       get: (u) => (u.enabled ? "on" : "off") },
-  ], [t]);
+  ], [t, selShop]);
   const colFlt = useDataFilter(COLS, "adm-users");
 
   const filtered = rankItems(colFlt.apply(users), search, {
@@ -99,7 +110,7 @@ export default function UsersPage({ toast }) {
   const exportRows = filtered.map((u) => [
     u.fullName,
     u.username,
-    (u.roles || []).map(r => roleLabel(r.name || r.type || r)).join(", "),
+    (u.roles || []).map(r => roleName(r.name || r.type || r)).join(", "),
     t(u.enabled ? "common.active" : "common.blocked"),
   ]);
 
@@ -110,15 +121,23 @@ export default function UsersPage({ toast }) {
       <div style={{ width:220, flexShrink:0 }}>
         <div className="card">
           <div className="c-head" style={{ padding:"12px 14px" }}>
-            <span className="c-title" style={{ fontSize:13 }}>
-              <i className="fa-solid fa-store" aria-hidden="true" /> {t("nav.shops")}
-            </span>
+            {/* ⚠ Do'kon va restoran ALOHIDA (2026-10-08): rollar ham har xil. */}
+            <div className="tabs" role="tablist" aria-label={t("nav.users")}>
+              {["store", "restaurant"].map((k) => (
+                <button key={k} type="button" role="tab" aria-selected={kind === k}
+                        className={`tab ${kind === k ? "on" : ""}`}
+                        onClick={() => { setKind(k); setSelShop(ofKind(shops, k)[0] || null); }}>
+                  <i className={`fa-solid ${k === "store" ? "fa-store" : "fa-utensils"}`} aria-hidden="true" />{" "}
+                  {t(k === "store" ? "nav.shops" : "nav.restaurants")}
+                </button>
+              ))}
+            </div>
           </div>
-          {shopsLoading ? <SkeletonList rows={3} avatar={false} /> : shops.length === 0
+          {shopsLoading ? <SkeletonList rows={3} avatar={false} /> : kindShops.length === 0
             ? <Empty icon="fa-store" text={t("adm.users.noShops")} />
             : (
               <div style={{ padding:"4px 0" }}>
-                {shops.map(shop => (
+                {kindShops.map(shop => (
                   /* Tugma, `<div>` emas: klaviatura bilan yetib boriladi
                      va ekran o'quvchi uni bosiladigan deb o'qiydi. */
                   <button key={shop.id} type="button" onClick={() => setSelShop(shop)}
@@ -215,7 +234,7 @@ export default function UsersPage({ toast }) {
                               return (
                                 <span key={rn} className="badge"
                                       style={{ background: re.bg || "var(--bg-sunken)", color: re.color || "var(--fg-secondary)" }}>
-                                  {re.label}
+                                  {roleName(rn)}
                                 </span>
                               );
                             })}
@@ -339,7 +358,7 @@ function AddUserModal({ shop, roleOpts, hasOwner, onClose, onSaved, toast }) {
           block variant="field" ariaLabel={t("common.role")} disabled={!hasOwner}
           value={form.role}
           onChange={(v) => set("role")({ target: { value: v } })}
-          options={roleOpts.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
+          options={roleOpts.map(r => ({ value: r, label: roleNameIn(shop, r, t, roleLabel), icon: "fa-user-tag" }))}
         />
       </FG>
     </Modal>
@@ -356,9 +375,13 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
   // tartibi barqaror emas. Do'kon admini {SHOP_ADMIN, STOREKEEPER, CASHIER}
   // olgani uchun bu yerda tasodifan "Kassir" ko'rinib, saqlanganda xodim
   // chindan kassirga tushib qolardi. Endi ierarxiyaning ENG YUQORISI olinadi.
-  const RANK = ["OWNER", "SHOP_ADMIN", "STOREKEEPER", "CASHIER"];
+  const RANK = ["OWNER", "SHOP_ADMIN", "STOREKEEPER", "CASHIER", "WAITER", "COOK"];
   const curRole  = isOwner ? "OWNER" : (RANK.find((r) => allRoles.includes(r)) || allRoles[0] || "");
-  const roleOpts = isOwner ? ["OWNER"] : (!hasOwner ? ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER"] : ["SHOP_ADMIN","STOREKEEPER","CASHIER"]);
+  /* ⚠ Ofitsiant/oshpaz ilgari bu ro'yxatda YO'Q edi — tahrirlash oynasi
+     ofitsiantni jimgina birinchi rolga (admin) o'tkazib saqlardi. */
+  const roleOpts = isOwner ? ["OWNER"] : rolesFor(shop, !hasOwner
+    ? ["OWNER","SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER","COOK"]
+    : ["SHOP_ADMIN","STOREKEEPER","CASHIER","WAITER","COOK"]);
   const [form,   setForm]   = useState({ fullName: user.fullName || "", role: curRole });
   const [pass,   setPass]   = useState({ newPass:"", confirm:"" });
   const [saving, setSaving] = useState(false);
@@ -428,7 +451,7 @@ function EditUserModal({ shop, user, hasOwner, onClose, onSaved, toast }) {
               block variant="field" ariaLabel={t("common.role")} disabled={isOwner}
               value={form.role}
               onChange={(v) => set("role")({ target: { value: v } })}
-              options={roleOpts.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
+              options={roleOpts.map(r => ({ value: r, label: roleNameIn(shop, r, t, roleLabel), icon: "fa-user-tag" }))}
             />
           </FG>
         </>

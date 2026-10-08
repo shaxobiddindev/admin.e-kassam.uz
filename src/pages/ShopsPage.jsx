@@ -22,6 +22,7 @@ import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 import { asArray } from "../lib/ek-array";
 import SubscriptionManager from "../components/SubscriptionManager";
+import { RESTAURANT, isMixed, ofKind, rolesFor, roleNameIn, toggleDirection } from "../lib/ek-shop-kind";
 
 
 /* ── Obuna muddati ────────────────────────────────────────────────────────
@@ -50,8 +51,12 @@ function expiryTone(shop) {
   return "var(--fg-secondary)";
 }
 
-export default function ShopsPage({ toast, user }) {
+/* ⚠ `kind` — «store» yoki «restaurant» (2026-10-08). Bitta sahifa, lekin
+   ro'yxat, yaratish formasi va rollar turga qarab: egasi do'kon va
+   restoran bir joyda tayinlanishini xato deb topdi. */
+export default function ShopsPage({ toast, user, kind = "store" }) {
   const { t } = useT();
+  const rest = kind === "restaurant";
   /* ⚠ `null` — ruxsatlar HALI NOMA'LUM va bunda hamma narsa ko'rinadi
      (`can` izohi). Serverdagi tekshiruv baribir joyida: bu yerdagi
      yashirish qulaylik uchun, himoya uchun emas. */
@@ -72,7 +77,7 @@ export default function ShopsPage({ toast, user }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setShops(asArray((await shopApi.getAll()).data)); }
+    try { setShops(ofKind(asArray((await shopApi.getAll()).data), kind)); }
     catch (e) { toast.error(e.message); }
     finally { setLoading(false); }
 
@@ -215,9 +220,9 @@ export default function ShopsPage({ toast, user }) {
           </div>
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
             <Search value={search} onChange={setSearch} placeholder={t("adm.shops.searchPlaceholder")} style={{ width:220 }} />
-            <ExportButtons name="dokonlar" headers={exportHeaders} rows={exportRows} toast={toast} />
+            <ExportButtons name={rest ? "restoranlar" : "dokonlar"} headers={exportHeaders} rows={exportRows} toast={toast} />
             <button className="btn btn-primary btn-sm" onClick={() => setModal("add")}>
-              <i className="fa-solid fa-plus" /> {t("adm.shops.new")}
+              <i className="fa-solid fa-plus" /> {t(rest ? "adm.rest.new" : "adm.shops.new")}
             </button>
             <DataFilter cols={COLS} flt={colFlt} />
           </div>
@@ -326,6 +331,12 @@ export default function ShopsPage({ toast, user }) {
                       <td style={{ fontSize:11, maxWidth:150 }}>
                         {shop.directions?.length ? (
                           <div style={{ display:"flex", flexWrap:"wrap", gap:3 }}>
+                            {/* Aralash eski joy — matn bilan (rang yolg'iz signal emas). */}
+                            {isMixed(shop) && (
+                              <Badge color="red" title={t("adm.shops.mixedHint")}>
+                                <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {t("adm.shops.mixed")}
+                              </Badge>
+                            )}
                             {shop.directions.map((d) => (
                               <Badge key={d} color="blue">{t(`adm.dir.${d}`)}</Badge>
                             ))}
@@ -431,7 +442,7 @@ export default function ShopsPage({ toast, user }) {
       </div>
 
       {modal === "add" && (
-        <AddShopModal onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} toast={toast} />
+        <AddShopModal kind={kind} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} toast={toast} />
       )}
       {modal?.type === "edit" && (
         <EditShopModal shop={modal.shop} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} toast={toast} />
@@ -459,12 +470,14 @@ export default function ShopsPage({ toast, user }) {
 }
 
 // ── Yangi do'kon ──────────────────────────────────────────────
-function AddShopModal({ onClose, onSaved, toast }) {
+function AddShopModal({ kind, onClose, onSaved, toast }) {
   const { t } = useT();
+  const rest = kind === "restaurant";
   const [shops, setShops] = useState([]);
   // Xizmat yo'nalishlari (V49) — do'konning interfeysi shundan chiqadi.
   const [dirCatalog, setDirCatalog] = useState([]);
-  const [dirs, setDirs] = useState(new Set());
+  /* ⚠ Restoranning yo'nalishi TAYYOR va o'zgarmaydi — tanlov yo'q. */
+  const [dirs, setDirs] = useState(() => new Set(rest ? [RESTAURANT] : []));
   /* ⚠ Telefon BO'SH boshlanadi. Ilgari u «+998 » edi va maydonga
      tegilmasa o'sha ko'rinishda serverga ketardi: `@Pattern` esa uni
      raqam deb hisoblamay, do'kon yaratishni 400 xatosi bilan to'xtatardi
@@ -475,7 +488,9 @@ function AddShopModal({ onClose, onSaved, toast }) {
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   useEffect(() => {
-    shopApi.getAll().then(res => setShops(asArray(res.data))).catch(() => {});
+    /* Bosh joy faqat SHU turdan: restoran do'konning filiali bo'lmaydi
+       (filial yo'nalishni bosh joydan meros oladi). */
+    shopApi.getAll().then(res => setShops(ofKind(asArray(res.data), kind))).catch(() => {});
     /* ⚠ Yo'nalishlar ro'yxati YIQILSA forma baribir ochiladi: yo'nalish
        majburiy emas va usiz yaratilgan do'konda hamma modul ochiq
        qoladi. Ya'ni bu so'rovning yiqilishi do'kon ochishga to'sqinlik
@@ -483,11 +498,9 @@ function AddShopModal({ onClose, onSaved, toast }) {
     featureApi.directions().then(res => setDirCatalog(asArray(res.data))).catch(() => {});
   }, []);
 
-  const toggleDir = (key) => setDirs((prev) => {
-    const next = new Set(prev);
-    next.has(key) ? next.delete(key) : next.add(key);
-    return next;
-  });
+  const toggleDir = (key) => setDirs((prev) => toggleDirection(prev, key));
+  /* Do'kon formasida restoran yo'nalishi KO'RINMAYDI — u alohida bo'lim. */
+  const storeCatalog = dirCatalog.filter((c) => c.direction !== RESTAURANT);
 
   const save = async () => {
     if (!form.name.trim() || !form.code.trim()) { toast.error(t("adm.shops.nameCodeRequired")); return; }
@@ -515,7 +528,7 @@ function AddShopModal({ onClose, onSaved, toast }) {
   };
 
   return (
-    <Modal title={t("adm.shops.createTitle")} onClose={onClose} footer={
+    <Modal title={t(rest ? "adm.rest.createTitle" : "adm.shops.createTitle")} onClose={onClose} footer={
       <><button className="btn btn-outline btn-sm" onClick={onClose}>{t("common.cancel")}</button>
         <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
           {saving ? <><Spinner /> {t("common.creating")}</> : <><i className="fa-solid fa-plus" /> {t("common.create")}</>}
@@ -554,9 +567,13 @@ function AddShopModal({ onClose, onSaved, toast }) {
           qoldiradi. Dorixonaning filiali ham dorixona; boshqacha
           bo'lsa, bitta katalogga ulangan ikki xil interfeysli do'kon
           paydo bo'lardi. */}
-      {!form.parentShopId && dirCatalog.length > 0 && (
+      {rest ? (
+        <div className="ek-note ek-note--info">
+          <i className="fa-solid fa-utensils" aria-hidden="true" /> <span>{t("adm.rest.fixedDirection")}</span>
+        </div>
+      ) : !form.parentShopId && storeCatalog.length > 0 && (
         <FG label={t("adm.shops.fieldDirections")} hint={t("adm.shops.directionsHint")}>
-          <DirectionPicker catalog={dirCatalog} selected={dirs} onToggle={toggleDir} />
+          <DirectionPicker catalog={storeCatalog} selected={dirs} onToggle={toggleDir} />
           {/* ⚠ Tanlanmagan holat NOSOZLIK EMAS — buni aytib qo'yish
               kerak, aks holda forma «to'ldirilmagan» bo'lib ko'rinadi. */}
           {dirs.size === 0 && (
@@ -645,7 +662,8 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
   const [saving,   setSaving]   = useState(false);
 
   const hasOwner = users.some(u => (u.roles||[]).some(r => (r.name||r.type||r) === "OWNER"));
-  const availableRoles = !hasOwner ? ["OWNER"] : ROLE_OPTIONS.filter(r => r !== "OWNER");
+  /* Ofitsiant va oshpaz — faqat restoranda (server ham rad etadi). */
+  const availableRoles = !hasOwner ? ["OWNER"] : rolesFor(shop, ROLE_OPTIONS.filter(r => r !== "OWNER"));
 
   const load = async () => {
     setLoading(true);
@@ -786,7 +804,7 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
               block variant="field" ariaLabel={t("common.role")}
               value={form.role}
               onChange={(v) => set("role")({ target: { value: v } })}
-              options={availableRoles.map(r => ({ value: r, label: roleLabel(r), icon: "fa-user-tag" }))}
+              options={availableRoles.map(r => ({ value: r, label: roleNameIn(shop, r, t, roleLabel), icon: "fa-user-tag" }))}
             />
           </FG>
         </div>

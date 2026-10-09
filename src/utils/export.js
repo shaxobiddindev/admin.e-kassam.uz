@@ -1,89 +1,53 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   Jadval eksporti — CSV (Excel uchun) va chop etish (PDF uchun)
+   Jadval eksporti — haqiqiy Excel (.xlsx) va chop etish (PDF uchun)
 
-   ⚠ NEGA `xlsx` VA `jspdf` KUTUBXONALARI ISHLATILMAYDI
+   · Excel → `.xlsx`, kutubxonasiz: yozuvchi `lib/ek-xlsx.js` (kassa
+             ilovasidan nusxa) va u faqat tugma bosilganda yuklanadi
+             (`import()`), ya'ni panel hajmiga qo'shilmaydi.
+             Ilgari bu yerda CSV yozilardi — Excel uni ochardi, lekin
+             raqamlar matn bo'lib qolardi va ustunni jamlab bo'lmasdi.
+   · PDF   → brauzerning "Chop etish → PDF ga saqlash" oynasi. Natija
+             haqiqiy PDF, hujjat esa foydalanuvchining shrifti va tili
+             bilan chiqadi.
 
-   07-ADMIN.md "Excel/PDF eksport" deydi. To'g'ridan-to'g'ri o'qilsa, bu
-   SheetJS (~140 KB gzip) + jsPDF/autotable (~100 KB gzip) degani — panelning
-   hozirgi butun hajmidan ikki barobar ko'p, va ikkalasi ham FAQAT tugma
-   bosilganda kerak bo'ladi.
-
-   Shuning uchun:
-     · Excel  → CSV. Excel uni ikki marta bosishda ochadi, LibreOffice ham.
-                UTF-8 BOM va `;` ajratkich — Excel'ning O'zbekiston/rus
-                lokalidagi standarti (`,` bilan barcha ustun bitta katakka
-                tushib qolardi).
-     · PDF    → brauzerning "Chop etish → PDF ga saqlash" oynasi. Natija
-                haqiqiy PDF, hujjat esa foydalanuvchining shrifti va tili
-                bilan chiqadi.
-
-   Ikkalasi ham NOLTA baytlik bog'liqlik. Chetlanish `09-CHETLANISHLAR.md`
-   da yozilgan.
+   Egasi (2026-10-09): «har qanday jadval ko'rinishidagi ma'lumotni
+   Excel'ga yuklab olish imkoni bo'lsin».
    ══════════════════════════════════════════════════════════════════════════ */
-
-/** Excel'ning lokalga bog'liq talqiniga eng mos ajratkich. */
-const SEP = ";";
+import { toNumber } from "../lib/ek-table-xlsx.js";
 
 /**
- * Bitta katakni CSV qoidalari bo'yicha qochiradi.
+ * Bitta katak. Son — son bo'lib qoladi (Excel jamlay olsin); «1 250 000
+ * so'm» kabi matn ham songa aylanadi. Telefon, shtrix-kod, «0» bilan
+ * boshlanadigan kod matn qoladi (`toNumber` ularni rad etadi).
  *
- * `=` bilan boshlanadigan qiymat Excel'da FORMULA bo'lib ketadi (do'kon nomi
- * `=SUM(...)` bo'lsa — bu formula in'ektsiyasi). Bunday qiymat oldiga
- * apostrof qo'yiladi.
+ * `= + - @` bilan boshlanadigan matn oldiga apostrof qo'yiladi: fayl
+ * boshqa dasturda (yoki CSV ga qayta saqlanib) ochilganda do'kon nomi
+ * `=HYPERLINK(...)` formula bo'lib ketmasin.
  */
-function cell(value) {
+export function xlsxCell(value) {
   if (value === null || value === undefined) return "";
-  let s = String(value);
-  if (/^[=+\-@]/.test(s)) s = "'" + s;
-  if (s.includes('"') || s.includes(SEP) || s.includes("\n") || s.includes("\r")) {
-    s = '"' + s.replace(/"/g, '""') + '"';
-  }
-  return s;
+  if (typeof value === "number") return Number.isFinite(value) ? value : "";
+  if (typeof value === "boolean") return String(value);
+  const n = toNumber(value);
+  if (n != null) return n;
+  const s = String(value);
+  // Telefon («+998 90 …») formula emas — apostrof u yerda faqat xalaqit beradi.
+  if (/^\+[\d\s()-]+$/.test(s)) return s;
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 
-/**
- * CSV faylni yaratib yuklab beradi.
- *
- * @param {string}   filename  kengaytmasiz nom, masalan "dokonlar"
- * @param {string[]} headers   ustun sarlavhalari (allaqachon tarjima qilingan)
- * @param {Array<Array>} rows  qatorlar, `headers` bilan bir xil tartibda
- * @returns {string|null} yaratilgan fayl nomi, qator bo'lmasa `null`
- */
-export function downloadCsv(filename, headers, rows) {
-  if (!rows || rows.length === 0) return null;
-
-  const body = [headers, ...rows]
-    .map((r) => r.map(cell).join(SEP))
-    .join("\r\n");
-
-  // ⚠ BOM (﻿) SHART: usiz Excel faylni ANSI deb o'qiydi va
-  // o'zbekcha «o'» / kirill harflari buziladi.
-  const blob = new Blob(["﻿" + body], { type: "text/csv;charset=utf-8;" });
-
-  const name = `${filename}-${stamp()}.csv`;
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  // Brauzer yuklashni boshlashi uchun bir kadr kutamiz, keyin bo'shatamiz.
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-  return name;
+/** Varaq qatorlari: birinchi qator — qalin sarlavhalar. */
+export function xlsxRows(headers, rows) {
+  return [
+    (headers || []).map((h) => ({ v: String(h ?? ""), bold: true })),
+    ...(rows || []).map((r) => (r || []).map(xlsxCell)),
+  ];
 }
 
 const p2 = (n) => String(n).padStart(2, "0");
 
-/** `2026-08-06_1435` — fayl nomiga qo'shiladi, eski nusxa ustiga yozilmasin. */
-function stamp() {
-  const d = new Date();
-  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}`;
-}
-
 /**
- * CSV uchun sana — `2026-08-06`.
+ * Eksport uchun sana — `2026-08-06`.
  *
  * ⚠ Ekrandagi `fmtDate` ISHLATILMAYDI. U "6-avgust 2026" beradi va Excel
  * bunday qiymatni MATN deb qabul qiladi: ustunni sanaga qarab saralab ham,
@@ -97,7 +61,7 @@ export function isoDate(value) {
   return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
 }
 
-/** CSV uchun sana va vaqt — `2026-08-06 14:35`. */
+/** Eksport uchun sana va vaqt — `2026-08-06 14:35`. */
 export function isoDateTime(value) {
   const day = isoDate(value);
   if (!day) return "";

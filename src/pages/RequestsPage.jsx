@@ -9,6 +9,8 @@ import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 import { asArray } from "../lib/ek-array";
+import ExportButtons from "../components/ExportButtons";
+import { isoDateTime } from "../utils/export";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Arizalar — landing sahifadagi "Demo so'rash" formasidan kelgan so'rovlar.
@@ -85,6 +87,15 @@ export default function RequestsPage({ toast }) {
     filter === "ALL" ? st(i) !== "SPAM" : st(i) === filter
   ));
 
+  const exportHeaders = [
+    t("common.date"), t("req.colClient"), t("req.shopName"), t("common.phone"),
+    t("req.colMessage"), t("common.status"),
+  ];
+  const exportRows = filtered.map((i) => [
+    isoDateTime(i.createdAt), i.fullName || "", i.shopName || "", i.phone || "", i.message || "",
+    t(st(i) === "HANDLED" ? "req.handled" : st(i) === "SPAM" ? "req.spam" : "req.new"),
+  ]);
+
   /* Holatni o'zgartiradi. O'CHIRISH YO'Q — `ContactStatus` izohiga qarang. */
   const changeStatus = async (item, next) => {
     const ask = {
@@ -135,6 +146,7 @@ export default function RequestsPage({ toast }) {
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
             <DataFilter cols={COLS} flt={colFlt} />
+            <ExportButtons name="arizalar" headers={exportHeaders} rows={exportRows} toast={toast} />
             <button className="btn btn-outline btn-sm" onClick={load}>
               <i className="fa-solid fa-rotate" aria-hidden="true" /> {t("common.refresh")}
             </button>

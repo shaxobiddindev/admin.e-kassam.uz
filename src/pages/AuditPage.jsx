@@ -9,6 +9,7 @@ import { SkeletonTable } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import ExportButtons from "../components/ExportButtons";
 import { isoDateTime } from "../utils/export";
+import { collectPages } from "../lib/ek-table-xlsx";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -97,17 +98,31 @@ export default function AuditPage({ toast }) {
     t("audit.colTime"), t("audit.colActor"),
     t("audit.colAction"), t("audit.colSummary"), "IP",
   ];
-  /* ⚠ EKSPORT — EKRANDAGI qatorlar (filtrlangan), xom sahifa emas:
-     filtr qo'yib eksport bosgan odam o'zi ko'rgan ro'yxatni kutadi. */
-  const exportRows = shown.map((row) => [
+  const toExportRow = (row) => [
     isoDateTime(row.createdAt),
-    // Ekranda ism va tur ikki qatorda turadi; faylda bitta katakda,
-    // chunki CSV da "ikkinchi qator" degan tushuncha yo'q.
+    // Ekranda ism va tur ikki qatorda turadi; faylda bitta katakda.
     `${row.actorUsername || "—"} (${t(`audit.actor.${row.actorType || "SYSTEM"}`)})`,
     entry(AUDIT_ACTION, row.action).label,
     [row.summary, row.details].filter(Boolean).join(" — "),
     row.ip || "",
-  ]);
+  ];
+  /* ⚠ EKSPORT — BUTUN JURNAL (tepadagi «amal» va «kim» bilan), joriy
+     50 qatorli sahifa emas: egasi «har qanday jadvalni Excel'ga» dedi
+     va bitta sahifa tergov uchun foydasiz — kerakli yozuv boshqa
+     sahifada qolardi. Keyin EKRANDAGI ustun filtri ham qo'llanadi:
+     filtr qo'yib eksport bosgan odam o'zi ko'rgan ro'yxatni kutadi.
+     Panelni yiqitmaslik uchun cheklov bor (200 tadan, ko'pi bilan
+     20 000) — oshsa «juda ko'p» deyiladi va filtrni toraytirish kerak. */
+  const fetchExportRows = async () => {
+    const all = await collectPages(async (p, size) => {
+      const params = new URLSearchParams({ page: String(p), size: String(size) });
+      if (action) params.set("action", action);
+      if (actor.trim()) params.set("actor", actor.trim());
+      const d = (await auditApi.search(params.toString())).data || {};
+      return { content: d.items || [], total: d.totalItems };
+    }, { size: 200, cap: 20000 });
+    return all && colFlt.apply(all).map(toExportRow);
+  };
 
   return (
     <div>
@@ -134,11 +149,8 @@ export default function AuditPage({ toast }) {
             <Search value={actor} onChange={setActor}
               placeholder={t("audit.filterActor")} style={{ width:200 }} />
             <DataFilter cols={COLS} flt={colFlt} />
-            {/* ⚠ Eksport JORIY SAHIFANI oladi (50 qator), butun jurnalni emas:
-                jurnal cheksiz o'sadi va uni to'liq yuklash panelni yiqitardi.
-                Butun jurnal kerak bo'lsa — bazadan, filtr bilan. */}
-            <ExportButtons name={`audit-${data.page + 1}`}
-                           headers={exportHeaders} rows={exportRows} toast={toast} />
+            <ExportButtons name="audit" headers={exportHeaders} rows={shown}
+                           fetchRows={fetchExportRows} toast={toast} />
           </div>
         </div>
 

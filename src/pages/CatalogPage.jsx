@@ -18,6 +18,9 @@ import {
 } from "../lib/ek-labels";
 import { BarcodeField, MxikField } from "../components/ek/EkFields";
 import { barcodeSuspicious } from "../lib/ek-barcode-check";
+import ExportButtons from "../components/ExportButtons";
+import { isoDateTime } from "../utils/export";
+import { collectPages } from "../lib/ek-table-xlsx";
 
 /* ══════════════════════════════════════════════════════════════════════════
    UMUMIY KATALOG — ADMIN EKRANI (V90)
@@ -197,6 +200,36 @@ function ProductsTab({ toast, cats, onModerated }) {
     if (error) toast.error(`${t("common.loadFailed")}: ${error}`);
   }, [error]);
 
+  const exportHeaders = [
+    t("adm.catalog.colBarcode"), t("adm.catalog.colName"), t("adm.catalog.fieldNameRu"),
+    t("adm.catalog.fieldBrand"), t("adm.catalog.fieldUnit"), t("adm.catalog.fieldType"),
+    t("adm.catalog.fieldCategory"), t("adm.catalog.fieldMxik"), t("adm.catalog.colSource"),
+    t("common.date"), t("adm.catalog.colImports"), t("common.status"),
+  ];
+  const toExportRow = (r) => [
+    r.barcode || "", r.name || "", r.nameRu || "", r.brand || "",
+    r.unit ? unitLabel(r.unit) : "", r.businessType ? businessType(r.businessType).label : "",
+    r.categoryName || "", r.mxikCode || "",
+    r.createdByShopName || r.createdByShopCode || t("adm.catalog.byAdmin"),
+    isoDateTime(r.createdAt), r.importCount ?? 0,
+    [globalStatus(r.status).label,
+     r.mergedIntoId ? `${t("adm.catalog.mergedInto")}: ${r.mergedIntoName || ""}`
+       : r.active === false ? t("adm.catalog.hidden") : "",
+     r.status === "REJECTED" ? r.rejectedReason : ""].filter(Boolean).join(" — "),
+  ];
+  /* ⚠ Ekranda faqat yuklangan sahifalar turadi (50 tadan) — fayl esa
+     xuddi shu filtrlar bilan HAMMA qatorni serverdan yig'adi. */
+  const fetchExportRows = async () => {
+    const all = await collectPages((page, size) => catalogApi.products({
+      status: status || undefined,
+      businessType: type || undefined,
+      categoryId: cat || undefined,
+      search: slowSearch.trim() || undefined,
+      page, size,
+    }), { size: 200 });
+    return all && all.map(toExportRow);
+  };
+
   /** Ro'yxatni qaytadan so'rash (tasdiqlash/rad etishdan keyin). */
   const load = useCallback(() => setVersion((v) => v + 1), []);
 
@@ -356,6 +389,8 @@ function ProductsTab({ toast, cats, onModerated }) {
                  onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <ExportButtons name="katalog-tovarlar" headers={exportHeaders} rows={rows}
+                         fetchRows={fetchExportRows} toast={toast} />
           <button className="btn btn-outline btn-sm" onClick={load}>
             <i className="fa-solid fa-rotate" aria-hidden="true" /> {t("common.refresh")}
           </button>
@@ -934,13 +969,27 @@ function CategoriesTab({ toast, cats, onChanged }) {
     finally { setBusyId(null); }
   };
 
+  const exportHeaders = [
+    t("adm.catalog.colName"), t("adm.catalog.fieldType"), t("adm.catalog.colParent"),
+    t("adm.catalog.colProducts"), t("common.status"),
+  ];
+  const exportRows = cats.map((c) => [
+    c.name || "",
+    c.businessType ? businessType(c.businessType).label : t("adm.catalog.anyType"),
+    c.parentName || "", c.productCount ?? 0,
+    c.active === false ? t("adm.catalog.hidden") : t("adm.catalog.fieldActive"),
+  ]);
+
   return (
     <div className="card">
       <div className="c-head">
         <h3 className="c-title">{t("adm.catalog.tabCategories")}</h3>
-        <button className="btn btn-primary btn-sm" onClick={() => setForm({})}>
-          <i className="fa-solid fa-plus" aria-hidden="true" /> {t("adm.catalog.addCategory")}
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <ExportButtons name="katalog-kategoriyalar" headers={exportHeaders} rows={exportRows} toast={toast} />
+          <button className="btn btn-primary btn-sm" onClick={() => setForm({})}>
+            <i className="fa-solid fa-plus" aria-hidden="true" /> {t("adm.catalog.addCategory")}
+          </button>
+        </div>
       </div>
 
       <p className="set-card__hint">{t("adm.catalog.catSubtitle")}</p>

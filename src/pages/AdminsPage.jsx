@@ -13,6 +13,8 @@ import { phoneInput } from "../lib/ek-input";
 import { rankItems } from "../lib/ek-search";
 import DataFilter, { useDataFilter, SortTh } from "../components/ek/DataFilter";
 import { asArray } from "../lib/ek-array";
+import ExportButtons from "../components/ExportButtons";
+import { isoDate } from "../utils/export";
 
 /* ══════════════════════════════════════════════════════════════════════════
    ADMIN HISOBLARI — faqat bosh admin (V50)
@@ -102,6 +104,18 @@ export default function AdminsPage({ toast, user }) {
     texts: (a) => [a.fullName, a.username],
   });
 
+  const exportHeaders = [
+    t("adm.admins.colAdmin"), t("common.username"), t("adm.admins.colRole"), t("common.status"),
+    t("adm.admins.colPerms"), t("adm.admins.col2fa"), t("common.date"),
+  ];
+  const exportRows = filtered.map((a) => [
+    a.fullName || "", a.username || "", adminRole(a.role).label,
+    t(a.enabled ? "common.active" : "common.blocked"),
+    a.permissions?.length ?? 0,
+    t(a.totpEnabled ? "adm.admins.twoFaOn" : "adm.admins.twoFaOff"),
+    isoDate(a.createdAt),
+  ]);
+
   /* ⚠ O'ZINI tanish ID bo'yicha, foydalanuvchi nomi bo'yicha EMAS: nom
      katta-kichik harfda boshqacha yozilishi mumkin va tekshiruv jimgina
      o'tib ketardi. Serverda ham xuddi shunday. */
@@ -146,6 +160,7 @@ export default function AdminsPage({ toast, user }) {
             <Search value={search} onChange={setSearch}
                     placeholder={t("adm.admins.searchPlaceholder")} style={{ width:220 }} />
             <DataFilter cols={COLS} flt={colFlt} />
+            <ExportButtons name="adminlar" headers={exportHeaders} rows={exportRows} toast={toast} />
             <button className="btn btn-primary btn-sm" onClick={() => setModal({ type:"add" })}>
               <i className="fa-solid fa-plus" /> {t("adm.admins.add")}
             </button>

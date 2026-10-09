@@ -8,6 +8,8 @@ import { useConfirm } from "../context/ConfirmProvider";
 import { SkeletonTable, Spinner } from "../components/ek/Loading";
 import { useLoading } from "../lib/use-loading";
 import { asArray } from "../lib/ek-array";
+import ExportButtons from "../components/ExportButtons";
+import { isoDateTime } from "../utils/export";
 
 /* ══════════════════════════════════════════════════════════════════════════
    TIZIM SOG'LIGI — BAZA QO'RIQCHILARI NIMA TOPGANI
@@ -102,6 +104,14 @@ export default function OpsPage({ toast }) {
      degan uchinchi holat odamni harakatga undamaydi. */
   const healthy = findings.length === 0 && !empty?.probeRed && !empty?.emptyShareJump;
 
+  const exportHeaders = [
+    t("ops.findings.kind"), t("ops.findings.shop"), t("ops.findings.what"), t("ops.findings.when"),
+  ];
+  const exportRows = findings.map((row) => [
+    findingLabel(row.kind), row.shopId ?? "",
+    [row.summary, row.details].filter(Boolean).join(" — "), isoDateTime(row.createdAt),
+  ]);
+
   return (
     <div className="page">
       <div className="page-head">
@@ -182,7 +192,10 @@ export default function OpsPage({ toast }) {
 
           {/* ── Belgilar ro'yxati ─────────────────────────────────────── */}
           <div className="card">
-            <h2 className="card-title">{t("ops.findings.title")}</h2>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+              <h2 className="card-title">{t("ops.findings.title")}</h2>
+              <ExportButtons name="ops-belgilar" headers={exportHeaders} rows={exportRows} toast={toast} />
+            </div>
             {findings.length === 0 ? (
               <Empty icon="fa-circle-check" title={t("ops.findings.empty")} />
             ) : (

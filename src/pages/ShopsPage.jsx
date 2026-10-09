@@ -762,6 +762,15 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
   const isEdit = view?.type === "edit";
   const isList = view === "list";
 
+  const exportHeaders = [
+    t("adm.users.colUser"), t("common.username"), t("common.role"), t("common.status"),
+  ];
+  const exportRows = users.map((u) => [
+    u.fullName || "", u.username || "",
+    (u.roles || []).map((r) => roleNameIn(shop, r.name || r.type || r, t, roleLabel)).join(", "),
+    t(u.enabled ? "common.active" : "common.blocked"),
+  ]);
+
   return (
     <Modal title={t("adm.users.title", { name: shop.name })} onClose={onClose} size="md" footer={
       isList ? (
@@ -867,6 +876,10 @@ function ShopUsersModal({ shop, onClose, onReload, toast }) {
           <Empty icon="fa-users" title={t("adm.users.none")} subtitle={t("adm.users.noneHint")} />
         ) : (
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            <div style={{ display:"flex", justifyContent:"flex-end" }}>
+              <ExportButtons name={`xodimlar-${shop.code || shop.id}`}
+                             headers={exportHeaders} rows={exportRows} toast={toast} />
+            </div>
             {users.map((u) => {
               const roles = u.roles || [];
               const isOwner = roles.some(r => (r.name||r.type||r) === "OWNER");

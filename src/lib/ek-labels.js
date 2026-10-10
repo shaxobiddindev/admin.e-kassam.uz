@@ -215,6 +215,7 @@ export const AUDIT_ACTION = dict("enum.audit", {
   PRICE_BULK_CHANGE:      { color: "yellow", icon: "fa-tags" },
   MODIFIER_CHANGE:        { color: "yellow", icon: "fa-utensils" },
   RECIPE_CHANGE:          { color: "yellow", icon: "fa-scroll" },
+  MENU_STOP:              { color: "yellow", icon: "fa-ban" },
 
   /* ── Ombor ── */
   STOCK_TAKE_CLOSE:       { color: "blue",   icon: "fa-clipboard-check" },

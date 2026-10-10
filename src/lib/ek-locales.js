@@ -1128,6 +1128,7 @@ const uz = {
   "enum.writeOff.THEFT": "Yo'qoldi, o'g'irlandi",
   "enum.writeOff.SUPPLIER_RETURN": "Yetkazib beruvchiga qaytarildi",
   "enum.writeOff.OWN_USE": "Do'kon ehtiyoji",
+  "enum.writeOff.KITCHEN_VOID": "Bekor qilingan taom (oshxona)",
   "enum.writeOff.RECOUNT": "Hisob xatosi",
   "enum.writeOff.OTHER": "Boshqa",
 
@@ -3280,6 +3281,7 @@ const ru = {
   "enum.writeOff.THEFT": "Утеря, кража",
   "enum.writeOff.SUPPLIER_RETURN": "Возврат поставщику",
   "enum.writeOff.OWN_USE": "Нужды магазина",
+  "enum.writeOff.KITCHEN_VOID": "Отмена блюда (кухня)",
   "enum.writeOff.RECOUNT": "Ошибка учёта",
   "enum.writeOff.OTHER": "Другое",
   "inv.history": "Приход-расход",
@@ -5413,6 +5415,7 @@ const en = {
   "enum.writeOff.THEFT": "Lost or stolen",
   "enum.writeOff.SUPPLIER_RETURN": "Returned to supplier",
   "enum.writeOff.OWN_USE": "Shop’s own use",
+  "enum.writeOff.KITCHEN_VOID": "Voided dish (kitchen)",
   "enum.writeOff.RECOUNT": "Bookkeeping fix",
   "enum.writeOff.OTHER": "Other",
   "inv.history": "Stock movements",

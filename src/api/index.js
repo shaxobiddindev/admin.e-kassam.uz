@@ -322,6 +322,12 @@ export const auditApi = {
   search: (qs = "") => req(`/superadmin/audit${qs ? "?" + qs : ""}`),
 };
 
+/* Ilova xatolari (V163) — kassadan kelgan, guruhlangan. */
+export const clientErrorApi = {
+  groups:      (qs = "") => req(`/superadmin/client-errors${qs ? "?" + qs : ""}`),
+  occurrences: (fp)      => req(`/superadmin/client-errors/${encodeURIComponent(fp)}`),
+};
+
 /* ══════════════════════════════════════════════════════════════════════
    MIJOZLAR — ADMINGA FAQAT SON (V50)
 

@@ -56,6 +56,8 @@ export const NAV = [
     // Umumiy katalog (V90): BARCHA do'konlar ishlatadigan tovar bazasi.
     { id: "catalog",   path: "/catalog",   key: "nav.catalog",   icon: "fa-boxes-stacked",   perm: "CATALOG_MODERATE" },
     { id: "audit",     path: "/audit",     key: "nav.audit",     icon: "fa-clipboard-list",  perm: "AUDIT_VIEW" },
+    /* Ilova xatolari (V163) — ruxsat auditniki: bu ham «nazorat», faqat o'qish. */
+    { id: "client-errors", path: "/client-errors", key: "nav.clientErrors", icon: "fa-bug", perm: "AUDIT_VIEW" },
     // Tizim sog'ligi va adminlar — faqat bosh adminda (`ADMIN_VIEW`).
     { id: "ops",       path: "/ops",       key: "nav.ops",       icon: "fa-heart-pulse",     perm: "ADMIN_VIEW" },
     { id: "admins",    path: "/admins",    key: "nav.admins",    icon: "fa-user-shield",     perm: "ADMIN_VIEW" },

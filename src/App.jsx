@@ -16,6 +16,7 @@ import UsersPage     from "./pages/UsersPage";
 import CustomersPage from "./pages/CustomersPage";
 import RequestsPage  from "./pages/RequestsPage";
 import AuditPage     from "./pages/AuditPage";
+import ClientErrorsPage from "./pages/ClientErrorsPage";
 import CatalogPage   from "./pages/CatalogPage";
 import OpsPage       from "./pages/OpsPage";
 import AdminsPage    from "./pages/AdminsPage";
@@ -113,6 +114,7 @@ export default function App() {
             <Route path="/users"     element={<UsersPage     toast={toast} />} />
             <Route path="/customers" element={<CustomersPage toast={toast} />} />
             <Route path="/audit"     element={<AuditPage     toast={toast} />} />
+            <Route path="/client-errors" element={<ClientErrorsPage toast={toast} />} />
             {/* Umumiy katalog (V90) — moderatsiya va boshqaruv. */}
             <Route path="/catalog"   element={<CatalogPage   toast={toast} />} />
             {/* Tizim sog'ligi — baza qo'riqchilarining chiqishi. */}

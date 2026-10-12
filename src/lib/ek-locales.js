@@ -49,6 +49,8 @@ const uz = {
   "cerr.occHint": "Oxirgi {n} ta holat. Do'kon va login — ilova aytgani (tekshirilmagan).",
   "cerr.componentStack": "Komponentlar zanjiri",
   "cerr.device": "Qurilma",
+  "cerr.copy": "Stackni nusxalash",
+  "cerr.copied": "Nusxalandi",
   /* ══ TIZIM SOG'LIGI (`/ops`) — baza qo'riqchilari ══════════════════════ */
   "nav.ops": "Tizim sog'ligi",
   "nav.section.ops": "Tizim sog'ligi",
@@ -2269,6 +2271,8 @@ const ru = {
   "cerr.occHint": "Последние {n} случаев. Магазин и логин — со слов приложения (не проверены).",
   "cerr.componentStack": "Цепочка компонентов",
   "cerr.device": "Устройство",
+  "cerr.copy": "Скопировать стек",
+  "cerr.copied": "Скопировано",
   /* ══ ЗДОРОВЬЕ СИСТЕМЫ (`/ops`) — сторожа базы ══════════════════════════ */
   "nav.ops": "Здоровье системы",
   "nav.section.ops": "Здоровье системы",
@@ -4434,6 +4438,8 @@ const en = {
   "cerr.occHint": "Latest {n} occurrences. Shop and login are as reported by the app (not verified).",
   "cerr.componentStack": "Component stack",
   "cerr.device": "Device",
+  "cerr.copy": "Copy stack",
+  "cerr.copied": "Copied",
   /* ══ SYSTEM HEALTH (`/ops`) — database guards ══════════════════════════ */
   "nav.ops": "System health",
   "nav.section.ops": "System health",

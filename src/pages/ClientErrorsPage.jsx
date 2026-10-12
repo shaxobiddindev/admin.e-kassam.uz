@@ -159,7 +159,23 @@ export default function ClientErrorsPage({ toast }) {
 
 /** Guruhning oxirgi holatlari: kim, qayerda, qaysi versiya — va stack. */
 function Occurrences({ rows, t, platformLabel }) {
+  const [copied, setCopied] = useState(null);
   if (!rows.length) return <p className="muted">{t("cerr.noOcc")}</p>;
+
+  /* ⚠ Stack siqilgan koddan — dasturchi uni `ekassam-app/scripts/resolve-stack.mjs`
+     bilan asl fayl:qatorga aylantiradi (A3). Versiya va platforma ham
+     ketadi: desktop xatosida skript `desktop-vX.Y.Z` tegidan quradi. */
+  const copy = async (o) => {
+    const text = [
+      o.message,
+      o.stack || "",
+      o.componentStack ? o.componentStack.trim() : "",
+      `# ${o.app} · ${o.platform} · v${o.version || "?"} · ${o.path || ""}`,
+      `# node scripts/resolve-stack.mjs${o.platform === "desktop" && o.version ? ` --version ${o.version}` : ""} < stack.txt`,
+    ].filter(Boolean).join("\n");
+    try { await navigator.clipboard.writeText(text); setCopied(o.id); setTimeout(() => setCopied(null), 2000); }
+    catch { /* buferga ruxsat yo'q — matn ekranda, qo'lda olinadi */ }
+  };
   return (
     <div style={{ display: "grid", gap: 10 }}>
       <p className="muted" style={{ margin: 0 }}>{t("cerr.occHint", { n: rows.length })}</p>
@@ -180,6 +196,12 @@ function Occurrences({ rows, t, platformLabel }) {
                 <pre className="ek-num" style={preStyle}>{o.componentStack.trim()}</pre>
               </>
             )}
+            <div>
+              <button type="button" className="btn btn-outline btn-sm" style={{ minHeight: 44 }} onClick={() => copy(o)}>
+                <i className={`fa-solid ${copied === o.id ? "fa-check" : "fa-copy"}`} aria-hidden="true" />{" "}
+                {copied === o.id ? t("cerr.copied") : t("cerr.copy")}
+              </button>
+            </div>
             <span className="muted">{t("cerr.device")}: <span className="ek-num">{o.deviceId || "—"}</span></span>
             {o.userAgent && <span className="muted">{o.userAgent}</span>}
           </div>

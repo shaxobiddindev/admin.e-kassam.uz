@@ -53,7 +53,11 @@ async function req(path, options = {}, _retry = false) {
   const token = localStorage.getItem("ek_token");
   const { headers: extra, ...rest } = options;
 
-  const res = await fetch(`${API}${path}`, {
+  /* ⚠ Xatoga `status` / `offline` belgisi (A2): xato kuzatuvi
+     (`ek-errors-core.isNoise`) server javobi va tarmoq uzilishini
+     yubormaydi — ular kod xatosi emas, server o'zi logga yozadi. */
+  let res;
+  try { res = await fetch(`${API}${path}`, {
     ...rest,
     credentials: "include",
     headers: {
@@ -64,13 +68,13 @@ async function req(path, options = {}, _retry = false) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(extra || {}),
     },
-  });
+  }); } catch (e) { throw Object.assign(new Error(e?.message || "Failed to fetch"), { offline: true }); }
 
   if (res.status === 401) {
     // Login/refresh ning o'zi 401 bersa — bu haqiqiy xato, qayta urinmaymiz
     if (path.includes("/auth/admin/login") || path.includes("/auth/admin/refresh")) {
       const json = await res.json().catch(() => ({}));
-      throw new Error(json.message || `Xatolik ${res.status}`);
+      throw Object.assign(new Error(json.message || `Xatolik ${res.status}`), { status: res.status });
     }
 
     if (_retry) forceLogout();
@@ -82,7 +86,7 @@ async function req(path, options = {}, _retry = false) {
   }
 
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.message || `Xatolik ${res.status}`);
+  if (!res.ok) throw Object.assign(new Error(json.message || `Xatolik ${res.status}`), { status: res.status });
   return json;
 }
 const body = (data) => ({ body: JSON.stringify(data) });

@@ -74,6 +74,8 @@ const walkDir = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e
    o'tkazib yuboradi. Birinchisi qo'riqchini o'ldiradi, ikkinchisi
    yo'q. */
 const GLOBALS = new Set([
+  // Vite `define` (`vite.config.js`) — build paytida qiymatga almashadi
+  "__APP_VERSION__",
   // JS
   "globalThis", "Infinity", "NaN", "undefined", "eval", "isFinite", "isNaN",
   "parseFloat", "parseInt", "decodeURI", "decodeURIComponent", "encodeURI",

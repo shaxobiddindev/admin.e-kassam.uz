@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import {
   buildAlerts, sortAlerts, countBySeverity, changes, pctChange,
   WIDGETS, allowedWidgets, readLayout, saveLayout, move, toggle,
-  shopState, stateTone, healthCounts, T,
+  shopState, stateTone, healthCounts, speedTone, T,
   EVENT_KINDS_ALL, PRIORITIES, TASK_STATES,
 } from "../src/lib/ek-dash.js";
 
@@ -364,6 +364,7 @@ for (const a of buildAlerts(EVERY)) emitted.add(a.key);
 emitted.add("adm.dash.attBackupNever");
 for (const w of WIDGETS) emitted.add(w.key);
 for (const m of ["activeShops", "income", "sales", "newShops"]) emitted.add(`adm.dash.chg.${m}`);
+for (const k of ["median", "three", "p75", "under", "items", "target", "base", "none"]) emitted.add(`adm.dash.speed.${k}`);
 for (const st of ["live", "quiet", "abandoned", "never"]) emitted.add(`adm.dash.state.${st}`);
 
 /* ⚠ SANOQDAN TUG'ILADIGAN KALITLAR. Ular ekranda
@@ -401,6 +402,19 @@ for (const lang of ["uz", "ru", "en"]) {
     assert.deepEqual(miss, [], "tarjimasiz: " + miss.join(", "));
   });
 }
+
+/* ── Sotuv tezligi (C4) ── */
+it("sotuv tezligi: maqsadgacha yashil, 1.5x gacha sariq, keyin qizil", () => {
+  assert.equal(speedTone(7000), "good");
+  assert.equal(speedTone(12000), "good", "aynan 12 s — maqsadga yetgan");
+  assert.equal(speedTone(15000), "warn");
+  assert.equal(speedTone(40000), "bad");
+  assert.equal(speedTone(null), undefined, "o'lchov yo'q — rang ham yo'q");
+});
+
+it("tezlik bloki `SHOP_VIEW` talab qiladi (server ham shuni so'raydi)", () => {
+  assert.equal(WIDGETS.find((w) => w.id === "speed")?.perm, "SHOP_VIEW");
+});
 
 it("o'rin egallovchilar uchala tilda ham bir xil", () => {
   const ph = (v) => [...String(v).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(",");

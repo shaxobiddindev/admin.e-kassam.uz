@@ -115,6 +115,8 @@ export const shopApi = {
   // Do'kon ro'yxatidan ALOHIDA: ro'yxatni chizish uchun agregatsiya
   // kerak emas va uni har safar hisoblash bekorga bo'lardi.
   stats:   ()         => req("/superadmin/shops/stats"),
+  // Bitta sotuv vaqti (C4, V165): mediana, p75, 12 s dan tez ulushi.
+  saleSpeed: (days = 30) => req(`/superadmin/shops/sale-speed?days=${days}`),
   // Obuna to'lovlari. `POST` — hozircha qo'lda qayd etish, lekin
   // so'rov shakli Payme/Click callback'i bilan bir xil (provider +
   // providerTransactionId), ya'ni shlyuz ulanganda o'zgarmaydi.

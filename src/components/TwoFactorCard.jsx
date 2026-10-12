@@ -48,7 +48,7 @@ export default function TwoFactorCard({ toast }) {
       width: 190, margin: 1,
       // Qorong'i rejimda ham o'qilsin: QR skanerlari kontrastga tayanadi,
       // shuning uchun ranglar temaga qarab EMAS, doim qora/oq.
-      color: { dark: "#000000", light: "#ffffff" },
+      color: { dark: "#000000", light: "#ffffff" }, // hex: QR kutubxonasiga — skaner uchun doim qora/oq
     }).catch(() => {});
   }, [setup]);
 
@@ -196,7 +196,7 @@ export default function TwoFactorCard({ toast }) {
             <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
               <canvas ref={qrRef} width={190} height={190}
                       aria-label={t("twofa.qrAlt")} role="img"
-                      style={{ background: "#fff", borderRadius: 10, padding: 8, flexShrink: 0 }} />
+                      style={{ background: "#fff", borderRadius: 10, padding: 8, flexShrink: 0 }} /> {/* hex: QR foni — skaner faqat oqda o'qiydi */}
               <p className="set-row__hint" style={{ flex: "1 1 200px", margin: 0 }}>
                 {t("twofa.qrHint")}
               </p>

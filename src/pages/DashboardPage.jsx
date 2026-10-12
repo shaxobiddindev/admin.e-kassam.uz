@@ -13,7 +13,7 @@ import CommandPalette from "../components/ek/CommandPalette";
 import Modal from "../components/Modal";
 import { can } from "../routes";
 import {
-  buildAlerts, countBySeverity, changes, healthCounts, shopState, stateTone,
+  buildAlerts, countBySeverity, changes, healthCounts, shopState, stateTone, speedTone,
   readLayout, saveLayout, move, toggle,
   EVENT_ICON, EVENT_KINDS, PRIORITIES, TASK_STATES,
 } from "../lib/ek-dash";
@@ -288,6 +288,64 @@ function ChangesPanel({ stats, loading }) {
             </div>
           ))}
         </div>
+      )}
+    </Panel>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SOTUV TEZLIGI (C4, V165)
+   ══════════════════════════════════════════════════════════════════════ */
+
+const sec = (ms) => (ms == null ? "—" : `${(ms / 1000).toFixed(1)} s`);
+
+/**
+ * `docs/00-OVERVIEW.md` mezoni «bitta sotuv (3 ta tovar) < 12 s» — endi
+ * sekundomer bilan emas, kassaning o'z o'lchovi bilan.
+ *
+ * ⚠ «3 ta tovar» ALOHIDA katakda: umumiy mediana bitta tovarli sotuvlar
+ * hisobiga chiroyli chiqadi, mezon esa aynan uch tovarni so'raydi.
+ * ⚠ Rang yolg'iz signal emas (6-qoida): har katakda raqam va nom bor.
+ */
+function SpeedPanel({ speed, loading }) {
+  const { t } = useT();
+  const target = speed?.targetMs ?? 12000;
+  const three = (speed?.buckets || []).find((b) => b.items === "3");
+
+  const CELLS = speed ? [
+    { key: "median", v: sec(speed.medianMs), tone: speedTone(speed.medianMs, target) },
+    { key: "three", v: sec(three?.medianMs), tone: speedTone(three?.medianMs, target) },
+    { key: "p75", v: speed.p75Ms == null ? "—" : `≤ ${sec(speed.p75Ms)}`, tone: speedTone(speed.p75Ms, target) },
+    { key: "under", v: speed.underTargetShare == null ? "—" : percent(speed.underTargetShare * 100) },
+  ] : [];
+
+  return (
+    <Panel title={t("adm.dash.wSpeed")} icon="fa-stopwatch" hint={t("adm.dash.hintSpeed")}
+           right={speed ? <span className="dash__period">{t("adm.dash.speed.target", { v: sec(target) })}</span> : null}>
+      {loading ? <span className="ek-skeleton" style={{ height: 120 }} />
+       : !speed?.sales ? <div className="pln__none">{t("adm.dash.speed.none")}</div>
+       : (
+        <>
+          <div className="stk__row">
+            {CELLS.map((x) => (
+              <div key={x.key} className="stk__c" data-tone={x.tone === "good" ? undefined : x.tone}>
+                <b className="ek-num">{x.v}</b>
+                <span>{t(`adm.dash.speed.${x.key}`)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="spd__by">
+            {speed.buckets.map((b) => (
+              <span key={b.items} className="spd__b" data-tone={speedTone(b.medianMs, target)}>
+                {t("adm.dash.speed.items", { v: b.items })}
+                <b className="ek-num">{sec(b.medianMs)}</b>
+              </span>
+            ))}
+          </div>
+          <div className="spd__base">
+            {t("adm.dash.speed.base", { n: speed.sales, s: speed.shops })}
+          </div>
+        </>
       )}
     </Panel>
   );
@@ -970,6 +1028,7 @@ export default function DashboardPage({ toast, user }) {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [backup, setBackup] = useState(null);
+  const [speed, setSpeed] = useState(null);
   const [loading, setLoading] = useState(true);
   const [at, setAt] = useState(null);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -994,18 +1053,23 @@ export default function DashboardPage({ toast, user }) {
      ⚠ Avto-yangilanishda esa xabar CHIQMAYDI (`quiet`): har uch
      daqiqada takrorlanadigan toast panelni ishlatib bo'lmas holga
      keltirardi. */
+  /* ⚠ Mantiqiy qiymat, massiv emas: `user` qayta kelsa `permissions`
+     yangi massiv bo'ladi va bog'liqlikda tursa panel qayta yuklanardi. */
+  const canSpeed = can(permissions, "SHOP_VIEW");
   const load = useCallback((quiet) => {
     if (!quiet) setLoading(true);
     return Promise.allSettled([
       shopApi.getAll(), userApi.getAll(), contactApi.getAll(),
       shopApi.stats(), backupApi.status(),
+      canSpeed ? shopApi.saleSpeed(30) : Promise.resolve(null),
     ]).then((res) => {
-      const [s, u, c, st, bk] = res;
+      const [s, u, c, st, bk, sp] = res;
       if (s.status === "fulfilled") setShops(asArray(s.value?.data));
       if (u.status === "fulfilled") setUsers(asArray(u.value?.data));
       if (c.status === "fulfilled") setRequests(asArray(c.value?.data));
       if (st.status === "fulfilled") setStats(st.value?.data || null);
       if (bk.status === "fulfilled") setBackup(bk.value?.data || null);
+      if (sp.status === "fulfilled") setSpeed(sp.value?.data || null);
       setAt(new Date());
 
       const failed = res.filter((r) => r.status === "rejected");
@@ -1013,7 +1077,7 @@ export default function DashboardPage({ toast, user }) {
         toast?.error?.(`${t("common.loadFailed")}: ${failed[0].reason?.message || ""}`);
       }
     }).finally(() => setLoading(false));
-  }, [toast, t]);
+  }, [toast, t, canSpeed]);
 
   useEffect(() => { load(false); }, [load]);
 
@@ -1107,6 +1171,7 @@ export default function DashboardPage({ toast, user }) {
     income: () => <IncomePanel key="income" stats={stats} loading={busy} onGo={go} />,
     changes: () => <ChangesPanel key="changes" stats={stats} loading={busy} />,
     health: () => <HealthPanel key="health" stats={stats} loading={busy} onGo={go} />,
+    speed: () => <SpeedPanel key="speed" speed={speed} loading={busy} />,
     shops: () => <ShopsPanel key="shops" shops={shops} stats={stats} loading={loading} busy={busy} onGo={go} />,
     requests: () => <RequestsPanel key="requests" requests={requests} loading={busy} onGo={go} />,
     plan: () => <PlanPanel key="plan" plan={plan} loading={busy} canEdit={canPlan}
@@ -1116,7 +1181,7 @@ export default function DashboardPage({ toast, user }) {
   };
 
   /* Yonma-yon tushadigan bloklar — keng ekranda joy tejaladi. */
-  const NARROW = new Set(["changes", "health", "requests", "plan", "actions"]);
+  const NARROW = new Set(["changes", "health", "speed", "requests", "plan", "actions"]);
   const blocks = layout.filter((w) => w.on && RENDER[w.id]);
   const rows = [];
   for (const w of blocks) {

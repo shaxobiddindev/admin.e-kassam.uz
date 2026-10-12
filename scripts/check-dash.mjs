@@ -103,6 +103,15 @@ const EVENTS = [
     daysAway: 9, active: false, createdBy: "Bosh admin" },
 ];
 
+const SPEED = {
+  days: 30, sales: 120, shops: 4, medianMs: 7000, p75Ms: 11000, underTargetShare: 0.75, targetMs: 12000,
+  buckets: [
+    { items: "1", sales: 60, medianMs: 4000 },
+    { items: "2", sales: 30, medianMs: 9000 },
+    { items: "3", sales: 20, medianMs: 14000 },
+    { items: "6+", sales: 10, medianMs: 30000 },
+  ],
+};
 const TASKS = [
   { id: 61, title: "Chilonzorga obuna haqida qo'ng'iroq", note: null,
     assigneeId: 1, assignee: "Bosh admin", shopId: 1, shopName: "Chilonzor market",
@@ -188,6 +197,7 @@ async function open({ shops = SHOPS, users = USERS, requests = REQUESTS,
 
     const map = {
       "/api/superadmin/shops/stats": stats,
+      "/api/superadmin/shops/sale-speed": SPEED,
       "/api/superadmin/shops": shops,
       "/api/superadmin/planner/tasks": TASKS,
       "/api/superadmin/planner/events": EVENTS,
@@ -283,8 +293,9 @@ console.log("\n── B. Raqamlar ──");
   is(deltas.some((d) => d.startsWith("good") && d.includes("▲")),
      "o'sish yashil va yuqoriga qaragan");
 
-  /* Do'konlar holati: 2 ishlayapti, 1 tashlab ketilgan, 1 hech sotmagan. */
-  const cells = await page.$$eval(".stk__c", (n) => n.map((x) => x.querySelector("b")?.textContent.trim()));
+  /* Do'konlar holati: 2 ishlayapti, 1 tashlab ketilgan, 1 hech sotmagan.
+     ⚠ `button.stk__c` — tezlik bloki ham `.stk__c` ishlatadi (bosilmaydi). */
+  const cells = await page.$$eval("button.stk__c", (n) => n.map((x) => x.querySelector("b")?.textContent.trim()));
   is(cells.join(",") === "2,0,1,1", "do'konlar to'rtta holatga ajratildi", cells.join(","));
 
   const bars = await page.$$eval(".hlt__bar > span", (n) => n.length);
@@ -345,6 +356,25 @@ console.log("\n── D. Buyruq qatori ──");
   await shot(page, "adm-dash-cmd");
 }
 
+/* ══ D2. Sotuv tezligi (C4, V165) ═══════════════════════════════════════
+   ⚠ «3 ta tovar» umumiy medianadan ALOHIDA ko'rinishi shart — mezon
+   aynan shuni so'raydi, umumiy raqam esa bitta tovarli sotuvlar hisobiga
+   chiroyli chiqadi. Bu yerda umumiy 7 s (yashil), uch tovar 14 s (sariq). */
+console.log("\n── D2. Sotuv tezligi ──");
+{
+  const cells = await page.$$eval(".dpn", (ps) => {
+    const p = ps.find((x) => /Sotuv tezligi/.test(x.querySelector(".dpn__t")?.textContent || ""));
+    return p ? [...p.querySelectorAll(".stk__c")].map((c) => ({
+      v: c.querySelector("b")?.textContent.trim(), k: c.querySelector("span")?.textContent.trim(),
+      tone: c.dataset.tone || "" })) : null;
+  });
+  is(Array.isArray(cells), "blok chizildi");
+  const by = Object.fromEntries((cells || []).map((c) => [c.k, c]));
+  is(by["Mediana"]?.v === "7.0 s" && !by["Mediana"].tone, "mediana 7.0 s — maqsad ichida", JSON.stringify(by["Mediana"]));
+  is(by["3 ta tovar"]?.v === "14.0 s" && by["3 ta tovar"].tone === "warn", "3 ta tovar 14.0 s — sariq", JSON.stringify(by["3 ta tovar"]));
+  is(/75/.test(by["12 s dan tez"]?.v || ""), "12 s dan tez ulushi ko'rinadi", JSON.stringify(by["12 s dan tez"]));
+}
+
 /* ══ E. Bloklarni sozlash ══════════════════════════════════════════════ */
 console.log("\n── E. Bloklarni sozlash ──");
 {
@@ -352,7 +382,7 @@ console.log("\n── E. Bloklarni sozlash ──");
   await page.evaluate(() => [...document.querySelectorAll(".dash__icon")].pop()?.click());
   await wait(300);
   const rows = await page.$$eval(".lay__row", (n) => n.length);
-  is(rows === 9, "to'qqizta blok ro'yxatda", String(rows));
+  is(rows === 10, "o'nta blok ro'yxatda (C4: sotuv tezligi)", String(rows));
 
   await page.evaluate(() => {
     const row = [...document.querySelectorAll(".lay__row")].find((r) => /tushum/i.test(r.textContent));

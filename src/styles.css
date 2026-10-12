@@ -232,9 +232,9 @@ tbody tr:hover td { background: var(--bg-hover); }
    ustidagi oq yozuv 2.28 berardi — o'chirish tugmasining matni deyarli
    o'qilmasdi. Fon yorug' bo'lgani uchun matn QORA bo'lishi kerak. */
 .btn-danger  { background: var(--fg-danger); color: var(--fg-on-brand); }
-[data-theme="dark"] .btn-danger { color: #2a0d0a; }
+[data-theme="dark"] .btn-danger { color: #2a0d0a; /* hex: och qizil fonda to'q matn — kontrast (yuqoridagi izoh) */ }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .btn-danger { color: #2a0d0a; }
+  :root:not([data-theme="light"]) .btn-danger { color: #2a0d0a; /* hex: och qizil fonda to'q matn — kontrast */ }
 }
 .btn-danger:hover { background: var(--ek-red-700); }
 .btn-warning { background: var(--bg-warning); color: var(--fg-on-brand); }
@@ -545,7 +545,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
   border: 0; background: none; color: inherit; cursor: pointer;
   width: 18px; height: 18px; border-radius: 50%; font-size: 11px;
 }
-.flt-chip button:hover { background: var(--bg-brand); color: #fff; }
+.flt-chip button:hover { background: var(--bg-brand); color: var(--fg-on-brand); }
 .flt-chips__clear {
   border: 0; background: none; color: var(--fg-secondary); cursor: pointer;
   font-size: 12px; font-weight: 700; text-decoration: underline;
@@ -553,7 +553,7 @@ textarea.fi { resize: vertical; min-height: 80px; }
 .flt-btn__badge {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
-  border-radius: 999px; background: var(--bg-brand); color: #fff;
+  border-radius: 999px; background: var(--bg-brand); color: var(--fg-on-brand);
   font-size: 11px; font-weight: 800;
 }
 .btn-primary .flt-btn__badge { background: rgba(255, 255, 255, .28); }
@@ -705,10 +705,10 @@ textarea.fi { resize: vertical; min-height: 80px; }
 .alr__sum { display: flex; align-items: center; gap: 7px; }
 .alr__chip {
   min-width: 20px; padding: 1px 6px; border-radius: 999px;
-  font-size: 11px; font-weight: 800; text-align: center; color: #fff;
+  font-size: 11px; font-weight: 800; text-align: center; color: var(--fg-on-brand);
 }
 .alr__chip[data-tone="critical"] { background: var(--fg-danger); }
-.alr__chip[data-tone="warning"]  { background: var(--fg-warning); color: #3b2c00; }
+.alr__chip[data-tone="warning"]  { background: var(--fg-warning); color: #3b2c00; /* hex: to'q sariq chipda to'q matn — ikkala temada o'qiladi */ }
 .alr__chip[data-tone="info"]     { background: var(--fg-tertiary); }
 .alr__list { display: flex; flex-direction: column; gap: 7px; }
 .alr__row {
@@ -842,7 +842,7 @@ button.stk__c:hover { background: var(--bg-hover); }
   position: fixed; inset: 0; z-index: 1200;
   display: flex; align-items: flex-start; justify-content: center;
   padding: max(8vh, 40px) 16px 16px;
-  background: color-mix(in srgb, #000 45%, transparent);
+  background: color-mix(in srgb, #000 45%, transparent); /* hex: parda — ikkala temada qora */
 }
 .cmd {
   width: min(620px, 100%); max-height: 76vh; display: flex; flex-direction: column;
@@ -873,7 +873,7 @@ button.stk__c:hover { background: var(--bg-hover); }
   border: 0; background: none; cursor: pointer; text-align: start; font: inherit;
 }
 .cmd__row > i { color: var(--fg-tertiary); font-size: 13px; }
-.cmd__row.is-active { background: var(--bg-brand); color: var(--fg-on-brand, #fff); }
+.cmd__row.is-active { background: var(--bg-brand); color: var(--fg-on-brand); }
 .cmd__row.is-active > i, .cmd__row.is-active .cmd__s { color: inherit; opacity: .85; }
 .cmd__t { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cmd__s { font-size: 11px; font-weight: 700; color: var(--fg-secondary); white-space: nowrap; }
@@ -919,7 +919,7 @@ button.stk__c:hover { background: var(--bg-hover); }
   white-space: nowrap;
 }
 .seg__b:hover { color: var(--fg-primary); }
-.seg__b.is-on { background: var(--bg-brand); color: var(--fg-on-brand, #fff); }
+.seg__b.is-on { background: var(--bg-brand); color: var(--fg-on-brand); }
 
 .pln__n {
   font-size: 11px; font-weight: 700; color: var(--fg-secondary);
@@ -987,7 +987,7 @@ button.stk__c:hover { background: var(--bg-hover); }
 .pln__add input:focus { outline: none; border-color: var(--bg-brand); }
 .pln__add button {
   width: 36px; display: grid; place-items: center; cursor: pointer;
-  border: 0; border-radius: 8px; background: var(--bg-brand); color: var(--fg-on-brand, #fff);
+  border: 0; border-radius: 8px; background: var(--bg-brand); color: var(--fg-on-brand);
 }
 .pln__add button:disabled { opacity: .4; cursor: not-allowed; }
 
@@ -1239,3 +1239,15 @@ button.stk__c:hover { background: var(--bg-hover); }
   .subm-sum__date { font-size: 18px; }
   .subs-kpi__v { font-size: 19px; }
 }
+
+/* ── Sotuv tezligi (C4) — tovar soni bo'yicha mediana ─────────────── */
+.spd__by { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.spd__b {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 4px 9px; border-radius: 999px; background: var(--bg-sunken);
+  font-size: 12px; color: var(--fg-secondary);
+}
+.spd__b b { color: var(--fg-primary); font-weight: 700; }
+.spd__b[data-tone="warn"] b { color: var(--fg-warning); }
+.spd__b[data-tone="bad"]  b { color: var(--fg-danger); }
+.spd__base { margin-top: 8px; font-size: 12px; color: var(--fg-secondary); }

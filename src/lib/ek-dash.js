@@ -242,6 +242,9 @@ export const WIDGETS = [
   { id: "income",   key: "adm.dash.wIncome" },
   { id: "changes",  key: "adm.dash.wChanges" },
   { id: "health",   key: "adm.dash.wHealth", perm: "SHOP_VIEW" },
+  /* Bitta sotuv vaqti (C4, V165) — `/superadmin/shops/sale-speed` ham
+     `SHOP_VIEW` bilan yopilgan. */
+  { id: "speed",    key: "adm.dash.wSpeed",  perm: "SHOP_VIEW" },
   { id: "shops",    key: "adm.dash.wShops",  perm: "SHOP_VIEW" },
   { id: "requests", key: "adm.dash.wRequests", perm: "CONTACT_VIEW" },
   /* ⚠ Jamoa rejasi (V73) — `PLANNER_VIEW`. U to'rttala rolda bor,
@@ -250,6 +253,19 @@ export const WIDGETS = [
   { id: "plan",     key: "adm.dash.wPlan", perm: "PLANNER_VIEW" },
   { id: "actions",  key: "adm.dash.wActions" },
 ];
+
+/**
+ * Sotuv vaqtining rangi — maqsadga (12 s) nisbatan.
+ *
+ * ⚠ Bir yarim baravargacha — «sariq», undan keyin «qizil»: 13 s va 40 s
+ * bitta «maqsaddan sekin» qizilida ko'rinsa, admin qaysi biri jiddiy
+ * ekanini ajrata olmasdi. O'lchov yo'q (`null`) — rang ham yo'q.
+ */
+export function speedTone(ms, targetMs = 12000) {
+  if (ms == null || !Number.isFinite(Number(ms))) return undefined;
+  if (ms <= targetMs) return "good";
+  return ms <= targetMs * 1.5 ? "warn" : "bad";
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    JAMOA REJASINING SANOQLARI (V73)

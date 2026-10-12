@@ -97,7 +97,7 @@ export default function DirectionPicker({ catalog, selected, onToggle }) {
               borderRadius: 5, display: "grid", placeItems: "center",
               border: `1.5px solid ${on ? "var(--fg-brand)" : "var(--border-strong, var(--border-subtle))"}`,
               background: on ? "var(--fg-brand)" : "transparent",
-              color: "#fff", fontSize: 10,
+              color: "var(--fg-on-brand)", fontSize: 10,
             }}>
               {on && <i className="fa-solid fa-check" />}
             </span>

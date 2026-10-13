@@ -112,6 +112,15 @@ const SPEED = {
     { items: "6+", sales: 10, medianMs: 30000 },
   ],
 };
+const LANDING = {
+  days: 30, totals: { view: 1000, cta: 120, start: 40, sent: 10 }, contacts: 12,
+  sources: [
+    { key: "search", view: 600, cta: 70, start: 20, sent: 4 },
+    { key: "utm:kanal_1", view: 300, cta: 40, start: 15, sent: 5 },
+    { key: "direct", view: 100, cta: 10, start: 5, sent: 1 },
+  ],
+  devices: [], daily: [{ day: "2026-10-12", view: 1000, sent: 10 }],
+};
 const TASKS = [
   { id: 61, title: "Chilonzorga obuna haqida qo'ng'iroq", note: null,
     assigneeId: 1, assignee: "Bosh admin", shopId: 1, shopName: "Chilonzor market",
@@ -198,6 +207,7 @@ async function open({ shops = SHOPS, users = USERS, requests = REQUESTS,
     const map = {
       "/api/superadmin/shops/stats": stats,
       "/api/superadmin/shops/sale-speed": SPEED,
+      "/api/superadmin/landing-stats": LANDING,
       "/api/superadmin/shops": shops,
       "/api/superadmin/planner/tasks": TASKS,
       "/api/superadmin/planner/events": EVENTS,
@@ -375,6 +385,30 @@ console.log("\n── D2. Sotuv tezligi ──");
   is(/75/.test(by["12 s dan tez"]?.v || ""), "12 s dan tez ulushi ko'rinadi", JSON.stringify(by["12 s dan tez"]));
 }
 
+/* ══ D3. Landing konversiyasi (D6, V166) ════════════════════════════════
+   Voron: 1000 → 120 (12%) → 40 → 10; har bosqich ostida oldingisiga
+   nisbatan ulush. Manba «utm:kanal_1» — «Reklama: kanal_1». */
+console.log("\n── D3. Landing konversiyasi ──");
+{
+  const r = await page.$$eval(".dpn", (ps) => {
+    const p = ps.find((x) => /Landing konversiyasi/.test(x.querySelector(".dpn__t")?.textContent || ""));
+    if (!p) return null;
+    return {
+      cells: [...p.querySelectorAll(".stk__c")].map((c) => c.querySelector("b")?.textContent.trim()),
+      steps: [...p.querySelectorAll(".lnd__step")].map((c) => c.textContent.trim()),
+      rows: [...p.querySelectorAll(".lnd__r:not(.lnd__r--h)")].map((c) => c.textContent.replace(/\s+/g, " ").trim()),
+      head: p.querySelector(".dash__period")?.textContent.trim(),
+      base: p.querySelector(".lnd__base")?.textContent.trim(),
+    };
+  });
+  is(r !== null, "blok chizildi");
+  is(r?.cells.join(",") === "1000,120,40,10", "voron raqamlari", r?.cells.join(","));
+  is(/12/.test(r?.steps[0] || ""), "«demo» bosqichi ko'rishdan 12%", r?.steps.join(" · "));
+  is(/1\.0/.test(r?.head || ""), "sarlavhada umumiy konversiya 1.0%", r?.head);
+  is(r?.rows.some((x) => /^Reklama: kanal_1/.test(x)), "utm manba nomi bilan", r?.rows.join(" | "));
+  is(/12/.test(r?.base || ""), "bazadagi arizalar alohida ko'rinadi", r?.base);
+}
+
 /* ══ E. Bloklarni sozlash ══════════════════════════════════════════════ */
 console.log("\n── E. Bloklarni sozlash ──");
 {
@@ -382,7 +416,7 @@ console.log("\n── E. Bloklarni sozlash ──");
   await page.evaluate(() => [...document.querySelectorAll(".dash__icon")].pop()?.click());
   await wait(300);
   const rows = await page.$$eval(".lay__row", (n) => n.length);
-  is(rows === 10, "o'nta blok ro'yxatda (C4: sotuv tezligi)", String(rows));
+  is(rows === 11, "o'n bitta blok ro'yxatda (C4 tezlik, D6 landing)", String(rows));
 
   await page.evaluate(() => {
     const row = [...document.querySelectorAll(".lay__row")].find((r) => /tushum/i.test(r.textContent));

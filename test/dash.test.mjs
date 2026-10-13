@@ -18,6 +18,7 @@ import {
   buildAlerts, sortAlerts, countBySeverity, changes, pctChange,
   WIDGETS, allowedWidgets, readLayout, saveLayout, move, toggle,
   shopState, stateTone, healthCounts, speedTone, T,
+  LANDING_STEPS, LANDING_SOURCES, landingSource, rate,
   EVENT_KINDS_ALL, PRIORITIES, TASK_STATES,
 } from "../src/lib/ek-dash.js";
 
@@ -365,6 +366,9 @@ emitted.add("adm.dash.attBackupNever");
 for (const w of WIDGETS) emitted.add(w.key);
 for (const m of ["activeShops", "income", "sales", "newShops"]) emitted.add(`adm.dash.chg.${m}`);
 for (const k of ["median", "three", "p75", "under", "items", "target", "base", "none"]) emitted.add(`adm.dash.speed.${k}`);
+for (const k of [...LANDING_STEPS, "conv", "contacts", "none", "source"]) emitted.add(`adm.dash.land.${k}`);
+for (const s of [...LANDING_SOURCES, "utm:x"]) emitted.add(landingSource(s).key);
+emitted.add("adm.dash.hintLanding");
 for (const st of ["live", "quiet", "abandoned", "never"]) emitted.add(`adm.dash.state.${st}`);
 
 /* ⚠ SANOQDAN TUG'ILADIGAN KALITLAR. Ular ekranda
@@ -410,6 +414,23 @@ it("sotuv tezligi: maqsadgacha yashil, 1.5x gacha sariq, keyin qizil", () => {
   assert.equal(speedTone(15000), "warn");
   assert.equal(speedTone(40000), "bad");
   assert.equal(speedTone(null), undefined, "o'lchov yo'q — rang ham yo'q");
+});
+
+/* ── Landing konversiyasi (D6) ── */
+it("landing manbasi: utm — reklama nomi bilan, noma'lumi — «boshqa»", () => {
+  assert.deepEqual(landingSource("utm:kanal_1"), { key: "adm.dash.land.src.utm", v: "kanal_1" });
+  assert.equal(landingSource("search").key, "adm.dash.land.src.search");
+  assert.equal(landingSource("yangi_turkum").key, "adm.dash.land.src.other", "server yangi turkum qo'shsa ham kalit tarjimasiz qolmaydi");
+});
+
+it("ulush: maxraj nol — `null`, «0%» emas", () => {
+  assert.equal(rate(5, 0), null);
+  assert.equal(rate(5, 100), 5);
+  assert.equal(rate(0, 100), 0);
+});
+
+it("landing bloki `CONTACT_VIEW` talab qiladi (server ham shuni so'raydi)", () => {
+  assert.equal(WIDGETS.find((w) => w.id === "landing")?.perm, "CONTACT_VIEW");
 });
 
 it("tezlik bloki `SHOP_VIEW` talab qiladi (server ham shuni so'raydi)", () => {

@@ -246,6 +246,10 @@ export const WIDGETS = [
      `SHOP_VIEW` bilan yopilgan. */
   { id: "speed",    key: "adm.dash.wSpeed",  perm: "SHOP_VIEW" },
   { id: "shops",    key: "adm.dash.wShops",  perm: "SHOP_VIEW" },
+  /* Landing konversiyasi (D6, V166) — arizalar bilan bitta savol.
+     ⚠ «Arizalar»dan OLDIN: keng blok, u tor «Arizalar» + «Jamoa rejasi»
+     juftligini o'rtadan bo'lib yuborardi. */
+  { id: "landing",  key: "adm.dash.wLanding",  perm: "CONTACT_VIEW" },
   { id: "requests", key: "adm.dash.wRequests", perm: "CONTACT_VIEW" },
   /* ⚠ Jamoa rejasi (V73) — `PLANNER_VIEW`. U to'rttala rolda bor,
      ya'ni blok odatda hamma uchun ochiq; ruxsat baribir yozilgan,
@@ -265,6 +269,28 @@ export function speedTone(ms, targetMs = 12000) {
   if (ms == null || !Number.isFinite(Number(ms))) return undefined;
   if (ms <= targetMs) return "good";
   return ms <= targetMs * 1.5 ? "warn" : "bad";
+}
+
+/** Landing voronining bosqichlari — server `LandingStatsService.EVENTS` bilan bir xil. */
+export const LANDING_STEPS = ["view", "cta", "start", "sent"];
+
+/** Server manba turkumlari (`utm:*` dan tashqari). */
+export const LANDING_SOURCES = ["direct", "search", "social", "messenger", "other"];
+
+/**
+ * Manba yorlig'i: `{ key, v }` — `t(key, { v })` uchun.
+ * ⚠ `utm:kanal` — reklama nomi FOYDALANUVCHI matni emas, server
+ * `[a-z0-9_-]` bilan cheklagan; shunday ko'rsatiladi.
+ */
+export function landingSource(s) {
+  if (typeof s === "string" && s.startsWith("utm:")) return { key: "adm.dash.land.src.utm", v: s.slice(4) };
+  return { key: `adm.dash.land.src.${LANDING_SOURCES.includes(s) ? s : "other"}`, v: "" };
+}
+
+/** Ulush foizda; maxraj nol bo'lsa — `null` («0%» yolg'on bo'lardi). */
+export function rate(a, b) {
+  const x = Number(a), y = Number(b);
+  return y > 0 && Number.isFinite(x) ? (x / y) * 100 : null;
 }
 
 /* ══════════════════════════════════════════════════════════════════════

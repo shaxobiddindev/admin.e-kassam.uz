@@ -1251,3 +1251,18 @@ button.stk__c:hover { background: var(--bg-hover); }
 .spd__b[data-tone="warn"] b { color: var(--fg-warning); }
 .spd__b[data-tone="bad"]  b { color: var(--fg-danger); }
 .spd__base { margin-top: 8px; font-size: 12px; color: var(--fg-secondary); }
+
+/* ── Landing konversiyasi (D6) ───────────────────────────────────── */
+.lnd__step { font-style: normal; font-size: 11px; font-weight: 700; color: var(--fg-secondary); }
+.lnd__src { display: grid; margin-top: 12px; font-size: 13px; }
+.lnd__r {
+  display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px 64px; gap: 8px;
+  align-items: center; padding: 7px 2px; border-top: 1px solid var(--border-subtle);
+}
+.lnd__r > :not(:first-child) { text-align: end; }
+.lnd__r--h { border-top: 0; font-size: 11px; font-weight: 700; color: var(--fg-secondary); }
+.lnd__base {
+  margin-top: 8px; min-height: 44px; padding: 0; border: 0; background: none; font: inherit;
+  font-size: 12px; color: var(--fg-brand); cursor: pointer; text-align: start;
+}
+.lnd__base:hover { text-decoration: underline; }

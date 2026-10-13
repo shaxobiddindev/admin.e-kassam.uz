@@ -14,6 +14,7 @@ import Modal from "../components/Modal";
 import { can } from "../routes";
 import {
   buildAlerts, countBySeverity, changes, healthCounts, shopState, stateTone, speedTone,
+  LANDING_STEPS, landingSource, rate,
   readLayout, saveLayout, move, toggle,
   EVENT_ICON, EVENT_KINDS, PRIORITIES, TASK_STATES,
 } from "../lib/ek-dash";
@@ -345,6 +346,70 @@ function SpeedPanel({ speed, loading }) {
           <div className="spd__base">
             {t("adm.dash.speed.base", { n: speed.sales, s: speed.shops })}
           </div>
+        </>
+      )}
+    </Panel>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LANDING KONVERSIYASI (D6, V166)
+   ══════════════════════════════════════════════════════════════════════ */
+
+const share = (v) => (v == null ? "—" : percent(v));
+
+/**
+ * Voron va manbalar.
+ *
+ * ⚠ Har bosqich ostida OLDINGI bosqichga nisbatan ulush: «qayerda
+ * yo'qotyapmiz?» degan savolga javob shu — 1000 ko'rishdan 5 ariza
+ * yomonmi yoki yaxshimi, faqat oraliq bosqichlar aytadi.
+ * ⚠ «Arizalar bazada» alohida qator: sanoq «Kuzatmang» yoqilganlarni
+ * ko'rmaydi, `contact_requests` esa haqiqat.
+ */
+function LandingPanel({ data, loading, onGo }) {
+  const { t } = useT();
+  const tot = data?.totals || {};
+
+  return (
+    <Panel title={t("adm.dash.wLanding")} icon="fa-filter" hint={t("adm.dash.hintLanding")}
+           right={data?.totals?.view ? <span className="dash__period">
+             {t("adm.dash.land.conv", { v: share(rate(tot.sent, tot.view)) })}</span> : null}>
+      {loading ? <span className="ek-skeleton" style={{ height: 160 }} />
+       : !tot.view ? <div className="pln__none">{t("adm.dash.land.none")}</div>
+       : (
+        <>
+          <div className="stk__row">
+            {LANDING_STEPS.map((k, i) => (
+              <div key={k} className="stk__c">
+                <b className="ek-num">{tot[k] ?? 0}</b>
+                <span>{t(`adm.dash.land.${k}`)}</span>
+                {i > 0 && <em className="lnd__step ek-num">→ {share(rate(tot[k], tot[LANDING_STEPS[i - 1]]))}</em>}
+              </div>
+            ))}
+          </div>
+          <div className="lnd__src" role="table" aria-label={t("adm.dash.land.source")}>
+            <div className="lnd__r lnd__r--h" role="row">
+              <span role="columnheader">{t("adm.dash.land.source")}</span>
+              <span role="columnheader">{t("adm.dash.land.view")}</span>
+              <span role="columnheader">{t("adm.dash.land.sent")}</span>
+              <span role="columnheader">%</span>
+            </div>
+            {(data.sources || []).slice(0, 6).map((r) => {
+              const l = landingSource(r.key);
+              return (
+                <div key={r.key} className="lnd__r" role="row">
+                  <span role="cell">{t(l.key, { v: l.v })}</span>
+                  <b role="cell" className="ek-num">{r.view}</b>
+                  <b role="cell" className="ek-num">{r.sent}</b>
+                  <b role="cell" className="ek-num">{share(rate(r.sent, r.view))}</b>
+                </div>
+              );
+            })}
+          </div>
+          <button type="button" className="lnd__base" onClick={() => onGo("/requests")}>
+            {t("adm.dash.land.contacts", { n: data.contacts ?? 0 })}
+          </button>
         </>
       )}
     </Panel>
@@ -1029,6 +1094,7 @@ export default function DashboardPage({ toast, user }) {
   const [users, setUsers] = useState([]);
   const [backup, setBackup] = useState(null);
   const [speed, setSpeed] = useState(null);
+  const [landing, setLanding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [at, setAt] = useState(null);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -1056,20 +1122,23 @@ export default function DashboardPage({ toast, user }) {
   /* ⚠ Mantiqiy qiymat, massiv emas: `user` qayta kelsa `permissions`
      yangi massiv bo'ladi va bog'liqlikda tursa panel qayta yuklanardi. */
   const canSpeed = can(permissions, "SHOP_VIEW");
+  const canLanding = can(permissions, "CONTACT_VIEW");
   const load = useCallback((quiet) => {
     if (!quiet) setLoading(true);
     return Promise.allSettled([
       shopApi.getAll(), userApi.getAll(), contactApi.getAll(),
       shopApi.stats(), backupApi.status(),
       canSpeed ? shopApi.saleSpeed(30) : Promise.resolve(null),
+      canLanding ? shopApi.landing(30) : Promise.resolve(null),
     ]).then((res) => {
-      const [s, u, c, st, bk, sp] = res;
+      const [s, u, c, st, bk, sp, ld] = res;
       if (s.status === "fulfilled") setShops(asArray(s.value?.data));
       if (u.status === "fulfilled") setUsers(asArray(u.value?.data));
       if (c.status === "fulfilled") setRequests(asArray(c.value?.data));
       if (st.status === "fulfilled") setStats(st.value?.data || null);
       if (bk.status === "fulfilled") setBackup(bk.value?.data || null);
       if (sp.status === "fulfilled") setSpeed(sp.value?.data || null);
+      if (ld.status === "fulfilled") setLanding(ld.value?.data || null);
       setAt(new Date());
 
       const failed = res.filter((r) => r.status === "rejected");
@@ -1077,7 +1146,7 @@ export default function DashboardPage({ toast, user }) {
         toast?.error?.(`${t("common.loadFailed")}: ${failed[0].reason?.message || ""}`);
       }
     }).finally(() => setLoading(false));
-  }, [toast, t, canSpeed]);
+  }, [toast, t, canSpeed, canLanding]);
 
   useEffect(() => { load(false); }, [load]);
 
@@ -1173,6 +1242,7 @@ export default function DashboardPage({ toast, user }) {
     health: () => <HealthPanel key="health" stats={stats} loading={busy} onGo={go} />,
     speed: () => <SpeedPanel key="speed" speed={speed} loading={busy} />,
     shops: () => <ShopsPanel key="shops" shops={shops} stats={stats} loading={loading} busy={busy} onGo={go} />,
+    landing: () => <LandingPanel key="landing" data={landing} loading={busy} onGo={go} />,
     requests: () => <RequestsPanel key="requests" requests={requests} loading={busy} onGo={go} />,
     plan: () => <PlanPanel key="plan" plan={plan} loading={busy} canEdit={canPlan}
                            toast={toast} onGo={go} onOpenAll={() => setPlanOpen(true)}

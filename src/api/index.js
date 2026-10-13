@@ -117,6 +117,8 @@ export const shopApi = {
   stats:   ()         => req("/superadmin/shops/stats"),
   // Bitta sotuv vaqti (C4, V165): mediana, p75, 12 s dan tez ulushi.
   saleSpeed: (days = 30) => req(`/superadmin/shops/sale-speed?days=${days}`),
+  // Landing konversiyasi (D6, V166): ko'rish → demo → forma → yuborildi.
+  landing:   (days = 30) => req(`/superadmin/landing-stats?days=${days}`),
   // Obuna to'lovlari. `POST` — hozircha qo'lda qayd etish, lekin
   // so'rov shakli Payme/Click callback'i bilan bir xil (provider +
   // providerTransactionId), ya'ni shlyuz ulanganda o'zgarmaydi.
